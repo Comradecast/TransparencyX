@@ -3,10 +3,14 @@ import sys
 import json
 from importlib.metadata import version, PackageNotFoundError
 import datetime
+from pathlib import Path
 
 from transparencyx.ranges import parse_range
 from transparencyx.sources.registry import get_registered_sources
 from transparencyx.sources.downloader import Downloader
+from transparencyx.extract.registry import get_extractor_for_source
+from transparencyx.config import RAW_DATA_DIR
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -37,6 +41,13 @@ def main():
     # We add year here but make it default to previous year if not supplied for convenience, 
     # though it wasn't strictly requested, it makes the command usable.
     fetch_parser.add_argument("--year", type=int, default=datetime.datetime.now().year - 1, help="The disclosure year to fetch")
+
+    # "extract" command
+    extract_parser = subparsers.add_parser("extract", help="Extract text from downloaded disclosures")
+    extract_group = extract_parser.add_mutually_exclusive_group(required=True)
+    extract_group.add_argument("--all", action="store_true", help="Extract all downloaded files")
+    extract_group.add_argument("--chamber", choices=["house", "senate"], help="Extract for a specific chamber")
+
 
     # "parse-range" command
     parse_parser = subparsers.add_parser("parse-range", help="Parse a financial disclosure range label")
@@ -73,6 +84,65 @@ def main():
                 print(f"Fetched (placeholder): {path}")
         else:
             sources_parser.print_help()
+            
+    elif args.command == "extract":
+        search_dir = RAW_DATA_DIR
+        
+        # Determine the target directory based on the chamber argument
+        if args.chamber:
+            search_dir = RAW_DATA_DIR / args.chamber.lower()
+            
+        if not search_dir.exists():
+            print(f"No raw data directory found at {search_dir}")
+            sys.exit(0)
+            
+        sources_dict = get_registered_sources()
+        results = []
+        
+        # Iterate over files in the target directory (recursive)
+        for file_path in search_dir.rglob("*"):
+            if file_path.is_file():
+                # Derive file type from extension without the leading dot
+                file_ext = file_path.suffix.lstrip(".")
+                
+                # Derive source from path components assuming data/raw/{chamber}/...
+                chamber_name = "unknown"
+                try:
+                    rel_path = file_path.relative_to(RAW_DATA_DIR)
+                    chamber_name = rel_path.parts[0]
+                except ValueError:
+                    pass
+                
+                source = sources_dict.get(chamber_name)
+                
+                if not source:
+                    results.append({
+                        "file_path": str(file_path),
+                        "source": chamber_name,
+                        "success": False,
+                        "message": f"Unknown source directory: {chamber_name}"
+                    })
+                    continue
+                
+                extractor = get_extractor_for_source(source, file_ext)
+                if extractor:
+                    result = extractor.extract(file_path, source)
+                    message = result.extracted_text if result.success else result.error
+                    results.append({
+                        "file_path": str(result.file_path),
+                        "source": result.source.chamber_name,
+                        "success": result.success,
+                        "message": message
+                    })
+                else:
+                    results.append({
+                        "file_path": str(file_path),
+                        "source": source.chamber_name,
+                        "success": False,
+                        "message": f"No extractor found for file type: {file_ext}"
+                    })
+                    
+        print(json.dumps(results, indent=2))
 
     elif args.command == "parse-range":
         parsed = parse_range(args.label)
