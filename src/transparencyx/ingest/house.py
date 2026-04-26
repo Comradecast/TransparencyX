@@ -40,38 +40,38 @@ def insert_house_raw_disclosure(db_path: Path, record: HouseDisclosureRecord) ->
     Checks for duplicates using the source_hash and returns the existing ID if found.
     """
     source_hash = compute_source_hash(record)
-
+    
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
-
+        
         # Check for existing record
         cursor.execute(
-            "SELECT id FROM raw_disclosures WHERE source_hash = ?",
+            "SELECT id FROM raw_disclosures WHERE source_hash = ?", 
             (source_hash,)
         )
         existing = cursor.fetchone()
         if existing:
             return existing["id"]
-
+            
         # Prepare insertion data
         now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-
+        
         # We store the raw data as JSON for auditability and future extraction
         raw_metadata_json = json.dumps(asdict(record))
-
+        
         cursor.execute(
             """
             INSERT INTO raw_disclosures (
-                source_chamber,
-                source_name,
-                filing_year,
-                filing_type,
-                document_title,
-                document_url,
-                local_path,
-                source_hash,
-                retrieved_at,
-                raw_metadata_json,
+                source_chamber, 
+                source_name, 
+                filing_year, 
+                filing_type, 
+                document_title, 
+                document_url, 
+                local_path, 
+                source_hash, 
+                retrieved_at, 
+                raw_metadata_json, 
                 created_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """,
@@ -89,5 +89,5 @@ def insert_house_raw_disclosure(db_path: Path, record: HouseDisclosureRecord) ->
                 now   # created_at
             )
         )
-
+        
         return cursor.lastrowid

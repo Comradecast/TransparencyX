@@ -27,20 +27,20 @@ def test_disclosure_report_creation():
         chamber=Chamber.SENATE,
         state="NY"
     )
-
+    
     range_obj = DisclosureRange(
         original_label="$1,001 - $15,000",
         minimum=1001,
         maximum=15000,
         midpoint=8000
     )
-
+    
     asset = FinancialAsset(
         name="Index Fund",
         asset_type="Mutual Fund",
         value_range=range_obj
     )
-
+    
     report = DisclosureReport(
         member=member,
         year=2023,
@@ -49,7 +49,7 @@ def test_disclosure_report_creation():
         outside_incomes=[],
         liabilities=[]
     )
-
+    
     assert report.year == 2023
     assert len(report.assets) == 1
     assert report.assets[0].name == "Index Fund"

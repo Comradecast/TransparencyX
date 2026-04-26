@@ -20,28 +20,28 @@ def main():
     parser = argparse.ArgumentParser(
         description="TransparencyX: A Python civic-data project that consolidates U.S. congressional financial disclosure information."
     )
-
+    
     parser.add_argument(
-        "--version",
-        action="store_true",
+        "--version", 
+        action="store_true", 
         help="Show the version and exit."
     )
-
+    
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
-
+    
     # "sources" command and its subcommands
     sources_parser = subparsers.add_parser("sources", help="Manage data sources")
     sources_subparsers = sources_parser.add_subparsers(dest="sources_command", help="Source operations")
-
+    
     # "sources list"
     sources_subparsers.add_parser("list", help="List supported sources")
-
+    
     # "sources fetch"
     fetch_parser = sources_subparsers.add_parser("fetch", help="Simulate fetching source disclosures")
     fetch_group = fetch_parser.add_mutually_exclusive_group(required=True)
     fetch_group.add_argument("--all", action="store_true", help="Fetch from all available sources")
     fetch_group.add_argument("--chamber", choices=["house", "senate"], help="Fetch for a specific chamber")
-
+    
     fetch_parser.add_argument("--year", type=int, default=datetime.datetime.now().year - 1, help="The disclosure year to fetch")
 
     # "extract" command
@@ -73,13 +73,13 @@ def main():
     # "parse-range" command
     parse_parser = subparsers.add_parser("parse-range", help="Parse a financial disclosure range label")
     parse_parser.add_argument(
-        "label",
-        type=str,
+        "label", 
+        type=str, 
         help="The range label to parse (e.g., '$1,001 - $15,000')"
     )
-
+    
     args = parser.parse_args()
-
+    
     if args.version:
         try:
             pkg_version = version("transparencyx")
@@ -87,7 +87,7 @@ def main():
         except PackageNotFoundError:
             print("transparencyx version unknown (not installed)")
         sys.exit(0)
-
+        
     if args.command == "sources":
         if args.sources_command == "list":
             sources = get_registered_sources()
@@ -100,41 +100,41 @@ def main():
                 paths = downloader.fetch_all(args.year)
             elif args.chamber:
                 paths = downloader.fetch_chamber(args.chamber, args.year)
-
+            
             for path in paths:
                 print(f"Fetched (placeholder): {path}")
         else:
             sources_parser.print_help()
-
+            
     elif args.command == "extract":
         search_dir = RAW_DATA_DIR
-
+        
         # Determine the target directory based on the chamber argument
         if args.chamber:
             search_dir = RAW_DATA_DIR / args.chamber.lower()
-
+            
         if not search_dir.exists():
             print(f"No raw data directory found at {search_dir}")
             sys.exit(0)
-
+            
         sources_dict = get_registered_sources()
         results = []
-
+        
         # Iterate over files in the target directory (recursive)
         for file_path in search_dir.rglob("*"):
             if file_path.is_file():
                 # Derive file type from extension without the leading dot
                 file_ext = file_path.suffix.lstrip(".")
-
+                
                 chamber_name = "unknown"
                 try:
                     rel_path = file_path.relative_to(RAW_DATA_DIR)
                     chamber_name = rel_path.parts[0]
                 except ValueError:
                     pass
-
+                
                 source = sources_dict.get(chamber_name)
-
+                
                 if not source:
                     results.append({
                         "file_path": str(file_path),
@@ -143,20 +143,20 @@ def main():
                         "error": f"Unknown source directory: {chamber_name}"
                     })
                     continue
-
+                
                 extractor = get_extractor_for_source(source, file_ext)
                 if extractor:
                     result = extractor.extract(file_path, source)
                     if result.success:
                         length = len(result.extracted_text) if result.extracted_text else 0
-
+                        
                         out = {
                             "file_path": str(result.file_path),
                             "source": result.source.chamber_name,
                             "success": True,
                             "extracted_length": length
                         }
-
+                        
                         if args.show_sections and result.extracted_text:
                             sections = detect_sections(result.extracted_text)
                             out["sections"] = [
@@ -168,7 +168,7 @@ def main():
                                 }
                                 for sec in sections
                             ]
-
+                            
                         results.append(out)
                     else:
                         results.append({
@@ -184,9 +184,9 @@ def main():
                         "success": False,
                         "error": f"No extractor found for file type: {file_ext}"
                     })
-
+                    
         print(json.dumps(results, indent=2))
-
+        
     elif args.command == "db":
         if args.db_command == "init":
             db_path = Path(args.path)
@@ -194,7 +194,7 @@ def main():
             print(f"Database initialized at {db_path}")
         else:
             db_parser.print_help()
-
+            
     elif args.command == "ingest":
         if args.ingest_command == "house-sample":
             db_path = Path(args.db)
@@ -217,7 +217,7 @@ def main():
             sources_dict = get_registered_sources()
             processed_count = 0
             total_inserted = 0
-
+            
             with get_connection(db_path) as conn:
                 cursor = conn.cursor()
                 # Get raw disclosures with a local_path
@@ -225,13 +225,13 @@ def main():
                     "SELECT id, politician_id, local_path, source_chamber FROM raw_disclosures WHERE local_path IS NOT NULL"
                 )
                 rows = cursor.fetchall()
-
+                
             for row in rows:
                 raw_id = row["id"]
                 politician_id = row["politician_id"]
                 local_path = Path(row["local_path"])
                 chamber = row["source_chamber"]
-
+                
                 # We need a dummy politician_id to satisfy constraints if it's NULL in the raw row,
                 # but the instructions say politician_id is NOT NULL in normalized_assets, and might be NULL in raw_disclosures.
                 # So if politician_id is missing, we must skip or handle it.
@@ -239,17 +239,17 @@ def main():
                     # In a real pipeline, we'd resolve the politician first. For now, skip or use a dummy ID.
                     # Let's skip for safety.
                     continue
-
+                
                 if not local_path.exists():
                     continue
-
+                    
                 source = sources_dict.get(chamber)
                 if not source:
                     continue
-
+                    
                 file_ext = local_path.suffix.lstrip(".")
                 extractor = get_extractor_for_source(source, file_ext)
-
+                
                 if extractor:
                     result = extractor.extract(local_path, source)
                     if result.success and result.extracted_text:
@@ -261,7 +261,7 @@ def main():
                         )
                         processed_count += 1
                         total_inserted += inserted
-
+                        
             print(json.dumps({
                 "processed": processed_count,
                 "inserted_assets": total_inserted
@@ -271,14 +271,14 @@ def main():
 
     elif args.command == "parse-range":
         parsed = parse_range(args.label)
-
+        
         output = {
             "label": parsed.original_label,
             "minimum": parsed.minimum,
             "maximum": parsed.maximum,
             "midpoint": parsed.midpoint,
         }
-
+        
         print(json.dumps(output, indent=2))
     elif args.command is None:
         parser.print_help()

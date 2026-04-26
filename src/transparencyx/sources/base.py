@@ -11,13 +11,13 @@ class DisclosureSource(ABC):
     """
     Abstract base class for a congressional data source.
     """
-
+    
     @property
     @abstractmethod
     def chamber_name(self) -> str:
         """Returns the name of the chamber (e.g., 'house', 'senate')."""
         pass
-
+        
     def get_download_path(self, year: int) -> Path:
         """Returns the base directory where downloads for a given year are stored."""
         return get_raw_data_dir(self.chamber_name, year)

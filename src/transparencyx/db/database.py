@@ -25,7 +25,7 @@ def initialize_database(db_path: Path) -> None:
     """
     # Ensure the parent directory exists
     db_path.parent.mkdir(parents=True, exist_ok=True)
-
+    
     with get_connection(db_path) as conn:
         schema_sql = get_schema_sql()
         conn.executescript(schema_sql)

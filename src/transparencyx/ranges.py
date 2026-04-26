@@ -7,7 +7,7 @@ def parse_range(label: str) -> DisclosureRange:
     It does not guess values. If parsing fails, it returns None for min, max, and mid.
     """
     label_clean = label.strip()
-
+    
     # Handle explicit none/N/A
     lower_label = label_clean.lower()
     if lower_label == "none":
@@ -17,7 +17,7 @@ def parse_range(label: str) -> DisclosureRange:
             maximum=0,
             midpoint=0
         )
-
+        
     if lower_label in ("n/a", ""):
         return DisclosureRange(
             original_label=label,
@@ -25,7 +25,7 @@ def parse_range(label: str) -> DisclosureRange:
             maximum=None,
             midpoint=None
         )
-
+        
     # Handle "Over X" format
     over_match = re.match(r"(?i)^over\s*\$([\d,]+)$", label_clean)
     if over_match:
@@ -58,7 +58,7 @@ def parse_range(label: str) -> DisclosureRange:
             )
         except ValueError:
             pass
-
+            
     # Default fallback for unparseable ranges
     return DisclosureRange(
         original_label=label,
