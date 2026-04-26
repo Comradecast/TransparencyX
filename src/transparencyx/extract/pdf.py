@@ -15,17 +15,17 @@ class PDFExtractor(Extractor):
     """
     def supports_file_type(self, file_type: str) -> bool:
         return file_type.lower() == "pdf"
-        
+
     def extract(self, file_path: Path, source: DisclosureSource) -> ExtractionResult:
         """
         Opens the PDF and extracts raw text across all pages.
         """
         extracted_text = ""
-        
+
         try:
             with open(file_path, "rb") as f:
                 reader = pypdf.PdfReader(f)
-                
+
                 # Check for empty PDF (0 pages)
                 if len(reader.pages) == 0:
                     return ExtractionResult(
@@ -57,7 +57,7 @@ class PDFExtractor(Extractor):
                 extracted_text=extracted_text.strip(),
                 error=None
             )
-            
+
         except Exception as e:
             return ExtractionResult(
                 source=source,

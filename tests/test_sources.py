@@ -26,10 +26,10 @@ def test_fetch_all_creates_placeholders(tmp_path, monkeypatch):
     # Monkeypatch RAW_DATA_DIR to point to tmp_path so we don't dirty the workspace
     import transparencyx.config as config
     monkeypatch.setattr(config, "RAW_DATA_DIR", tmp_path / "raw")
-    
+
     downloader = Downloader()
     paths = downloader.fetch_all(2023)
-    
+
     assert len(paths) == 2
     for path in paths:
         assert path.exists()
@@ -39,14 +39,14 @@ def test_fetch_all_creates_placeholders(tmp_path, monkeypatch):
 def test_fetch_chamber_house_creates_placeholders(tmp_path, monkeypatch):
     import transparencyx.config as config
     monkeypatch.setattr(config, "RAW_DATA_DIR", tmp_path / "raw")
-    
+
     downloader = Downloader()
     paths = downloader.fetch_chamber("house", 2023)
-    
+
     assert len(paths) == 1
     assert paths[0].exists()
     assert paths[0].name == "2023FD.zip"
-    
+
     # Verify senate path was NOT created
     senate_dir = tmp_path / "raw" / "senate" / "2023"
     assert not senate_dir.exists()

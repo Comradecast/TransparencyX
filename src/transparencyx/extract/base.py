@@ -24,14 +24,14 @@ class Extractor(ABC):
     """
     Abstract base class for document extractors.
     """
-    
+
     @abstractmethod
     def supports_file_type(self, file_type: str) -> bool:
         """
         Check if the extractor supports the given file extension (e.g., 'pdf', 'csv', 'zip').
         """
         pass
-        
+
     @abstractmethod
     def extract(self, file_path: Path, source: DisclosureSource) -> ExtractionResult:
         """

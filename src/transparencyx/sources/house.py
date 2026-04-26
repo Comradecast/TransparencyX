@@ -17,8 +17,8 @@ class HouseSource(DisclosureSource):
         """
         download_dir = self.get_download_path(year)
         download_dir.mkdir(parents=True, exist_ok=True)
-        
+
         expected_file = download_dir / f"{year}FD.zip"
         expected_file.touch()
-        
+
         return [expected_file]

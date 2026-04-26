@@ -27,7 +27,7 @@ def test_parse_range_none():
     assert result.minimum == 0
     assert result.maximum == 0
     assert result.midpoint == 0
-    
+
 def test_parse_range_na():
     result = parse_range("N/A")
     assert result.original_label == "N/A"
