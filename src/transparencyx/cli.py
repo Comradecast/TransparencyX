@@ -62,6 +62,8 @@ def main():
     ingest_subparsers = ingest_parser.add_subparsers(dest="ingest_command", help="Ingest operations")
     ingest_house_parser = ingest_subparsers.add_parser("house-sample", help="Ingest a sample House disclosure")
     ingest_house_parser.add_argument("--db", type=str, required=True, help="Path to the SQLite database file")
+    ingest_trades_parser = ingest_subparsers.add_parser("trades-sample", help="Ingest sample trades")
+    ingest_trades_parser.add_argument("--db", type=str, required=True, help="Path to the SQLite database file")
 
     # "normalize" command
     normalize_parser = subparsers.add_parser("normalize", help="Normalize data")
@@ -208,6 +210,13 @@ def main():
             )
             record_id = insert_house_raw_disclosure(db_path, record)
             print(json.dumps({"success": True, "record_id": record_id}, indent=2))
+        elif args.ingest_command == "trades-sample":
+            db_path = Path(args.db)
+            initialize_database(db_path)
+            from transparencyx.ingest.trades import ingest_sample_trades
+            with get_connection(db_path) as conn:
+                inserted = ingest_sample_trades(conn)
+            print(json.dumps({"success": True, "inserted_count": inserted}, indent=2))
         else:
             ingest_parser.print_help()
 
