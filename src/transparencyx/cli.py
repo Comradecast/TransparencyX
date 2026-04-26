@@ -79,6 +79,13 @@ def main():
         type=str, 
         help="The range label to parse (e.g., '$1,001 - $15,000')"
     )
+
+    # "shape" command
+    shape_parser = subparsers.add_parser("shape", help="Shape model operations")
+    shape_subparsers = shape_parser.add_subparsers(dest="shape_command", help="Shape commands")
+    shape_summary_parser = shape_subparsers.add_parser("summary", help="Build a financial shape summary")
+    shape_summary_parser.add_argument("--db", type=str, required=True, help="Path to the SQLite database file")
+    shape_summary_parser.add_argument("--politician-id", type=int, required=True, help="ID of the politician")
     
     args = parser.parse_args()
     
@@ -289,6 +296,18 @@ def main():
         }
         
         print(json.dumps(output, indent=2))
+        
+    elif args.command == "shape":
+        if args.shape_command == "summary":
+            db_path = Path(args.db)
+            politician_id = args.politician_id
+            
+            from transparencyx.shape.summary import build_financial_shape_summary, summary_to_dict
+            
+            summary = build_financial_shape_summary(db_path, politician_id)
+            print(json.dumps(summary_to_dict(summary), indent=2))
+        else:
+            shape_parser.print_help()
     elif args.command is None:
         parser.print_help()
 
