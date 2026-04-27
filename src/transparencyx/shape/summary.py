@@ -104,8 +104,8 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         cursor.execute("""
             SELECT 
                 COUNT(*) as asset_count,
-                SUM(value_min) as total_value_min,
-                SUM(value_max) as total_value_max,
+                SUM(CASE WHEN value_min IS NOT NULL AND value_max IS NOT NULL THEN value_min END) as total_value_min,
+                SUM(CASE WHEN value_min IS NOT NULL AND value_max IS NOT NULL THEN value_max END) as total_value_max,
                 SUM(value_midpoint) as total_value_mid
             FROM normalized_assets
             WHERE politician_id = ?
@@ -121,8 +121,8 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         cursor.execute("""
             SELECT 
                 COUNT(*) as trade_count,
-                SUM(amount_min) as total_amount_min,
-                SUM(amount_max) as total_amount_max,
+                SUM(CASE WHEN amount_min IS NOT NULL AND amount_max IS NOT NULL THEN amount_min END) as total_amount_min,
+                SUM(CASE WHEN amount_min IS NOT NULL AND amount_max IS NOT NULL THEN amount_max END) as total_amount_max,
                 SUM(amount_mid) as total_amount_mid
             FROM trades
             WHERE politician_id = ?

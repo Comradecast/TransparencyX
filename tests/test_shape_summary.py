@@ -95,10 +95,79 @@ def test_trades_aggregate_correctly(db_path):
     summary = build_financial_shape_summary(db_path, 1)
     
     assert summary.trade_count == 3
-    assert summary.trade_volume_min == 111.0
+    assert summary.trade_volume_min == 11.0
     assert summary.trade_volume_max == 25.0
     assert summary.trade_volume_midpoint == 118.0
     assert summary.trade_activity == "LOW"
+
+def test_trade_bounds_ignore_null_max(db_path):
+    """Rows with NULL max must be excluded from bounds but still counted."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO trades (politician_id, asset_name, transaction_type, amount_range_text, amount_min, amount_max, amount_mid)
+        VALUES 
+        (1, 'X', 'BUY', '$1,001-$15,000', 1001, 15000, 8000),
+        (1, 'Y', 'BUY', 'Over $50,000', 50000, NULL, 50000)
+    """)
+    conn.commit()
+    conn.close()
+
+    summary = build_financial_shape_summary(db_path, 1)
+
+    assert summary.trade_count == 2
+    # Only row X has complete bounds
+    assert summary.trade_volume_min == 1001.0
+    assert summary.trade_volume_max == 15000.0
+    # Midpoint includes both rows
+    assert summary.trade_volume_midpoint == 58000.0
+    # Invariant: min <= max
+    assert summary.trade_volume_min <= summary.trade_volume_max
+
+def test_trade_bounds_all_null_max(db_path):
+    """When every row has NULL max, bounds must be None."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO trades (politician_id, asset_name, transaction_type, amount_range_text, amount_min, amount_max, amount_mid)
+        VALUES 
+        (1, 'A', 'BUY', 'Over $50,000', 50000, NULL, 50000),
+        (1, 'B', 'SELL', 'Over $100,000', 100000, NULL, 100000)
+    """)
+    conn.commit()
+    conn.close()
+
+    summary = build_financial_shape_summary(db_path, 1)
+
+    assert summary.trade_count == 2
+    assert summary.trade_volume_min is None
+    assert summary.trade_volume_max is None
+    # Midpoint still aggregates
+    assert summary.trade_volume_midpoint == 150000.0
+
+def test_trade_midpoint_independent_of_bounds(db_path):
+    """Midpoint aggregation must include all rows regardless of bound completeness."""
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    cursor.execute("""
+        INSERT INTO trades (politician_id, asset_name, transaction_type, amount_range_text, amount_min, amount_max, amount_mid)
+        VALUES 
+        (1, 'A', 'BUY', '$1-$5', 1, 5, 3),
+        (1, 'B', 'BUY', 'Over $1,000', 1000, NULL, 1000),
+        (1, 'C', 'SELL', '$10-$20', 10, 20, 15)
+    """)
+    conn.commit()
+    conn.close()
+
+    summary = build_financial_shape_summary(db_path, 1)
+
+    # Bounds only from rows A and C (complete bounds)
+    assert summary.trade_volume_min == 11.0
+    assert summary.trade_volume_max == 25.0
+    # Midpoint from all three rows
+    assert summary.trade_volume_midpoint == 1018.0
+    # Invariant
+    assert summary.trade_volume_min <= summary.trade_volume_max
 
 @pytest.mark.parametrize("trade_count, expected_activity", [
     (0, "NONE"),
