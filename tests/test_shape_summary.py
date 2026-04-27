@@ -4,7 +4,15 @@ from pathlib import Path
 import json
 
 from transparencyx.db.schema import get_schema_sql
-from transparencyx.shape.summary import build_financial_shape_summary, summary_to_dict
+from transparencyx.shape.summary import (
+    build_financial_shape_summary, 
+    summary_to_dict,
+    get_net_worth_band,
+    get_asset_density,
+    get_trade_volume_band,
+    build_summary_label,
+    FinancialShapeSummary
+)
 
 @pytest.fixture
 def db_path(tmp_path):
@@ -37,6 +45,11 @@ def test_empty_politician_shape(db_path):
     assert summary.trade_volume_midpoint is None
     
     assert summary.trade_activity == "NONE"
+    
+    assert summary.net_worth_band == "UNKNOWN"
+    assert summary.asset_density == "NONE"
+    assert summary.trade_volume_band == "UNKNOWN"
+    assert summary.summary_label == "No disclosed financial activity"
 
 def test_assets_aggregate_correctly(db_path):
     conn = sqlite3.connect(db_path)
@@ -120,6 +133,72 @@ def test_summary_to_dict(db_path):
     assert d["asset_count"] == 0
     assert d["asset_value_min"] is None
     assert d["trade_activity"] == "NONE"
+    assert d["net_worth_band"] == "UNKNOWN"
+    assert d["asset_density"] == "NONE"
+    assert d["trade_volume_band"] == "UNKNOWN"
+    assert d["summary_label"] == "No disclosed financial activity"
     
     # Ensure it's json serializable
     json.dumps(d)
+
+@pytest.mark.parametrize("val, expected", [
+    (None, "UNKNOWN"),
+    (0, "LOW"),
+    (249_999, "LOW"),
+    (250_000, "MODERATE"),
+    (999_999, "MODERATE"),
+    (1_000_000, "HIGH"),
+    (4_999_999, "HIGH"),
+    (5_000_000, "VERY_HIGH"),
+    (100_000_000, "VERY_HIGH"),
+])
+def test_net_worth_band(val, expected):
+    assert get_net_worth_band(val) == expected
+
+@pytest.mark.parametrize("val, expected", [
+    (0, "NONE"),
+    (1, "LOW"),
+    (5, "LOW"),
+    (6, "MEDIUM"),
+    (20, "MEDIUM"),
+    (21, "HIGH"),
+])
+def test_asset_density_band(val, expected):
+    assert get_asset_density(val) == expected
+
+@pytest.mark.parametrize("val, expected", [
+    (None, "UNKNOWN"),
+    (0, "LOW"),
+    (49_999, "LOW"),
+    (50_000, "MODERATE"),
+    (249_999, "MODERATE"),
+    (250_000, "HIGH"),
+    (999_999, "HIGH"),
+    (1_000_000, "VERY_HIGH"),
+])
+def test_trade_volume_band(val, expected):
+    assert get_trade_volume_band(val) == expected
+
+def test_build_summary_label():
+    def make_summary(ac, tc, ta, nwb, ad):
+        return FinancialShapeSummary(
+            politician_id=1, asset_count=ac, asset_value_min=None, asset_value_max=None, asset_value_midpoint=None,
+            trade_count=tc, trade_volume_min=None, trade_volume_max=None, trade_volume_midpoint=None,
+            trade_activity=ta, net_worth_band=nwb, asset_density=ad, trade_volume_band="UNKNOWN", summary_label=""
+        )
+    
+    # Empty
+    assert build_summary_label(make_summary(0, 0, "NONE", "UNKNOWN", "NONE")) == "No disclosed financial activity"
+    
+    # Assets only
+    assert build_summary_label(make_summary(1, 0, "NONE", "LOW", "LOW")) == "Low asset complexity, no trading activity"
+    assert build_summary_label(make_summary(10, 0, "NONE", "MODERATE", "MEDIUM")) == "Medium asset complexity, no trading activity"
+    assert build_summary_label(make_summary(25, 0, "NONE", "HIGH", "HIGH")) == "High disclosed wealth, no trading activity"
+    assert build_summary_label(make_summary(5, 0, "NONE", "VERY_HIGH", "LOW")) == "Very high disclosed wealth, no trading activity"
+    
+    # Trades only
+    assert build_summary_label(make_summary(0, 5, "LOW", "UNKNOWN", "NONE")) == "No disclosed assets, low trading activity"
+    
+    # Both
+    assert build_summary_label(make_summary(5, 10, "MEDIUM", "VERY_HIGH", "LOW")) == "Very high disclosed wealth, medium trading activity"
+

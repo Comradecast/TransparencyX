@@ -16,6 +16,10 @@ class FinancialShapeSummary:
     trade_volume_max: Optional[float]
     trade_volume_midpoint: Optional[float]
     trade_activity: str
+    net_worth_band: str
+    asset_density: str
+    trade_volume_band: str
+    summary_label: str
 
 def get_trade_activity(count: int) -> str:
     """
@@ -33,6 +37,64 @@ def get_trade_activity(count: int) -> str:
         return "MEDIUM"
     else:
         return "HIGH"
+
+def get_net_worth_band(asset_value_midpoint: Optional[float]) -> str:
+    if asset_value_midpoint is None:
+        return "UNKNOWN"
+    elif asset_value_midpoint < 250_000:
+        return "LOW"
+    elif asset_value_midpoint < 1_000_000:
+        return "MODERATE"
+    elif asset_value_midpoint < 5_000_000:
+        return "HIGH"
+    else:
+        return "VERY_HIGH"
+
+def get_asset_density(asset_count: int) -> str:
+    if asset_count == 0:
+        return "NONE"
+    elif 1 <= asset_count <= 5:
+        return "LOW"
+    elif 6 <= asset_count <= 20:
+        return "MEDIUM"
+    else:
+        return "HIGH"
+
+def get_trade_volume_band(trade_volume_midpoint: Optional[float]) -> str:
+    if trade_volume_midpoint is None:
+        return "UNKNOWN"
+    elif trade_volume_midpoint < 50_000:
+        return "LOW"
+    elif trade_volume_midpoint < 250_000:
+        return "MODERATE"
+    elif trade_volume_midpoint < 1_000_000:
+        return "HIGH"
+    else:
+        return "VERY_HIGH"
+
+def build_summary_label(summary: FinancialShapeSummary) -> str:
+    if summary.asset_count == 0 and summary.trade_count == 0:
+        return "No disclosed financial activity"
+        
+    asset_str = "No disclosed assets"
+    if summary.asset_count > 0:
+        if summary.net_worth_band == "VERY_HIGH":
+            asset_str = "Very high disclosed wealth"
+        elif summary.net_worth_band == "HIGH":
+            asset_str = "High disclosed wealth"
+        else:
+            density_map = {
+                "LOW": "Low asset complexity",
+                "MEDIUM": "Medium asset complexity",
+                "HIGH": "High asset complexity"
+            }
+            asset_str = density_map.get(summary.asset_density, "Disclosed assets")
+
+    trade_str = "no trading activity"
+    if summary.trade_activity != "NONE":
+        trade_str = f"{summary.trade_activity.lower()} trading activity"
+        
+    return f"{asset_str}, {trade_str}"
 
 def build_financial_shape_summary(db_path: Path, politician_id: int) -> FinancialShapeSummary:
     with get_connection(db_path) as conn:
@@ -73,8 +135,11 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         trade_volume_midpoint = float(trades_row["total_amount_mid"]) if trades_row["total_amount_mid"] is not None else None
 
         trade_activity = get_trade_activity(trade_count)
+        net_worth_band = get_net_worth_band(asset_value_midpoint)
+        asset_density = get_asset_density(asset_count)
+        trade_volume_band = get_trade_volume_band(trade_volume_midpoint)
         
-        return FinancialShapeSummary(
+        summary = FinancialShapeSummary(
             politician_id=politician_id,
             asset_count=asset_count,
             asset_value_min=asset_value_min,
@@ -84,8 +149,14 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             trade_volume_min=trade_volume_min,
             trade_volume_max=trade_volume_max,
             trade_volume_midpoint=trade_volume_midpoint,
-            trade_activity=trade_activity
+            trade_activity=trade_activity,
+            net_worth_band=net_worth_band,
+            asset_density=asset_density,
+            trade_volume_band=trade_volume_band,
+            summary_label=""
         )
+        summary.summary_label = build_summary_label(summary)
+        return summary
 
 def summary_to_dict(summary: FinancialShapeSummary) -> dict:
     return {
@@ -98,5 +169,9 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "trade_volume_min": summary.trade_volume_min,
         "trade_volume_max": summary.trade_volume_max,
         "trade_volume_midpoint": summary.trade_volume_midpoint,
-        "trade_activity": summary.trade_activity
+        "trade_activity": summary.trade_activity,
+        "net_worth_band": summary.net_worth_band,
+        "asset_density": summary.asset_density,
+        "trade_volume_band": summary.trade_volume_band,
+        "summary_label": summary.summary_label
     }
