@@ -1,6 +1,6 @@
 import pytest
 from transparencyx.parse.sections import Section
-from transparencyx.normalize.assets import extract_asset_candidates, insert_normalized_assets, process_assets_for_disclosure, clean_asset_name, is_valid_asset_name, contains_asset_anchor
+from transparencyx.normalize.assets import extract_asset_candidates, insert_normalized_assets, process_assets_for_disclosure, clean_asset_name, is_valid_asset_name, contains_asset_anchor, parse_value_range
 from transparencyx.db.database import get_connection, initialize_database
 
 
@@ -54,6 +54,24 @@ def test_contains_asset_anchor():
     assert contains_asset_anchor("Bank of America - Checking Account [BA] SP")
     assert not contains_asset_anchor("Apple Inc. (AAPL) SP")
     assert not contains_asset_anchor("Lowercase [st] SP")
+
+def test_parse_value_range_full_range():
+    assert parse_value_range("$1,001 - $15,000") == (1001, 15000, 8000.5)
+
+def test_parse_value_range_open_ended_range():
+    assert parse_value_range("$5,000,001 -") == (5000001, None, None)
+
+def test_parse_value_range_over_range():
+    assert parse_value_range("Over $50,000,000") == (50000000, None, None)
+
+def test_parse_value_range_ignores_none_and_trailing_text():
+    assert parse_value_range("$15,001 - $50,000None D: San Francisco, CA") == (15001, 50000, 32500.5)
+
+def test_parse_value_range_invalid_value():
+    assert parse_value_range("$GARBAGE") == (None, None, None)
+
+def test_parse_value_range_ignores_non_range_text():
+    assert parse_value_range("$100 to $200") == (None, None, None)
 
 def test_extract_asset_candidates_success():
     raw_text = """
@@ -218,6 +236,7 @@ def test_insert_normalized_assets(test_db):
         assert rows[0]["original_value_range"] == "$1,001 - $15,000"
         assert rows[0]["value_min"] == 1001
         assert rows[0]["value_max"] == 15000
+        assert rows[0]["value_midpoint"] == 8000.5
         assert rows[0]["confidence"] == "medium"
         assert rows[0]["asset_category"] == "unknown"
         

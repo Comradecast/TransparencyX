@@ -8,7 +8,6 @@ from typing import Optional, List
 from pathlib import Path
 
 from transparencyx.parse.sections import Section, detect_sections
-from transparencyx.ranges import parse_range
 from transparencyx.db.database import get_connection
 
 @dataclass
@@ -162,6 +161,45 @@ def extract_asset_candidates(section: Section) -> List[AssetCandidate]:
     return candidates
 
 
+def parse_value_range(range_str: str) -> tuple[int | None, int | None, float | None]:
+    """
+    Parses deterministic asset value ranges into min, max, and midpoint values.
+    """
+    cleaned = range_str.replace("$", "").replace(",", "").replace("None", "").strip()
+    
+    if cleaned.lower().startswith("over "):
+        cleaned = cleaned[5:].strip()
+        value_min = None
+        value_max = None
+        
+        match = re.match(r"\s*(\d+)", cleaned)
+        if match:
+            value_min = int(match.group(1))
+    else:
+        def safe_int(value: str) -> int | None:
+            match = re.match(r"\s*(\d+)", value.strip())
+            if not match:
+                return None
+            try:
+                return int(match.group(1))
+            except ValueError:
+                return None
+        
+        if "-" in cleaned:
+            left, right = cleaned.split("-", 1)
+            value_min = safe_int(left)
+            value_max = safe_int(right)
+        else:
+            value_min = None
+            value_max = None
+        
+    value_midpoint = None
+    if value_min is not None and value_max is not None:
+        value_midpoint = (value_min + value_max) / 2
+        
+    return value_min, value_max, value_midpoint
+
+
 def insert_normalized_assets(
     db_path: Path,
     raw_disclosure_id: int,
@@ -200,11 +238,11 @@ def insert_normalized_assets(
                 continue
                 
             # Parse the range
-            parsed_range = parse_range(candidate.value_range_text)
+            value_min, value_max, value_midpoint = parse_value_range(candidate.value_range_text)
             
             # Confidence rules
             confidence = "low"
-            if candidate.cleaned_name and (parsed_range.minimum is not None or parsed_range.maximum is not None or parsed_range.midpoint is not None):
+            if candidate.cleaned_name and (value_min is not None or value_max is not None or value_midpoint is not None):
                 confidence = "medium"
             
             cursor.execute(
@@ -227,10 +265,10 @@ def insert_normalized_assets(
                     politician_id,
                     candidate.cleaned_name,
                     "unknown",  # per requirements
-                    parsed_range.original_label,
-                    parsed_range.minimum,
-                    parsed_range.maximum,
-                    parsed_range.midpoint,
+                    candidate.value_range_text,
+                    value_min,
+                    value_max,
+                    value_midpoint,
                     confidence,
                     now
                 )

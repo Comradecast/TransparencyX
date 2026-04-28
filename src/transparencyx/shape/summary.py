@@ -3,6 +3,7 @@ from pathlib import Path
 from typing import Optional
 
 from transparencyx.db.database import get_connection
+from transparencyx.normalize.assets import classify_asset_quality
 
 @dataclass
 class FinancialShapeSummary:
@@ -100,22 +101,27 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
         
-        # Aggregate normalized assets
+        # Aggregate usable normalized assets
         cursor.execute("""
             SELECT 
-                COUNT(*) as asset_count,
-                SUM(CASE WHEN value_min IS NOT NULL AND value_max IS NOT NULL THEN value_min END) as total_value_min,
-                SUM(CASE WHEN value_min IS NOT NULL AND value_max IS NOT NULL THEN value_max END) as total_value_max,
-                SUM(value_midpoint) as total_value_mid
+                asset_name,
+                value_min,
+                value_max,
+                value_midpoint
             FROM normalized_assets
             WHERE politician_id = ?
         """, (politician_id,))
-        assets_row = cursor.fetchone()
+        assets = [dict(row) for row in cursor.fetchall()]
+        usable_assets = [row for row in assets if classify_asset_quality(row) == "usable_asset"]
         
-        asset_count = assets_row["asset_count"] or 0
-        asset_value_min = float(assets_row["total_value_min"]) if assets_row["total_value_min"] is not None else None
-        asset_value_max = float(assets_row["total_value_max"]) if assets_row["total_value_max"] is not None else None
-        asset_value_midpoint = float(assets_row["total_value_mid"]) if assets_row["total_value_mid"] is not None else None
+        asset_count = len(usable_assets)
+        value_min_rows = [row["value_min"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
+        value_max_rows = [row["value_max"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
+        value_midpoint_rows = [row["value_midpoint"] for row in usable_assets if row["value_midpoint"] is not None]
+        
+        asset_value_min = float(sum(value_min_rows)) if value_min_rows else None
+        asset_value_max = float(sum(value_max_rows)) if value_max_rows else None
+        asset_value_midpoint = float(sum(value_midpoint_rows)) if value_midpoint_rows else None
 
         # Aggregate trades
         cursor.execute("""

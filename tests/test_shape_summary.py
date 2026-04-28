@@ -77,6 +77,35 @@ def test_assets_aggregate_correctly(db_path):
     assert summary.asset_value_max == 25.0
     assert summary.asset_value_midpoint == 18.0
 
+def test_assets_aggregate_only_usable_assets(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+    
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    
+    cursor.execute("""
+        INSERT INTO normalized_assets (raw_disclosure_id, politician_id, asset_name, asset_category, original_value_range, value_min, value_max, value_midpoint, confidence, created_at)
+        VALUES 
+        (1, 1, 'Apple Inc. (AAPL) [ST] SP', 'N/A', '$1-$5', 1, 5, 3, 'HIGH', 'now'),
+        (1, 1, 'NVIDIA [OP] SP', 'N/A', '$10-$20', 10, 20, 15, 'HIGH', 'now'),
+        (1, 1, 'Amazon.com, Inc. (AMZN) [ST] SP Asset Owner', 'N/A', '$100-$200', 100, 200, 150, 'HIGH', 'now'),
+        (1, 1, 'Apple Inc. (AAPL) [ST] SP 05/8/2023 S', 'N/A', '$500-$1000', 500, 1000, 750, 'HIGH', 'now'),
+        (1, 1, 'Microsoft Corporation (MSFT) [ST] SP', 'N/A', '$10-$20', NULL, NULL, NULL, 'LOW', 'now')
+    """)
+    conn.commit()
+    conn.close()
+    
+    summary = build_financial_shape_summary(db_path, 1)
+    
+    assert summary.asset_count == 1
+    assert summary.asset_value_min == 1.0
+    assert summary.asset_value_max == 5.0
+    assert summary.asset_value_midpoint == 3.0
+    assert summary.asset_density == "LOW"
+
 def test_trades_aggregate_correctly(db_path):
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
@@ -270,4 +299,3 @@ def test_build_summary_label():
     
     # Both
     assert build_summary_label(make_summary(5, 10, "MEDIUM", "VERY_HIGH", "LOW")) == "Very high disclosed wealth, medium trading activity"
-

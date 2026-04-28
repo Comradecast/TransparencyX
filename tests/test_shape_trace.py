@@ -23,8 +23,8 @@ def db_path(tmp_path):
     return path
 
 
-def test_trace_counts_match_summary(db_path):
-    """Length of count_rows lists must equal the summary's asset_count and trade_count."""
+def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
+    """Trace asset rows stay unfiltered while summary counts only usable assets."""
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
 
@@ -36,8 +36,8 @@ def test_trace_counts_match_summary(db_path):
     cursor.execute("""
         INSERT INTO normalized_assets (raw_disclosure_id, politician_id, asset_name, asset_category, original_value_range, value_min, value_max, value_midpoint, confidence, created_at)
         VALUES
-        (1, 1, 'A', 'N/A', '$1-$5', 1, 5, 3, 'HIGH', 'now'),
-        (1, 1, 'B', 'N/A', '$10-$20', 10, 20, 15, 'HIGH', 'now')
+        (1, 1, 'Apple Inc. (AAPL) [ST] SP', 'N/A', '$1-$5', 1, 5, 3, 'HIGH', 'now'),
+        (1, 1, 'NVIDIA [OP] SP', 'N/A', '$10-$20', 10, 20, 15, 'HIGH', 'now')
     """)
 
     cursor.execute("""
@@ -59,8 +59,9 @@ def test_trace_counts_match_summary(db_path):
     assert isinstance(trace["assets"]["count_rows"], list)
     assert isinstance(trace["trades"]["count_rows"], list)
 
-    # Lengths match summary totals
-    assert len(trace["assets"]["count_rows"]) == summary.asset_count
+    # Trace keeps all asset rows, summary filters parser-noise assets.
+    assert len(trace["assets"]["count_rows"]) == 2
+    assert summary.asset_count == 1
     assert len(trace["trades"]["count_rows"]) == summary.trade_count
 
     # All returned values are ints (row IDs)
