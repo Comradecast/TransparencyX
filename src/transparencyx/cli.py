@@ -16,6 +16,50 @@ from transparencyx.ingest.house import HouseDisclosureRecord, insert_house_raw_d
 from transparencyx.normalize.assets import process_assets_for_disclosure
 
 
+def get_normalized_asset_audit_rows(db_path: Path):
+    """
+    Returns normalized asset rows in deterministic insertion order for audit output.
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT
+                id,
+                asset_name,
+                asset_category,
+                original_value_range,
+                value_min,
+                value_max,
+                value_midpoint
+            FROM normalized_assets
+            ORDER BY id ASC
+            """
+        )
+        return [dict(row) for row in cursor.fetchall()]
+
+
+def format_normalized_asset_audit_table(rows) -> str:
+    """
+    Formats normalized asset rows as a deterministic audit table.
+    """
+    columns = [
+        "id",
+        "asset_name",
+        "asset_category",
+        "original_value_range",
+        "value_min",
+        "value_max",
+        "value_midpoint",
+    ]
+    lines = [" | ".join(columns)]
+
+    for row in rows:
+        lines.append(" | ".join("" if row[column] is None else str(row[column]) for column in columns))
+
+    return "\n".join(lines)
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="TransparencyX: A Python civic-data project that consolidates U.S. congressional financial disclosure information."
@@ -93,6 +137,7 @@ def main():
     # "validate-real" command
     validate_parser = subparsers.add_parser("validate-real", help="Validate one real disclosure through the full pipeline")
     validate_parser.add_argument("--pdf", type=str, required=True, help="Path to a real House disclosure PDF")
+    validate_parser.add_argument("--show-assets", action="store_true", help="Print normalized asset rows for audit")
 
     args = parser.parse_args()
     
@@ -390,6 +435,10 @@ def main():
         # 6. Build shape export
         export = build_financial_shape_export(db_path, 1)
         print(json.dumps(export, indent=2))
+
+        if args.show_assets:
+            rows = get_normalized_asset_audit_rows(db_path)
+            print(format_normalized_asset_audit_table(rows))
     elif args.command is None:
         parser.print_help()
 

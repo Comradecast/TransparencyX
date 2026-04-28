@@ -2,6 +2,7 @@
 Normalization module for financial assets.
 """
 import datetime
+import re
 from dataclasses import dataclass
 from typing import Optional, List
 from pathlib import Path
@@ -27,17 +28,69 @@ def clean_asset_name(raw_name: str) -> str:
     Cleans an asset name deterministically without guessing or inference.
     - Strips leading/trailing whitespace
     - Collapses multiple spaces
+    - Removes deterministic income suffixes
     - Removes trailing dashes or colons
     - Restrips
     """
     # Collapse whitespace and strip
     cleaned = " ".join(raw_name.split())
     
+    for suffix in ["Dividends", "Interest", "Partnership Loss", "Capital Loss", "None"]:
+        cleaned = cleaned.split(suffix, 1)[0].strip()
+    
     # Remove trailing punctuation
-    while cleaned.endswith("-") or cleaned.endswith(":") or cleaned.endswith(" "):
+    while cleaned.endswith("-") or cleaned.endswith(":") or cleaned.endswith(",") or cleaned.endswith(" "):
         cleaned = cleaned[:-1].strip()
         
     return cleaned
+
+
+def is_valid_asset_name(name: str) -> bool:
+    """
+    Returns whether a cleaned asset name passes deterministic asset-row filters.
+    """
+    stripped = name.strip()
+    
+    if stripped in ["Dividends", "Interest", "Rent", "Partnership Loss", "Capital Loss"]:
+        return False
+        
+    if stripped.startswith("D:") or stripped.startswith("C:"):
+        return False
+        
+    if re.search(r"\d{1,2}/\d{1,2}/\d{4}\s+[PS]$", stripped):
+        return False
+        
+    if len(stripped) < 5:
+        return False
+        
+    return "(" in stripped or "[" in stripped or "-" in stripped
+
+
+def contains_asset_anchor(line: str) -> bool:
+    return bool(re.search(r"\[[A-Z]{2}\]", line))
+
+
+def classify_asset_quality(asset_row) -> str:
+    """
+    Classifies an in-memory normalized asset row without persisting the result.
+    """
+    asset_name = asset_row["asset_name"]
+    value_min = asset_row["value_min"]
+    value_max = asset_row["value_max"]
+    
+    if "[OP]" in asset_name:
+        return "parser_noise"
+        
+    if value_min is None and value_max is None:
+        return "parser_noise"
+        
+    if "Asset Owner" in asset_name or "Income Type" in asset_name or "Tx." in asset_name:
+        return "parser_noise"
+        
+    if re.search(r"\d{1,2}/\d{1,2}/\d{4}", asset_name) or "S (partial)" in asset_name:
+        return "parser_noise"
+        
+    return "usable_asset"
 
 
 def extract_asset_candidates(section: Section) -> List[AssetCandidate]:
@@ -53,17 +106,9 @@ def extract_asset_candidates(section: Section) -> List[AssetCandidate]:
     
     seen = set()
     
-    for line in lines:
-        raw_line = line.strip()
-        # Collapse whitespace for the line before processing so range matching is clean,
-        # but the prompt said "split raw_text into lines, normalize whitespace per line"
-        raw_line = " ".join(raw_line.split())
-        
-        if not raw_line:
-            continue
-            
+    def process_group(raw_line: str) -> None:
         lower_line = raw_line.lower()
-        
+
         # Only line containing "Over $" or "$" are valid
         split_idx = -1
         
@@ -80,7 +125,7 @@ def extract_asset_candidates(section: Section) -> List[AssetCandidate]:
             
             cleaned_name = clean_asset_name(asset_name)
             
-            if cleaned_name and range_str:
+            if cleaned_name and range_str and is_valid_asset_name(cleaned_name):
                 # Deduplicate candidates in memory
                 key = (cleaned_name, range_str)
                 if key not in seen:
@@ -92,6 +137,27 @@ def extract_asset_candidates(section: Section) -> List[AssetCandidate]:
                         original_value_range=range_str,
                         value_range_text=range_str
                     ))
+    
+    buffer = []
+    
+    for line in lines:
+        raw_line = line.strip()
+        # Collapse whitespace for the line before processing so range matching is clean,
+        # but the prompt said "split raw_text into lines, normalize whitespace per line"
+        raw_line = " ".join(raw_line.split())
+        
+        if not raw_line:
+            continue
+            
+        if contains_asset_anchor(raw_line):
+            if buffer:
+                process_group(" ".join(buffer))
+            buffer = [raw_line]
+        elif buffer:
+            buffer.append(raw_line)
+            
+    if buffer:
+        process_group(" ".join(buffer))
                     
     return candidates
 

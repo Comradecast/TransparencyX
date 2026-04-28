@@ -60,7 +60,7 @@ class TestScheduleASectionDetection:
     def test_existing_assets_keyword_still_works(self):
         """The plain ASSETS keyword must still work for demo/synthetic data."""
         text = """ASSETS
-US Treasury Bonds $1,001 - $15,000
+US Treasury Bonds [ST] $1,001 - $15,000
 LIABILITIES
 None"""
         sections = detect_sections(text)
