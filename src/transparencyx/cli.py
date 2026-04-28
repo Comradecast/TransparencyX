@@ -138,6 +138,7 @@ def main():
     validate_parser = subparsers.add_parser("validate-real", help="Validate one real disclosure through the full pipeline")
     validate_parser.add_argument("--pdf", type=str, required=True, help="Path to a real House disclosure PDF")
     validate_parser.add_argument("--show-assets", action="store_true", help="Print normalized asset rows for audit")
+    validate_parser.add_argument("--shape-card", action="store_true", help="Print a human-readable financial shape card")
 
     args = parser.parse_args()
     
@@ -368,6 +369,7 @@ def main():
         print(json.dumps(export, indent=2))
     elif args.command == "validate-real":
         from transparencyx.shape.export import build_financial_shape_export
+        from transparencyx.shape.card import render_financial_shape_card
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
@@ -434,7 +436,10 @@ def main():
 
         # 6. Build shape export
         export = build_financial_shape_export(db_path, 1)
-        print(json.dumps(export, indent=2))
+        if args.shape_card:
+            print(render_financial_shape_card(export))
+        else:
+            print(json.dumps(export, indent=2))
 
         if args.show_assets:
             rows = get_normalized_asset_audit_rows(db_path)
