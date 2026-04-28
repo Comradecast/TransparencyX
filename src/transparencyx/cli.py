@@ -86,6 +86,9 @@ def main():
     shape_summary_parser = shape_subparsers.add_parser("summary", help="Build a financial shape summary")
     shape_summary_parser.add_argument("--db", type=str, required=True, help="Path to the SQLite database file")
     shape_summary_parser.add_argument("--politician-id", type=int, required=True, help="ID of the politician")
+
+    # "demo-run" command
+    subparsers.add_parser("demo-run", help="Run a demo: create a sample database and produce a shape export")
     
     args = parser.parse_args()
     
@@ -308,6 +311,12 @@ def main():
             print(json.dumps(summary_to_dict(summary), indent=2))
         else:
             shape_parser.print_help()
+    elif args.command == "demo-run":
+        from transparencyx.demo import run_demo
+
+        db_path = Path("data/demo.sqlite")
+        export = run_demo(db_path)
+        print(json.dumps(export, indent=2))
     elif args.command is None:
         parser.print_help()
 
