@@ -18,12 +18,15 @@ class Section:
 
 # Predefined section markers we look for
 KNOWN_HEADERS = [
+    "SCHEDULE A",
     "ASSETS",
     "INCOME",
     "LIABILITIES",
     "POSITIONS",
     "AGREEMENTS"
 ]
+
+ASSET_COLUMN_HEADER = "ASSET OWNER VALUE OF ASSET INCOME TYPE(S)"
 
 def detect_sections(text: str) -> List[Section]:
     """
@@ -36,11 +39,15 @@ def detect_sections(text: str) -> List[Section]:
     # Find the positions of all known headers
     found_headers = []
     text_upper = text.upper()
+    asset_column_header_pos = text_upper.find(ASSET_COLUMN_HEADER)
     
     for header in KNOWN_HEADERS:
         # Simple substring search.
         # This could be improved later (e.g. word boundaries), but keeps things simple for now.
-        start_pos = text_upper.find(header)
+        if header == "ASSETS" and asset_column_header_pos != -1:
+            start_pos = asset_column_header_pos
+        else:
+            start_pos = text_upper.find(header)
         if start_pos != -1:
             found_headers.append({
                 "name": header,
@@ -60,7 +67,36 @@ def detect_sections(text: str) -> List[Section]:
 
     # Sort found headers by their appearance in the text
     found_headers.sort(key=lambda x: x["start_index"])
-    
+
+    # Deduplicate: if multiple headers appear on the same line, keep only the first
+    # when it has a strictly longer keyword. This prevents header text like
+    # 'Schedule A: Assets and "Unearned" Income' from being split into
+    # separate SCHEDULE A / ASSETS / INCOME sections, while still allowing
+    # two equal-length keywords on the same line to remain separate.
+    deduplicated = []
+    for header in found_headers:
+        pos = header["start_index"]
+        # Find the line boundaries for this header's position
+        line_start = text.rfind("\n", 0, pos) + 1
+        line_end = text.find("\n", pos)
+        if line_end == -1:
+            line_end = len(text)
+
+        # Skip if a previously kept header with a strictly longer keyword
+        # starts on the same line
+        skip = False
+        for kept in deduplicated:
+            if line_start <= kept["start_index"] < line_end:
+                if kept["name"] == "ASSETS" and kept["start_index"] == asset_column_header_pos:
+                    skip = True
+                    break
+                if len(kept["name"]) > len(header["name"]):
+                    skip = True
+                    break
+        if not skip:
+            deduplicated.append(header)
+
+    found_headers = deduplicated
     sections = []
     
     # Process each found header and slice until the next header (or end of text)

@@ -38,6 +38,7 @@ class PDFExtractor(Extractor):
 
                 for page in reader.pages:
                     text = page.extract_text()
+                    text = text.replace("\x00", "")
                     if text:
                         extracted_text += text + "\n"
 

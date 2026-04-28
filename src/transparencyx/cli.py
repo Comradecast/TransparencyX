@@ -89,7 +89,11 @@ def main():
 
     # "demo-run" command
     subparsers.add_parser("demo-run", help="Run a demo: create a sample database and produce a shape export")
-    
+
+    # "validate-real" command
+    validate_parser = subparsers.add_parser("validate-real", help="Validate one real disclosure through the full pipeline")
+    validate_parser.add_argument("--pdf", type=str, required=True, help="Path to a real House disclosure PDF")
+
     args = parser.parse_args()
     
     if args.version:
@@ -316,6 +320,75 @@ def main():
 
         db_path = Path("data/demo.sqlite")
         export = run_demo(db_path)
+        print(json.dumps(export, indent=2))
+    elif args.command == "validate-real":
+        from transparencyx.shape.export import build_financial_shape_export
+
+        pdf_path = Path(args.pdf)
+        if not pdf_path.exists():
+            print(f"PDF not found: {pdf_path}")
+            sys.exit(1)
+
+        db_path = Path("data/validate_real.sqlite")
+        db_path.parent.mkdir(parents=True, exist_ok=True)
+        if db_path.exists():
+            db_path.unlink()
+
+        initialize_database(db_path)
+
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        with get_connection(db_path) as conn:
+            cursor = conn.cursor()
+
+            # 1. Insert politician
+            cursor.execute("""
+                INSERT INTO politicians
+                    (id, first_name, last_name, full_name, chamber, created_at, updated_at)
+                VALUES (1, 'Real', 'Disclosure', 'Disclosure, Real', 'house', ?, ?)
+            """, (now, now))
+
+            # 2. Insert raw disclosure pointing at the real PDF
+            cursor.execute("""
+                INSERT INTO raw_disclosures
+                    (id, politician_id, source_chamber, source_name, filing_year,
+                     retrieved_at, raw_metadata_json, local_path, created_at)
+                VALUES (1, 1, 'house', 'validate-real', 2023, ?, '{}', ?, ?)
+            """, (now, str(pdf_path), now))
+
+            conn.commit()
+
+        # 3. Extract text from the PDF
+        sources_dict = get_registered_sources()
+        source = sources_dict.get("house")
+        file_ext = pdf_path.suffix.lstrip(".")
+        extractor = get_extractor_for_source(source, file_ext)
+
+        if not extractor:
+            print(f"No extractor for file type: {file_ext}")
+            sys.exit(1)
+
+        result = extractor.extract(pdf_path, source)
+        if not result.success:
+            print(json.dumps({"success": False, "error": result.error}, indent=2))
+            sys.exit(1)
+
+        print(f"Extracted {len(result.extracted_text)} chars from PDF")
+
+        # 4. Show section detection
+        sections = detect_sections(result.extracted_text)
+        print(f"Sections detected: {[s.name for s in sections]}")
+
+        # 5. Normalize assets
+        inserted = process_assets_for_disclosure(
+            db_path=db_path,
+            raw_disclosure_id=1,
+            politician_id=1,
+            extracted_text=result.extracted_text
+        )
+        print(f"Normalized assets inserted: {inserted}")
+
+        # 6. Build shape export
+        export = build_financial_shape_export(db_path, 1)
         print(json.dumps(export, indent=2))
     elif args.command is None:
         parser.print_help()
