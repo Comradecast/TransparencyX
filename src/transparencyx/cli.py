@@ -72,6 +72,7 @@ def main():
     )
     parser.add_argument("--build-registry", type=str, help="Build a member registry from PDFs in a directory")
     parser.add_argument("--batch-profile", type=str, help="Build profile exports from PDFs in a directory")
+    parser.add_argument("--batch-summary", type=str, help="Build a compact profile summary table from PDFs in a directory")
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -166,6 +167,14 @@ def main():
         from transparencyx.profile.batch import build_profiles_for_directory
 
         print(json.dumps(build_profiles_for_directory(Path(args.batch_profile)), indent=2))
+        sys.exit(0)
+
+    if args.batch_summary:
+        from transparencyx.profile.batch import build_profiles_for_directory
+        from transparencyx.profile.table import render_batch_summary_table
+
+        profiles = build_profiles_for_directory(Path(args.batch_summary))
+        print(render_batch_summary_table(profiles))
         sys.exit(0)
         
     if args.command == "sources":
