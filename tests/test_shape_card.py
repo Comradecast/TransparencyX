@@ -1,4 +1,4 @@
-from transparencyx.shape.card import format_money, render_asset_mix, render_financial_shape_card
+from transparencyx.shape.card import format_money, render_asset_mix, render_income_mix, render_financial_shape_card
 
 
 def make_export():
@@ -22,6 +22,20 @@ def make_export():
                 "option": 0,
                 "other": 1,
                 "unknown": 0,
+            },
+            "income_count": 3,
+            "income_min": 5203,
+            "income_max": 116200,
+            "income_midpoint": 60701.5,
+            "income_band": "MODERATE",
+            "income_type_counts": {
+                "dividends": 1,
+                "interest": 1,
+                "rent": 0,
+                "partnership_income": 1,
+                "partnership_loss": 0,
+                "capital_gains": 0,
+                "other": 0,
             },
             "trade_count": 0,
             "trade_activity": "NONE",
@@ -55,6 +69,8 @@ def test_render_financial_shape_card_includes_required_sections():
     assert "net_worth_band: VERY_HIGH" in card
     assert "asset_density: LOW" in card
     assert "Asset Mix:" in card
+    assert "Income:" in card
+    assert "Income Mix:" in card
     assert "trade_count: 0" in card
     assert "trade_activity: NONE" in card
     assert "trade_volume_band: UNKNOWN" in card
@@ -145,3 +161,70 @@ def test_render_financial_shape_card_zero_count_categories_still_render():
     assert "- mutual_fund: 0" in card
     assert "- option: 0" in card
     assert "- unknown: 0" in card
+
+
+def test_render_income_mix_exact_order():
+    lines = render_income_mix({
+        "other": 7,
+        "capital_gains": 6,
+        "partnership_loss": 5,
+        "partnership_income": 4,
+        "rent": 3,
+        "interest": 2,
+        "dividends": 1,
+    })
+
+    assert lines == [
+        "Income Mix:",
+        "- dividends: 1",
+        "- interest: 2",
+        "- rent: 3",
+        "- partnership_income: 4",
+        "- partnership_loss: 5",
+        "- capital_gains: 6",
+        "- other: 7",
+    ]
+
+
+def test_render_income_mix_defaults_missing_counts_to_zero():
+    lines = render_income_mix(None)
+
+    assert lines == [
+        "Income Mix:",
+        "- dividends: 0",
+        "- interest: 0",
+        "- rent: 0",
+        "- partnership_income: 0",
+        "- partnership_loss: 0",
+        "- capital_gains: 0",
+        "- other: 0",
+    ]
+
+
+def test_render_financial_shape_card_missing_income_type_counts_defaults_to_zero():
+    export = make_export()
+    del export["summary"]["income_type_counts"]
+
+    card = render_financial_shape_card(export)
+
+    assert "Income Mix:" in card
+    assert "- dividends: 0" in card
+    assert "- interest: 0" in card
+    assert "- rent: 0" in card
+    assert "- partnership_income: 0" in card
+    assert "- partnership_loss: 0" in card
+    assert "- capital_gains: 0" in card
+    assert "- other: 0" in card
+
+
+def test_render_financial_shape_card_none_income_values_render_unknown():
+    export = make_export()
+    export["summary"]["income_min"] = None
+    export["summary"]["income_max"] = None
+    export["summary"]["income_midpoint"] = None
+
+    card = render_financial_shape_card(export)
+
+    assert "- income_min: Unknown" in card
+    assert "- income_max: Unknown" in card
+    assert "- income_midpoint: Unknown" in card

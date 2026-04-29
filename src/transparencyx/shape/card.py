@@ -9,6 +9,16 @@ ASSET_MIX_ORDER = [
     "unknown",
 ]
 
+INCOME_MIX_ORDER = [
+    "dividends",
+    "interest",
+    "rent",
+    "partnership_income",
+    "partnership_loss",
+    "capital_gains",
+    "other",
+]
+
 
 def format_money(value) -> str:
     if value is None:
@@ -30,6 +40,28 @@ def render_asset_mix(category_counts: dict[str, int] | None) -> list[str]:
     return lines
 
 
+def render_income_mix(income_type_counts: dict[str, int] | None) -> list[str]:
+    counts = income_type_counts or {}
+    lines = ["Income Mix:"]
+
+    for income_type in INCOME_MIX_ORDER:
+        lines.append(f"- {income_type}: {counts.get(income_type, 0)}")
+
+    return lines
+
+
+def render_income_shape(summary: dict) -> list[str]:
+    return [
+        "Income:",
+        f"- income_count: {summary['income_count']}",
+        f"- income_min: {format_money(summary['income_min'])}",
+        f"- income_max: {format_money(summary['income_max'])}",
+        f"- income_midpoint: {format_money(summary['income_midpoint'])}",
+        f"- income_band: {summary['income_band']}",
+        *render_income_mix(summary.get("income_type_counts")),
+    ]
+
+
 def render_financial_shape_card(export: dict) -> str:
     summary = export["summary"]
     trace = export["trace"]
@@ -46,6 +78,7 @@ def render_financial_shape_card(export: dict) -> str:
         f"net_worth_band: {summary['net_worth_band']}",
         f"asset_density: {summary['asset_density']}",
         *render_asset_mix(summary.get("asset_category_counts")),
+        *render_income_shape(summary),
         f"trade_count: {summary['trade_count']}",
         f"trade_activity: {summary['trade_activity']}",
         f"trade_volume_band: {summary['trade_volume_band']}",
