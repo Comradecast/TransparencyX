@@ -139,6 +139,7 @@ def main():
     validate_parser.add_argument("--pdf", type=str, required=True, help="Path to a real House disclosure PDF")
     validate_parser.add_argument("--show-assets", action="store_true", help="Print normalized asset rows for audit")
     validate_parser.add_argument("--shape-card", action="store_true", help="Print a human-readable financial shape card")
+    validate_parser.add_argument("--compare", nargs=2, metavar=("A", "B"))
 
     args = parser.parse_args()
     
@@ -370,78 +371,93 @@ def main():
     elif args.command == "validate-real":
         from transparencyx.shape.export import build_financial_shape_export
         from transparencyx.shape.card import render_financial_shape_card
+        from transparencyx.shape.compare import render_shape_comparison
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
             print(f"PDF not found: {pdf_path}")
             sys.exit(1)
 
-        db_path = Path("data/validate_real.sqlite")
-        db_path.parent.mkdir(parents=True, exist_ok=True)
-        if db_path.exists():
-            db_path.unlink()
+        quiet = args.shape_card or args.compare
 
-        initialize_database(db_path)
+        def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path]:
+            db_path.parent.mkdir(parents=True, exist_ok=True)
+            if db_path.exists():
+                db_path.unlink()
 
-        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
-        with get_connection(db_path) as conn:
-            cursor = conn.cursor()
+            initialize_database(db_path)
 
-            # 1. Insert politician
-            cursor.execute("""
-                INSERT INTO politicians
-                    (id, first_name, last_name, full_name, chamber, created_at, updated_at)
-                VALUES (1, 'Real', 'Disclosure', 'Disclosure, Real', 'house', ?, ?)
-            """, (now, now))
+            now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+            with get_connection(db_path) as conn:
+                cursor = conn.cursor()
 
-            # 2. Insert raw disclosure pointing at the real PDF
-            cursor.execute("""
-                INSERT INTO raw_disclosures
-                    (id, politician_id, source_chamber, source_name, filing_year,
-                     retrieved_at, raw_metadata_json, local_path, created_at)
-                VALUES (1, 1, 'house', 'validate-real', 2023, ?, '{}', ?, ?)
-            """, (now, str(pdf_path), now))
+                # 1. Insert politician
+                cursor.execute("""
+                    INSERT INTO politicians
+                        (id, first_name, last_name, full_name, chamber, created_at, updated_at)
+                    VALUES (?, 'Real', 'Disclosure', 'Disclosure, Real', 'house', ?, ?)
+                """, (politician_id, now, now))
 
-            conn.commit()
+                # 2. Insert raw disclosure pointing at the real PDF
+                cursor.execute("""
+                    INSERT INTO raw_disclosures
+                        (id, politician_id, source_chamber, source_name, filing_year,
+                         retrieved_at, raw_metadata_json, local_path, created_at)
+                    VALUES (1, ?, 'house', 'validate-real', 2023, ?, '{}', ?, ?)
+                """, (politician_id, now, str(pdf_path), now))
 
-        # 3. Extract text from the PDF
-        sources_dict = get_registered_sources()
-        source = sources_dict.get("house")
-        file_ext = pdf_path.suffix.lstrip(".")
-        extractor = get_extractor_for_source(source, file_ext)
+                conn.commit()
 
-        if not extractor:
-            print(f"No extractor for file type: {file_ext}")
-            sys.exit(1)
+            # 3. Extract text from the PDF
+            sources_dict = get_registered_sources()
+            source = sources_dict.get("house")
+            file_ext = pdf_path.suffix.lstrip(".")
+            extractor = get_extractor_for_source(source, file_ext)
 
-        result = extractor.extract(pdf_path, source)
-        if not result.success:
-            print(json.dumps({"success": False, "error": result.error}, indent=2))
-            sys.exit(1)
+            if not extractor:
+                print(f"No extractor for file type: {file_ext}")
+                sys.exit(1)
 
-        print(f"Extracted {len(result.extracted_text)} chars from PDF")
+            result = extractor.extract(pdf_path, source)
+            if not result.success:
+                print(json.dumps({"success": False, "error": result.error}, indent=2))
+                sys.exit(1)
 
-        # 4. Show section detection
-        sections = detect_sections(result.extracted_text)
-        print(f"Sections detected: {[s.name for s in sections]}")
+            if not quiet:
+                print(f"Extracted {len(result.extracted_text)} chars from PDF")
 
-        # 5. Normalize assets
-        inserted = process_assets_for_disclosure(
-            db_path=db_path,
-            raw_disclosure_id=1,
-            politician_id=1,
-            extracted_text=result.extracted_text
-        )
-        print(f"Normalized assets inserted: {inserted}")
+            # 4. Show section detection
+            sections = detect_sections(result.extracted_text)
+            if not quiet:
+                print(f"Sections detected: {[s.name for s in sections]}")
 
-        # 6. Build shape export
-        export = build_financial_shape_export(db_path, 1)
-        if args.shape_card:
-            print(render_financial_shape_card(export))
+            # 5. Normalize assets
+            inserted = process_assets_for_disclosure(
+                db_path=db_path,
+                raw_disclosure_id=1,
+                politician_id=politician_id,
+                extracted_text=result.extracted_text
+            )
+            if not quiet:
+                print(f"Normalized assets inserted: {inserted}")
+
+            # 6. Build shape export
+            return build_financial_shape_export(db_path, politician_id), db_path
+
+        if args.compare:
+            politician_a = int(args.compare[0])
+            politician_b = int(args.compare[1])
+            export_a, _ = build_validate_real_export(politician_a, Path("data/validate_real_compare_a.sqlite"))
+            export_b, _ = build_validate_real_export(politician_b, Path("data/validate_real_compare_b.sqlite"))
+            print(render_shape_comparison(export_a, export_b))
         else:
-            print(json.dumps(export, indent=2))
+            export, db_path = build_validate_real_export(1, Path("data/validate_real.sqlite"))
+            if args.shape_card:
+                print(render_financial_shape_card(export))
+            else:
+                print(json.dumps(export, indent=2))
 
-        if args.show_assets:
+        if args.show_assets and not quiet:
             rows = get_normalized_asset_audit_rows(db_path)
             print(format_normalized_asset_audit_table(rows))
     elif args.command is None:
