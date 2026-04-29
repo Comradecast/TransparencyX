@@ -1,6 +1,6 @@
 import pytest
 from transparencyx.parse.sections import Section
-from transparencyx.normalize.assets import extract_asset_candidates, insert_normalized_assets, process_assets_for_disclosure, clean_asset_name, is_valid_asset_name, contains_asset_anchor, parse_value_range
+from transparencyx.normalize.assets import extract_asset_candidates, insert_normalized_assets, process_assets_for_disclosure, clean_asset_name, is_valid_asset_name, contains_asset_anchor, parse_value_range, map_asset_category
 from transparencyx.db.database import get_connection, initialize_database
 
 
@@ -54,6 +54,21 @@ def test_contains_asset_anchor():
     assert contains_asset_anchor("Bank of America - Checking Account [BA] SP")
     assert not contains_asset_anchor("Apple Inc. (AAPL) SP")
     assert not contains_asset_anchor("Lowercase [st] SP")
+
+def test_map_asset_category_uses_known_bracket_codes_only():
+    assert map_asset_category("Apple Inc. (AAPL) [ST] SP") == "stock"
+    assert map_asset_category("Rental Property [RP] SP") == "real_estate"
+    assert map_asset_category("Checking Account [BA] SP") == "bank_account"
+    assert map_asset_category("Business LLC [OL] SP") == "business_interest"
+    assert map_asset_category("Index Fund [MF] SP") == "mutual_fund"
+    assert map_asset_category("Call Option [OP] SP") == "option"
+    assert map_asset_category("Private Company [AB] SP") == "business_interest"
+    assert map_asset_category("Pension Plan [PS] SP") == "other"
+
+def test_map_asset_category_unknown_without_known_code():
+    assert map_asset_category("Apple Inc. stock") == "unknown"
+    assert map_asset_category("Checking account") == "unknown"
+    assert map_asset_category("Lowercase [st] SP") == "unknown"
 
 def test_parse_value_range_full_range():
     assert parse_value_range("$1,001 - $15,000") == (1001, 15000, 8000.5)
@@ -238,7 +253,7 @@ def test_insert_normalized_assets(test_db):
         assert rows[0]["value_max"] == 15000
         assert rows[0]["value_midpoint"] == 8000.5
         assert rows[0]["confidence"] == "medium"
-        assert rows[0]["asset_category"] == "unknown"
+        assert rows[0]["asset_category"] == "stock"
         
         assert rows[1]["asset_name"] == "Missing bounds [ST] - Asset"
         assert rows[1]["value_min"] is None

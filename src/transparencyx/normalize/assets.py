@@ -69,6 +69,29 @@ def contains_asset_anchor(line: str) -> bool:
     return bool(re.search(r"\[[A-Z]{2}\]", line))
 
 
+def map_asset_category(asset_name: str) -> str:
+    """
+    Maps House disclosure asset bracket codes to deterministic categories.
+    No category inference is performed beyond known bracket codes.
+    """
+    category_by_code = {
+        "[ST]": "stock",
+        "[RP]": "real_estate",
+        "[BA]": "bank_account",
+        "[OL]": "business_interest",
+        "[MF]": "mutual_fund",
+        "[OP]": "option",
+        "[AB]": "business_interest",
+        "[PS]": "other",
+    }
+
+    for code, category in category_by_code.items():
+        if code in asset_name:
+            return category
+
+    return "unknown"
+
+
 def classify_asset_quality(asset_row) -> str:
     """
     Classifies an in-memory normalized asset row without persisting the result.
@@ -264,7 +287,7 @@ def insert_normalized_assets(
                     raw_disclosure_id,
                     politician_id,
                     candidate.cleaned_name,
-                    "unknown",  # per requirements
+                    map_asset_category(candidate.cleaned_name),
                     candidate.value_range_text,
                     value_min,
                     value_max,
