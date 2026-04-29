@@ -1,9 +1,10 @@
 from dataclasses import dataclass, field
 from pathlib import Path
+import re
 from typing import Optional
 
 from transparencyx.db.database import get_connection
-from transparencyx.normalize.assets import classify_asset_quality
+from transparencyx.normalize.assets import classify_asset_quality, parse_value_range
 
 ASSET_CATEGORY_ORDER = [
     "stock",
@@ -15,6 +16,27 @@ ASSET_CATEGORY_ORDER = [
     "other",
     "unknown",
 ]
+
+INCOME_TYPE_ORDER = [
+    "dividends",
+    "interest",
+    "rent",
+    "partnership_income",
+    "partnership_loss",
+    "capital_gains",
+    "other",
+]
+
+INCOME_KEYWORDS = [
+    ("Partnership Income", "partnership_income"),
+    ("Partnership Loss", "partnership_loss"),
+    ("Capital Gains", "capital_gains"),
+    ("Dividends", "dividends"),
+    ("Interest", "interest"),
+    ("Rent", "rent"),
+]
+
+INCOME_RANGE_PATTERN = re.compile(r"\$[\d,]+\s*-\s*\$[\d,]+")
 
 
 @dataclass
@@ -34,6 +56,12 @@ class FinancialShapeSummary:
     trade_volume_band: str
     summary_label: str
     asset_category_counts: dict[str, int] = field(default_factory=dict)
+    income_count: int = 0
+    income_min: Optional[float] = None
+    income_max: Optional[float] = None
+    income_midpoint: Optional[float] = None
+    income_type_counts: dict[str, int] = field(default_factory=dict)
+    income_band: str = "UNKNOWN"
 
 
 def compute_asset_category_counts(usable_assets) -> dict[str, int]:
@@ -46,6 +74,74 @@ def compute_asset_category_counts(usable_assets) -> dict[str, int]:
         category_counts[category] += 1
 
     return category_counts
+
+
+def extract_income_signal(text: str) -> dict | None:
+    for keyword, income_type in INCOME_KEYWORDS:
+        keyword_index = text.find(keyword)
+        if keyword_index == -1:
+            continue
+
+        after_keyword = text[keyword_index + len(keyword):]
+        match = INCOME_RANGE_PATTERN.search(after_keyword)
+        if not match:
+            return None
+
+        income_min, income_max, income_midpoint = parse_value_range(match.group(0))
+        if income_min is None or income_max is None or income_midpoint is None:
+            return None
+
+        return {
+            "income_type": income_type,
+            "income_min": float(income_min),
+            "income_max": float(income_max),
+            "income_midpoint": float(income_midpoint),
+        }
+
+    return None
+
+
+def get_income_band(income_midpoint: Optional[float]) -> str:
+    if income_midpoint is None:
+        return "UNKNOWN"
+    elif income_midpoint < 10_000:
+        return "LOW"
+    elif income_midpoint < 100_000:
+        return "MODERATE"
+    elif income_midpoint < 1_000_000:
+        return "HIGH"
+    else:
+        return "VERY_HIGH"
+
+
+def compute_income_shape(usable_assets) -> dict:
+    income_type_counts = {income_type: 0 for income_type in INCOME_TYPE_ORDER}
+    income_min_rows = []
+    income_max_rows = []
+    income_midpoint_rows = []
+
+    for row in usable_assets:
+        signal = extract_income_signal(row["original_value_range"] or "")
+        if signal is None:
+            continue
+
+        income_type_counts[signal["income_type"]] += 1
+        income_min_rows.append(signal["income_min"])
+        income_max_rows.append(signal["income_max"])
+        income_midpoint_rows.append(signal["income_midpoint"])
+
+    income_min = float(sum(income_min_rows)) if income_min_rows else None
+    income_max = float(sum(income_max_rows)) if income_max_rows else None
+    income_midpoint = float(sum(income_midpoint_rows)) if income_midpoint_rows else None
+
+    return {
+        "income_count": len(income_midpoint_rows),
+        "income_min": income_min,
+        "income_max": income_max,
+        "income_midpoint": income_midpoint,
+        "income_type_counts": income_type_counts,
+        "income_band": get_income_band(income_midpoint),
+    }
 
 def get_trade_activity(count: int) -> str:
     """
@@ -131,6 +227,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             SELECT 
                 asset_name,
                 asset_category,
+                original_value_range,
                 value_min,
                 value_max,
                 value_midpoint
@@ -142,6 +239,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         
         asset_count = len(usable_assets)
         asset_category_counts = compute_asset_category_counts(usable_assets)
+        income_shape = compute_income_shape(usable_assets)
         value_min_rows = [row["value_min"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
         value_max_rows = [row["value_max"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
         value_midpoint_rows = [row["value_midpoint"] for row in usable_assets if row["value_midpoint"] is not None]
@@ -187,7 +285,13 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             asset_density=asset_density,
             trade_volume_band=trade_volume_band,
             summary_label="",
-            asset_category_counts=asset_category_counts
+            asset_category_counts=asset_category_counts,
+            income_count=income_shape["income_count"],
+            income_min=income_shape["income_min"],
+            income_max=income_shape["income_max"],
+            income_midpoint=income_shape["income_midpoint"],
+            income_type_counts=income_shape["income_type_counts"],
+            income_band=income_shape["income_band"]
         )
         summary.summary_label = build_summary_label(summary)
         return summary
@@ -208,5 +312,11 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "asset_density": summary.asset_density,
         "trade_volume_band": summary.trade_volume_band,
         "summary_label": summary.summary_label,
-        "asset_category_counts": summary.asset_category_counts
+        "asset_category_counts": summary.asset_category_counts,
+        "income_count": summary.income_count,
+        "income_min": summary.income_min,
+        "income_max": summary.income_max,
+        "income_midpoint": summary.income_midpoint,
+        "income_type_counts": summary.income_type_counts,
+        "income_band": summary.income_band
     }

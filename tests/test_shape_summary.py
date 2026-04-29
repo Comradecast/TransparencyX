@@ -8,6 +8,8 @@ from transparencyx.shape.summary import (
     build_financial_shape_summary, 
     summary_to_dict,
     compute_asset_category_counts,
+    compute_income_shape,
+    extract_income_signal,
     get_net_worth_band,
     get_asset_density,
     get_trade_volume_band,
@@ -60,6 +62,89 @@ def test_empty_politician_shape(db_path):
         "option": 0,
         "other": 0,
         "unknown": 0,
+    }
+    assert summary.income_count == 0
+    assert summary.income_min is None
+    assert summary.income_max is None
+    assert summary.income_midpoint is None
+    assert summary.income_type_counts == {
+        "dividends": 0,
+        "interest": 0,
+        "rent": 0,
+        "partnership_income": 0,
+        "partnership_loss": 0,
+        "capital_gains": 0,
+        "other": 0,
+    }
+    assert summary.income_band == "UNKNOWN"
+
+def test_extract_income_signal_extracts_dividends_range_after_keyword():
+    signal = extract_income_signal("$1,001 - $15,000 Dividends $5,001 - $15,000")
+
+    assert signal == {
+        "income_type": "dividends",
+        "income_min": 5001.0,
+        "income_max": 15000.0,
+        "income_midpoint": 10000.5,
+    }
+
+def test_extract_income_signal_does_not_use_asset_value_range():
+    signal = extract_income_signal("$100,001 - $250,000 None")
+
+    assert signal is None
+
+def test_extract_income_signal_parses_partnership_loss_without_space_before_dollar():
+    signal = extract_income_signal("$15,001 - $50,000Partnership Loss$50,001 - $100,000")
+
+    assert signal == {
+        "income_type": "partnership_loss",
+        "income_min": 50001.0,
+        "income_max": 100000.0,
+        "income_midpoint": 75000.5,
+    }
+
+def test_compute_income_shape_type_counts_include_all_categories():
+    shape = compute_income_shape([
+        {"original_value_range": "$1 - $1,000 Dividends $1 - $200"},
+        {"original_value_range": "$1 - $1,000 Interest $201 - $1,000"},
+        {"original_value_range": "$1 - $1,000 Rent $5,001 - $15,000"},
+        {"original_value_range": "$1 - $1,000 Partnership Income $50,001 - $100,000"},
+        {"original_value_range": "$1 - $1,000 Partnership Loss$50,001 - $100,000"},
+        {"original_value_range": "$1 - $1,000 Capital Gains $100,001 - $1,000,000"},
+    ])
+
+    assert shape["income_count"] == 6
+    assert shape["income_type_counts"] == {
+        "dividends": 1,
+        "interest": 1,
+        "rent": 1,
+        "partnership_income": 1,
+        "partnership_loss": 1,
+        "capital_gains": 1,
+        "other": 0,
+    }
+
+def test_compute_income_shape_no_income_returns_unknown_and_none_values():
+    shape = compute_income_shape([
+        {"original_value_range": "$1,001 - $15,000 None"},
+        {"original_value_range": "$5,001 - $15,000 Dividends"},
+    ])
+
+    assert shape == {
+        "income_count": 0,
+        "income_min": None,
+        "income_max": None,
+        "income_midpoint": None,
+        "income_type_counts": {
+            "dividends": 0,
+            "interest": 0,
+            "rent": 0,
+            "partnership_income": 0,
+            "partnership_loss": 0,
+            "capital_gains": 0,
+            "other": 0,
+        },
+        "income_band": "UNKNOWN",
     }
 
 def test_compute_asset_category_counts_correct_counting():
@@ -148,9 +233,9 @@ def test_assets_aggregate_only_usable_assets(db_path):
         INSERT INTO normalized_assets (raw_disclosure_id, politician_id, asset_name, asset_category, original_value_range, value_min, value_max, value_midpoint, confidence, created_at)
         VALUES 
         (1, 1, 'Apple Inc. (AAPL) [ST] SP', 'N/A', '$1-$5', 1, 5, 3, 'HIGH', 'now'),
-        (1, 1, 'NVIDIA [OP] SP', 'N/A', '$10-$20', 10, 20, 15, 'HIGH', 'now'),
-        (1, 1, 'Amazon.com, Inc. (AMZN) [ST] SP Asset Owner', 'N/A', '$100-$200', 100, 200, 150, 'HIGH', 'now'),
-        (1, 1, 'Apple Inc. (AAPL) [ST] SP 05/8/2023 S', 'N/A', '$500-$1000', 500, 1000, 750, 'HIGH', 'now'),
+        (1, 1, 'NVIDIA [OP] SP', 'N/A', '$10-$20 Dividends $1 - $200', 10, 20, 15, 'HIGH', 'now'),
+        (1, 1, 'Amazon.com, Inc. (AMZN) [ST] SP Asset Owner', 'N/A', '$100-$200 Interest $201 - $1,000', 100, 200, 150, 'HIGH', 'now'),
+        (1, 1, 'Apple Inc. (AAPL) [ST] SP 05/8/2023 S', 'N/A', '$500-$1000 Rent $5,001 - $15,000', 500, 1000, 750, 'HIGH', 'now'),
         (1, 1, 'Microsoft Corporation (MSFT) [ST] SP', 'N/A', '$10-$20', NULL, NULL, NULL, 'LOW', 'now')
     """)
     conn.commit()
@@ -173,6 +258,8 @@ def test_assets_aggregate_only_usable_assets(db_path):
         "other": 0,
         "unknown": 1,
     }
+    assert summary.income_count == 0
+    assert summary.income_band == "UNKNOWN"
 
 def test_trades_aggregate_correctly(db_path):
     conn = sqlite3.connect(db_path)
@@ -313,6 +400,20 @@ def test_summary_to_dict(db_path):
         "other": 0,
         "unknown": 0,
     }
+    assert d["income_count"] == 0
+    assert d["income_min"] is None
+    assert d["income_max"] is None
+    assert d["income_midpoint"] is None
+    assert d["income_type_counts"] == {
+        "dividends": 0,
+        "interest": 0,
+        "rent": 0,
+        "partnership_income": 0,
+        "partnership_loss": 0,
+        "capital_gains": 0,
+        "other": 0,
+    }
+    assert d["income_band"] == "UNKNOWN"
     
     # Ensure it's json serializable
     json.dumps(d)
