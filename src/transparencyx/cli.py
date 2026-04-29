@@ -374,6 +374,7 @@ def main():
         from transparencyx.shape.card import render_financial_shape_card
         from transparencyx.shape.compare import render_shape_comparison
         from transparencyx.profile.card import render_member_profile_card
+        from transparencyx.profile.identity import extract_member_identity
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
@@ -382,7 +383,7 @@ def main():
 
         quiet = args.shape_card or args.profile_card or args.compare
 
-        def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path]:
+        def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path, dict]:
             db_path.parent.mkdir(parents=True, exist_ok=True)
             if db_path.exists():
                 db_path.unlink()
@@ -425,6 +426,8 @@ def main():
                 print(json.dumps({"success": False, "error": result.error}, indent=2))
                 sys.exit(1)
 
+            identity = extract_member_identity(result.extracted_text)
+
             if not quiet:
                 print(f"Extracted {len(result.extracted_text)} chars from PDF")
 
@@ -444,11 +447,11 @@ def main():
                 print(f"Normalized assets inserted: {inserted}")
 
             # 6. Build shape export
-            return build_financial_shape_export(db_path, politician_id), db_path
+            return build_financial_shape_export(db_path, politician_id), db_path, identity
 
-        def build_validate_real_profile(shape_export: dict) -> dict:
+        def build_validate_real_profile(shape_export: dict, identity: dict) -> dict:
             return {
-                "member_name": "Disclosure, Real",
+                "member_name": identity.get("member_name", "Unknown"),
                 "politician_id": 1,
                 "filing_year": 2023,
                 "source": "validate-real",
@@ -459,15 +462,15 @@ def main():
         if args.compare:
             politician_a = int(args.compare[0])
             politician_b = int(args.compare[1])
-            export_a, _ = build_validate_real_export(politician_a, Path("data/validate_real_compare_a.sqlite"))
-            export_b, _ = build_validate_real_export(politician_b, Path("data/validate_real_compare_b.sqlite"))
+            export_a, _, _ = build_validate_real_export(politician_a, Path("data/validate_real_compare_a.sqlite"))
+            export_b, _, _ = build_validate_real_export(politician_b, Path("data/validate_real_compare_b.sqlite"))
             print(render_shape_comparison(export_a, export_b))
         else:
-            export, db_path = build_validate_real_export(1, Path("data/validate_real.sqlite"))
+            export, db_path, identity = build_validate_real_export(1, Path("data/validate_real.sqlite"))
             if args.shape_card:
                 print(render_financial_shape_card(export))
             elif args.profile_card:
-                print(render_member_profile_card(build_validate_real_profile(export)))
+                print(render_member_profile_card(build_validate_real_profile(export, identity)))
             else:
                 print(json.dumps(export, indent=2))
 
