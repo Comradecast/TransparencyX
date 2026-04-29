@@ -1,9 +1,21 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Optional
 
 from transparencyx.db.database import get_connection
 from transparencyx.normalize.assets import classify_asset_quality
+
+ASSET_CATEGORY_ORDER = [
+    "stock",
+    "real_estate",
+    "business_interest",
+    "bank_account",
+    "mutual_fund",
+    "option",
+    "other",
+    "unknown",
+]
+
 
 @dataclass
 class FinancialShapeSummary:
@@ -21,6 +33,19 @@ class FinancialShapeSummary:
     asset_density: str
     trade_volume_band: str
     summary_label: str
+    asset_category_counts: dict[str, int] = field(default_factory=dict)
+
+
+def compute_asset_category_counts(usable_assets) -> dict[str, int]:
+    category_counts = {category: 0 for category in ASSET_CATEGORY_ORDER}
+
+    for row in usable_assets:
+        category = row["asset_category"]
+        if category not in category_counts:
+            category = "unknown"
+        category_counts[category] += 1
+
+    return category_counts
 
 def get_trade_activity(count: int) -> str:
     """
@@ -105,6 +130,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         cursor.execute("""
             SELECT 
                 asset_name,
+                asset_category,
                 value_min,
                 value_max,
                 value_midpoint
@@ -115,6 +141,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         usable_assets = [row for row in assets if classify_asset_quality(row) == "usable_asset"]
         
         asset_count = len(usable_assets)
+        asset_category_counts = compute_asset_category_counts(usable_assets)
         value_min_rows = [row["value_min"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
         value_max_rows = [row["value_max"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
         value_midpoint_rows = [row["value_midpoint"] for row in usable_assets if row["value_midpoint"] is not None]
@@ -159,7 +186,8 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             net_worth_band=net_worth_band,
             asset_density=asset_density,
             trade_volume_band=trade_volume_band,
-            summary_label=""
+            summary_label="",
+            asset_category_counts=asset_category_counts
         )
         summary.summary_label = build_summary_label(summary)
         return summary
@@ -179,5 +207,6 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "net_worth_band": summary.net_worth_band,
         "asset_density": summary.asset_density,
         "trade_volume_band": summary.trade_volume_band,
-        "summary_label": summary.summary_label
+        "summary_label": summary.summary_label,
+        "asset_category_counts": summary.asset_category_counts
     }

@@ -7,6 +7,7 @@ from transparencyx.db.schema import get_schema_sql
 from transparencyx.shape.summary import (
     build_financial_shape_summary, 
     summary_to_dict,
+    compute_asset_category_counts,
     get_net_worth_band,
     get_asset_density,
     get_trade_volume_band,
@@ -50,6 +51,63 @@ def test_empty_politician_shape(db_path):
     assert summary.asset_density == "NONE"
     assert summary.trade_volume_band == "UNKNOWN"
     assert summary.summary_label == "No disclosed financial activity"
+    assert summary.asset_category_counts == {
+        "stock": 0,
+        "real_estate": 0,
+        "business_interest": 0,
+        "bank_account": 0,
+        "mutual_fund": 0,
+        "option": 0,
+        "other": 0,
+        "unknown": 0,
+    }
+
+def test_compute_asset_category_counts_correct_counting():
+    counts = compute_asset_category_counts([
+        {"asset_category": "stock"},
+        {"asset_category": "stock"},
+        {"asset_category": "real_estate"},
+        {"asset_category": "bank_account"},
+        {"asset_category": "business_interest"},
+        {"asset_category": "mutual_fund"},
+        {"asset_category": "option"},
+        {"asset_category": "other"},
+    ])
+
+    assert counts == {
+        "stock": 2,
+        "real_estate": 1,
+        "business_interest": 1,
+        "bank_account": 1,
+        "mutual_fund": 1,
+        "option": 1,
+        "other": 1,
+        "unknown": 0,
+    }
+
+def test_compute_asset_category_counts_unknown_fallback():
+    counts = compute_asset_category_counts([
+        {"asset_category": "stock"},
+        {"asset_category": "N/A"},
+    ])
+
+    assert counts["stock"] == 1
+    assert counts["unknown"] == 1
+
+def test_compute_asset_category_counts_all_categories_present():
+    counts = compute_asset_category_counts([])
+
+    assert list(counts.keys()) == [
+        "stock",
+        "real_estate",
+        "business_interest",
+        "bank_account",
+        "mutual_fund",
+        "option",
+        "other",
+        "unknown",
+    ]
+    assert all(count == 0 for count in counts.values())
 
 def test_assets_aggregate_correctly(db_path):
     conn = sqlite3.connect(db_path)
@@ -105,6 +163,16 @@ def test_assets_aggregate_only_usable_assets(db_path):
     assert summary.asset_value_max == 5.0
     assert summary.asset_value_midpoint == 3.0
     assert summary.asset_density == "LOW"
+    assert summary.asset_category_counts == {
+        "stock": 0,
+        "real_estate": 0,
+        "business_interest": 0,
+        "bank_account": 0,
+        "mutual_fund": 0,
+        "option": 0,
+        "other": 0,
+        "unknown": 1,
+    }
 
 def test_trades_aggregate_correctly(db_path):
     conn = sqlite3.connect(db_path)
@@ -235,6 +303,16 @@ def test_summary_to_dict(db_path):
     assert d["asset_density"] == "NONE"
     assert d["trade_volume_band"] == "UNKNOWN"
     assert d["summary_label"] == "No disclosed financial activity"
+    assert d["asset_category_counts"] == {
+        "stock": 0,
+        "real_estate": 0,
+        "business_interest": 0,
+        "bank_account": 0,
+        "mutual_fund": 0,
+        "option": 0,
+        "other": 0,
+        "unknown": 0,
+    }
     
     # Ensure it's json serializable
     json.dumps(d)
