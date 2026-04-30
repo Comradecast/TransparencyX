@@ -1,0 +1,162 @@
+import json
+import sys
+
+from transparencyx.dossier.builder import build_member_dossier_from_profile
+from transparencyx.dossier.export import (
+    dossier_filename,
+    render_member_dossier_json,
+    write_member_dossier_json,
+)
+from transparencyx.dossier.schema import create_empty_member_dossier
+
+
+def test_render_member_dossier_json_pretty_output():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    rendered = render_member_dossier_json(dossier)
+
+    assert rendered.startswith("{\n")
+    assert '  "identity": {' in rendered
+    assert '    "member_id": "nancy-pelosi",' in rendered
+    assert json.loads(rendered)["identity"]["full_name"] == "Nancy Pelosi"
+
+
+def test_render_member_dossier_json_ends_with_newline():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    assert render_member_dossier_json(dossier).endswith("\n")
+
+
+def test_write_creates_parent_directories(tmp_path):
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    output_path = tmp_path / "nested" / "dossiers" / "nancy-pelosi.json"
+
+    returned_path = write_member_dossier_json(dossier, output_path)
+
+    assert returned_path == output_path
+    assert output_path.exists()
+    assert json.loads(output_path.read_text(encoding="utf-8"))["identity"][
+        "member_id"
+    ] == "nancy-pelosi"
+
+
+def test_write_overwrites_deterministically(tmp_path):
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    output_path = tmp_path / "nancy-pelosi.json"
+    output_path.write_text("old content", encoding="utf-8")
+
+    write_member_dossier_json(dossier, output_path)
+    first = output_path.read_text(encoding="utf-8")
+    write_member_dossier_json(dossier, output_path)
+    second = output_path.read_text(encoding="utf-8")
+
+    assert first == second
+    assert first == render_member_dossier_json(dossier)
+
+
+def test_dossier_filename_slug_behavior():
+    dossier = create_empty_member_dossier(" Nancy Pelosi ", "Nancy Pelosi")
+
+    assert dossier_filename(dossier) == "nancy-pelosi.json"
+
+
+def test_dossier_filename_fallback():
+    dossier = create_empty_member_dossier("placeholder", "Placeholder")
+    dossier.identity.member_id = "   "
+
+    assert dossier_filename(dossier) == "unknown.json"
+
+
+def test_cli_writes_json_file_from_validate_real_path(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    class FakeExtraction:
+        success = True
+        extracted_text = "Name: Hon. Nancy Pelosi\nASSETS\nNone"
+        error = None
+
+    class FakeExtractor:
+        def extract(self, pdf_path, source):
+            return FakeExtraction()
+
+    pdf_path = tmp_path / "sample.pdf"
+    pdf_path.write_bytes(b"%PDF")
+    output_dir = tmp_path / "dossiers"
+    output_dir.mkdir()
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "validate-real",
+            "--pdf",
+            str(pdf_path),
+            "--dossier-json",
+            str(output_dir),
+        ],
+    )
+    monkeypatch.setattr("transparencyx.cli.get_registered_sources", lambda: {"house": object()})
+    monkeypatch.setattr(
+        "transparencyx.cli.get_extractor_for_source",
+        lambda source, file_ext: FakeExtractor(),
+    )
+    monkeypatch.setattr(
+        "transparencyx.cli.process_assets_for_disclosure",
+        lambda db_path, raw_disclosure_id, politician_id, extracted_text: 0,
+    )
+    monkeypatch.setattr(
+        "transparencyx.shape.export.build_financial_shape_export",
+        lambda db_path, politician_id: {
+            "politician_id": politician_id,
+            "summary": {
+                "asset_count": 0,
+                "asset_value_min": None,
+                "asset_value_max": None,
+            },
+            "trace": {},
+        },
+    )
+
+    from transparencyx.cli import main
+
+    main()
+
+    captured = capsys.readouterr()
+    output_path = output_dir / "nancy-pelosi.json"
+    data = json.loads(output_path.read_text(encoding="utf-8"))
+
+    assert f"Wrote member dossier JSON: {output_path}" in captured.out
+    assert data["identity"]["member_id"] == "nancy-pelosi"
+    assert data["identity"]["full_name"] == "Nancy Pelosi"
+    assert data["financials"]["asset_count"] == 0
+
+
+def test_json_is_parseable():
+    dossier = build_member_dossier_from_profile({
+        "member_name": "Nancy Pelosi",
+        "disclosure_year": 2023,
+    })
+
+    data = json.loads(render_member_dossier_json(dossier))
+
+    assert data["identity"]["member_id"] == "nancy-pelosi"
+    assert data["financials"]["disclosure_years"] == [2023]
+
+
+def test_forbidden_language_absent():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    rendered = render_member_dossier_json(dossier).lower()
+    restricted_terms = [
+        "cor" + "ruption",
+        "self-" + "dealing",
+        "insider trading " + "confirmed",
+        "conflict " + "confirmed",
+        "mis" + "conduct",
+        "sus" + "picious",
+    ]
+
+    for term in restricted_terms:
+        assert term not in rendered

@@ -153,6 +153,7 @@ def main():
     validate_parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
     validate_parser.add_argument("--recipient-candidate-audit", action="store_true", help="Print review-only recipient candidates for fetched exposure results")
     validate_parser.add_argument("--candidate-audit-csv", type=str, help="Write recipient candidate audit rows to a CSV file")
+    validate_parser.add_argument("--dossier-json", type=str, help="Write canonical member dossier JSON to a file or existing directory")
     validate_parser.add_argument("--compare", nargs=2, metavar=("A", "B"))
 
     args = parser.parse_args()
@@ -482,6 +483,11 @@ def main():
         from transparencyx.exposure.diagnostics import render_exposure_diagnostics
         from transparencyx.spending.fetch import fetch_award_exposure
         from transparencyx.spending.linker import link_business_interests_to_award_exposure
+        from transparencyx.dossier.builder import build_member_dossier_from_profile
+        from transparencyx.dossier.export import (
+            dossier_filename,
+            write_member_dossier_json,
+        )
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
@@ -492,7 +498,13 @@ def main():
             print("Recipient candidate audit requires fetched federal award exposure results.")
             sys.exit(0)
 
-        quiet = args.shape_card or args.profile_card or args.fetch_exposure or args.compare
+        quiet = (
+            args.shape_card
+            or args.profile_card
+            or args.fetch_exposure
+            or args.compare
+            or args.dossier_json
+        )
 
         def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path, dict]:
             db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -575,6 +587,14 @@ def main():
             links = link_business_interests_to_award_exposure(rows)
             return [fetch_award_exposure(link) for link in links]
 
+        def write_dossier_json(profile: dict) -> None:
+            dossier = build_member_dossier_from_profile(profile)
+            output_path = Path(args.dossier_json)
+            if output_path.exists() and output_path.is_dir():
+                output_path = output_path / dossier_filename(dossier)
+            write_member_dossier_json(dossier, output_path)
+            print(f"Wrote member dossier JSON: {output_path}")
+
         if args.compare:
             politician_a = int(args.compare[0])
             politician_b = int(args.compare[1])
@@ -583,19 +603,24 @@ def main():
             print(render_shape_comparison(export_a, export_b))
         else:
             export, db_path, identity = build_validate_real_export(1, Path("data/validate_real.sqlite"))
+            profile = build_validate_real_profile(export, identity)
+            exposures = None
+            candidates = None
+            if args.fetch_exposure:
+                exposures = fetch_exposure_results(db_path)
+                profile["federal_award_exposure"] = exposures
+            if args.fetch_exposure and args.recipient_candidate_audit:
+                candidates = build_recipient_candidate_audit(exposures)
+                profile["recipient_candidates"] = candidates
+
             if args.shape_card:
                 print(render_financial_shape_card(export))
             elif args.profile_card:
-                profile = build_validate_real_profile(export, identity)
-                if args.fetch_exposure:
-                    exposures = fetch_exposure_results(db_path)
-                    profile["federal_award_exposure"] = exposures
                 print(render_member_profile_card(profile))
                 if args.fetch_exposure and args.exposure_diagnostics:
                     print()
                     print(render_exposure_diagnostics(exposures))
                 if args.fetch_exposure and args.recipient_candidate_audit:
-                    candidates = build_recipient_candidate_audit(exposures)
                     print()
                     print(render_recipient_candidate_audit(candidates))
                     if args.candidate_audit_csv:
@@ -604,13 +629,11 @@ def main():
                         output_path.write_text(render_recipient_candidate_audit_csv(candidates), encoding="utf-8")
                         print(f"Wrote recipient candidate audit CSV: {output_path}")
             elif args.fetch_exposure:
-                exposures = fetch_exposure_results(db_path)
                 print(json.dumps(exposures, indent=2))
                 if args.exposure_diagnostics:
                     print()
                     print(render_exposure_diagnostics(exposures))
                 if args.recipient_candidate_audit:
-                    candidates = build_recipient_candidate_audit(exposures)
                     print()
                     print(render_recipient_candidate_audit(candidates))
                     if args.candidate_audit_csv:
@@ -618,6 +641,8 @@ def main():
                         output_path.parent.mkdir(parents=True, exist_ok=True)
                         output_path.write_text(render_recipient_candidate_audit_csv(candidates), encoding="utf-8")
                         print(f"Wrote recipient candidate audit CSV: {output_path}")
+            elif args.dossier_json:
+                write_dossier_json(profile)
             else:
                 if args.exposure_diagnostics:
                     print("Exposure diagnostics require fetched federal award exposure results.")
@@ -626,6 +651,9 @@ def main():
                     print("Recipient candidate audit requires fetched federal award exposure results.")
                     sys.exit(0)
                 print(json.dumps(export, indent=2))
+
+            if args.dossier_json and (args.shape_card or args.profile_card or args.fetch_exposure):
+                write_dossier_json(profile)
 
         if args.show_assets and not quiet:
             rows = get_normalized_asset_audit_rows(db_path)
