@@ -289,6 +289,7 @@ def main():
             build_site_manifest,
             write_site_manifest_json,
         )
+        from transparencyx.dossier.readme import write_site_readme
         from transparencyx.profile.batch import build_profiles_for_directory
 
         output_dir = Path(args.output_dir)
@@ -368,6 +369,9 @@ def main():
             output_dir / "build_manifest.json",
         )
         print(f"Wrote site build manifest JSON: {manifest_path}")
+
+        readme_path = write_site_readme(output_dir)
+        print(f"Wrote generated site README: {readme_path}")
 
         sys.exit(0)
 
