@@ -143,6 +143,7 @@ def main():
     validate_parser.add_argument("--show-assets", action="store_true", help="Print normalized asset rows for audit")
     validate_parser.add_argument("--shape-card", action="store_true", help="Print a human-readable financial shape card")
     validate_parser.add_argument("--profile-card", action="store_true", help="Print a human-readable member profile card")
+    validate_parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for disclosed business interests")
     validate_parser.add_argument("--compare", nargs=2, metavar=("A", "B"))
 
     args = parser.parse_args()
@@ -400,13 +401,15 @@ def main():
         from transparencyx.shape.compare import render_shape_comparison
         from transparencyx.profile.card import render_member_profile_card
         from transparencyx.profile.identity import extract_member_identity
+        from transparencyx.spending.fetch import fetch_award_exposure
+        from transparencyx.spending.linker import link_business_interests_to_award_exposure
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
             print(f"PDF not found: {pdf_path}")
             sys.exit(1)
 
-        quiet = args.shape_card or args.profile_card or args.compare
+        quiet = args.shape_card or args.profile_card or args.fetch_exposure or args.compare
 
         def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path, dict]:
             db_path.parent.mkdir(parents=True, exist_ok=True)
@@ -496,6 +499,10 @@ def main():
                 print(render_financial_shape_card(export))
             elif args.profile_card:
                 print(render_member_profile_card(build_validate_real_profile(export, identity)))
+            elif args.fetch_exposure:
+                rows = get_normalized_asset_audit_rows(db_path)
+                links = link_business_interests_to_award_exposure(rows)
+                print(json.dumps([fetch_award_exposure(link) for link in links], indent=2))
             else:
                 print(json.dumps(export, indent=2))
 
