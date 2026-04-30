@@ -78,6 +78,7 @@ def main():
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
     parser.add_argument("--recipient-candidate-audit", action="store_true", help="Print review-only recipient candidates for fetched exposure results")
+    parser.add_argument("--candidate-audit-csv", type=str, help="Write recipient candidate audit rows to a CSV file")
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -151,6 +152,7 @@ def main():
     validate_parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for disclosed business interests")
     validate_parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
     validate_parser.add_argument("--recipient-candidate-audit", action="store_true", help="Print review-only recipient candidates for fetched exposure results")
+    validate_parser.add_argument("--candidate-audit-csv", type=str, help="Write recipient candidate audit rows to a CSV file")
     validate_parser.add_argument("--compare", nargs=2, metavar=("A", "B"))
 
     args = parser.parse_args()
@@ -169,6 +171,10 @@ def main():
 
     if args.recipient_candidate_audit and not args.batch_exposure and args.command != "validate-real":
         print("Recipient candidate audit requires fetched federal award exposure results.")
+        sys.exit(0)
+
+    if args.candidate_audit_csv and not args.recipient_candidate_audit:
+        print("Candidate audit CSV export requires recipient candidate audit.")
         sys.exit(0)
 
     if args.build_registry:
@@ -194,7 +200,11 @@ def main():
         sys.exit(0)
 
     if args.batch_exposure:
-        from transparencyx.exposure.candidates import build_recipient_candidate_audit, render_recipient_candidate_audit
+        from transparencyx.exposure.candidates import (
+            build_recipient_candidate_audit,
+            render_recipient_candidate_audit,
+            render_recipient_candidate_audit_csv,
+        )
         from transparencyx.exposure.diagnostics import render_exposure_diagnostics
         from transparencyx.profile.batch import build_profiles_for_directory
         from transparencyx.profile.exposure_table import render_batch_exposure_csv, render_batch_exposure_table
@@ -231,8 +241,14 @@ def main():
                 for profile in profiles
                 for exposure in profile.get("federal_award_exposure", [])
             ]
+            candidates = build_recipient_candidate_audit(exposures)
             print()
-            print(render_recipient_candidate_audit(build_recipient_candidate_audit(exposures)))
+            print(render_recipient_candidate_audit(candidates))
+            if args.candidate_audit_csv:
+                output_path = Path(args.candidate_audit_csv)
+                output_path.parent.mkdir(parents=True, exist_ok=True)
+                output_path.write_text(render_recipient_candidate_audit_csv(candidates), encoding="utf-8")
+                print(f"Wrote recipient candidate audit CSV: {output_path}")
         sys.exit(0)
         
     if args.command == "sources":
@@ -458,7 +474,11 @@ def main():
         from transparencyx.shape.compare import render_shape_comparison
         from transparencyx.profile.card import render_member_profile_card
         from transparencyx.profile.identity import extract_member_identity
-        from transparencyx.exposure.candidates import build_recipient_candidate_audit, render_recipient_candidate_audit
+        from transparencyx.exposure.candidates import (
+            build_recipient_candidate_audit,
+            render_recipient_candidate_audit,
+            render_recipient_candidate_audit_csv,
+        )
         from transparencyx.exposure.diagnostics import render_exposure_diagnostics
         from transparencyx.spending.fetch import fetch_award_exposure
         from transparencyx.spending.linker import link_business_interests_to_award_exposure
@@ -575,8 +595,14 @@ def main():
                     print()
                     print(render_exposure_diagnostics(exposures))
                 if args.fetch_exposure and args.recipient_candidate_audit:
+                    candidates = build_recipient_candidate_audit(exposures)
                     print()
-                    print(render_recipient_candidate_audit(build_recipient_candidate_audit(exposures)))
+                    print(render_recipient_candidate_audit(candidates))
+                    if args.candidate_audit_csv:
+                        output_path = Path(args.candidate_audit_csv)
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        output_path.write_text(render_recipient_candidate_audit_csv(candidates), encoding="utf-8")
+                        print(f"Wrote recipient candidate audit CSV: {output_path}")
             elif args.fetch_exposure:
                 exposures = fetch_exposure_results(db_path)
                 print(json.dumps(exposures, indent=2))
@@ -584,8 +610,14 @@ def main():
                     print()
                     print(render_exposure_diagnostics(exposures))
                 if args.recipient_candidate_audit:
+                    candidates = build_recipient_candidate_audit(exposures)
                     print()
-                    print(render_recipient_candidate_audit(build_recipient_candidate_audit(exposures)))
+                    print(render_recipient_candidate_audit(candidates))
+                    if args.candidate_audit_csv:
+                        output_path = Path(args.candidate_audit_csv)
+                        output_path.parent.mkdir(parents=True, exist_ok=True)
+                        output_path.write_text(render_recipient_candidate_audit_csv(candidates), encoding="utf-8")
+                        print(f"Wrote recipient candidate audit CSV: {output_path}")
             else:
                 if args.exposure_diagnostics:
                     print("Exposure diagnostics require fetched federal award exposure results.")

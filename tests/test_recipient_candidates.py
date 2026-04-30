@@ -1,4 +1,8 @@
 from copy import deepcopy
+import os
+from pathlib import Path
+import subprocess
+import sys
 
 from transparencyx.exposure.candidates import (
     build_recipient_candidate_audit,
@@ -7,6 +11,7 @@ from transparencyx.exposure.candidates import (
     candidate_name_tokens,
     normalize_candidate_name,
     render_recipient_candidate_audit,
+    render_recipient_candidate_audit_csv,
 )
 
 
@@ -274,3 +279,156 @@ def test_render_recipient_candidate_audit_has_no_forbidden_language():
     assert "conflict confirmed" not in rendered
     assert "misconduct" not in rendered
     assert "suspicious" not in rendered
+
+
+def test_render_recipient_candidate_audit_csv_header():
+    csv_text = render_recipient_candidate_audit_csv([])
+
+    assert csv_text == (
+        "original_query,candidate_query,recipient_name,recipient_id,award_count,"
+        "total_award_amount,status,substring_match,token_overlap,exposure_counted\n"
+    )
+
+
+def test_render_recipient_candidate_audit_csv_empty_candidate_list():
+    csv_text = render_recipient_candidate_audit_csv([])
+
+    assert len(csv_text.splitlines()) == 1
+
+
+def test_render_recipient_candidate_audit_csv_normal_candidate_row():
+    csv_text = render_recipient_candidate_audit_csv([
+        {
+            "original_query": "REOF XXV, LLC",
+            "candidate_query": "REOF XXV",
+            "recipient_name": "REOF XXV HOLDINGS LLC",
+            "recipient_id": "R1",
+            "award_count": 4,
+            "total_award_amount": 120000.0,
+            "match_status": "candidate_review_only",
+            "exposure_counted": False,
+            "candidate_signals": {
+                "substring_match": True,
+                "token_overlap_count": 2,
+                "token_overlap_total": 2,
+            },
+        }
+    ])
+
+    assert csv_text.splitlines()[1] == (
+        '"REOF XXV, LLC",REOF XXV,REOF XXV HOLDINGS LLC,R1,4,120000.0,'
+        "candidate_review_only,Yes,2/2,False"
+    )
+
+
+def test_render_recipient_candidate_audit_csv_amount_numeric_not_dollar_formatted():
+    csv_text = render_recipient_candidate_audit_csv([
+        {
+            "original_query": "Query",
+            "candidate_query": "Query",
+            "recipient_name": "Query Holdings",
+            "total_award_amount": 1234.5,
+            "candidate_signals": {},
+        }
+    ])
+
+    assert "$" not in csv_text.splitlines()[1]
+    assert "1234.5" in csv_text.splitlines()[1]
+
+
+def test_render_recipient_candidate_audit_csv_substring_match_yes_no():
+    csv_text = render_recipient_candidate_audit_csv([
+        {"candidate_signals": {"substring_match": True}},
+        {"candidate_signals": {"substring_match": False}},
+    ])
+
+    assert csv_text.splitlines()[1].split(",")[7] == "Yes"
+    assert csv_text.splitlines()[2].split(",")[7] == "No"
+
+
+def test_render_recipient_candidate_audit_csv_token_overlap_formatting():
+    csv_text = render_recipient_candidate_audit_csv([
+        {
+            "candidate_signals": {
+                "token_overlap_count": 1,
+                "token_overlap_total": 3,
+            },
+        }
+    ])
+
+    assert csv_text.splitlines()[1].split(",")[8] == "1/3"
+
+
+def test_render_recipient_candidate_audit_csv_exposure_counted_always_false():
+    csv_text = render_recipient_candidate_audit_csv([
+        {"exposure_counted": True},
+    ])
+
+    assert csv_text.splitlines()[1].endswith(",False")
+
+
+def test_render_recipient_candidate_audit_csv_escaping_for_commas():
+    csv_text = render_recipient_candidate_audit_csv([
+        {
+            "original_query": "REOF XXV, LLC",
+            "candidate_query": "REOF XXV",
+            "recipient_name": "REOF XXV Holdings, LLC",
+            "recipient_id": "R1",
+            "award_count": 4,
+            "total_award_amount": 120000.0,
+            "match_status": "candidate_review_only",
+            "candidate_signals": {
+                "substring_match": True,
+                "token_overlap_count": 2,
+                "token_overlap_total": 2,
+            },
+        }
+    ])
+
+    assert csv_text.splitlines()[1] == (
+        '"REOF XXV, LLC",REOF XXV,"REOF XXV Holdings, LLC",R1,4,120000.0,'
+        "candidate_review_only,Yes,2/2,False"
+    )
+
+
+def test_candidate_audit_csv_cli_fails_closed_without_audit_flag():
+    repo_root = Path(__file__).resolve().parents[1]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(repo_root / "src")
+
+    result = subprocess.run(
+        [sys.executable, "-m", "transparencyx", "--candidate-audit-csv", "candidate-audit.csv"],
+        cwd=repo_root,
+        env=env,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert result.returncode == 0
+    assert result.stdout.strip() == "Candidate audit CSV export requires recipient candidate audit."
+
+
+def test_render_recipient_candidate_audit_csv_has_no_forbidden_language():
+    csv_text = render_recipient_candidate_audit_csv([
+        {
+            "original_query": "REOF XXV, LLC",
+            "candidate_query": "REOF XXV",
+            "recipient_name": "REOF XXV HOLDINGS LLC",
+            "award_count": 4,
+            "total_award_amount": 120000.0,
+            "match_status": "candidate_review_only",
+            "candidate_signals": {
+                "substring_match": True,
+                "token_overlap_count": 2,
+                "token_overlap_total": 2,
+            },
+        }
+    ]).lower()
+
+    assert "corruption" not in csv_text
+    assert "self-dealing" not in csv_text
+    assert "insider trading" not in csv_text
+    assert "conflict confirmed" not in csv_text
+    assert "misconduct" not in csv_text
+    assert "suspicious" not in csv_text

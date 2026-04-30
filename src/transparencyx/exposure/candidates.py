@@ -1,3 +1,5 @@
+import csv
+import io
 import json
 import re
 import socket
@@ -211,3 +213,40 @@ def render_recipient_candidate_audit(candidates: list[dict]) -> str:
         lines.append(" | ".join(row))
 
     return "\n".join(lines)
+
+
+def render_recipient_candidate_audit_csv(candidates: list[dict]) -> str:
+    output = io.StringIO()
+    columns = [
+        "original_query",
+        "candidate_query",
+        "recipient_name",
+        "recipient_id",
+        "award_count",
+        "total_award_amount",
+        "status",
+        "substring_match",
+        "token_overlap",
+        "exposure_counted",
+    ]
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(columns)
+
+    for candidate in candidates:
+        signals = candidate.get("candidate_signals") or {}
+        token_overlap_count = signals.get("token_overlap_count", 0)
+        token_overlap_total = signals.get("token_overlap_total", 0)
+        writer.writerow([
+            candidate.get("original_query") or "",
+            candidate.get("candidate_query") or "",
+            candidate.get("recipient_name") or "",
+            candidate.get("recipient_id") or "",
+            "" if candidate.get("award_count") is None else candidate["award_count"],
+            "" if candidate.get("total_award_amount") is None else candidate["total_award_amount"],
+            candidate.get("match_status") or "candidate_review_only",
+            "Yes" if signals.get("substring_match") else "No",
+            f"{token_overlap_count}/{token_overlap_total}",
+            False,
+        ])
+
+    return output.getvalue()
