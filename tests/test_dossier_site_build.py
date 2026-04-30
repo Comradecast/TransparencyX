@@ -57,12 +57,14 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
     assert (output_dir / "jane-public.html").exists()
     assert (output_dir / "index.json").exists()
     assert (output_dir / "index.html").exists()
+    assert (output_dir / "build_manifest.json").exists()
     assert not (output_dir / "metadata_coverage.json").exists()
     assert captured.out == "\n".join([
         f"Wrote member dossier JSON files: 2 to {output_dir}",
         f"Wrote dossier index JSON: {output_dir / 'index.json'}",
         f"Wrote member dossier HTML files: 2 to {output_dir}",
         f"Wrote dossier HTML index: {output_dir / 'index.html'}",
+        f"Wrote site build manifest JSON: {output_dir / 'build_manifest.json'}",
         "",
     ])
 

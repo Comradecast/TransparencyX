@@ -285,6 +285,10 @@ def main():
             load_member_metadata,
             render_metadata_coverage_report,
         )
+        from transparencyx.dossier.manifest import (
+            build_site_manifest,
+            write_site_manifest_json,
+        )
         from transparencyx.profile.batch import build_profiles_for_directory
 
         output_dir = Path(args.output_dir)
@@ -335,15 +339,35 @@ def main():
         print(f"Wrote member dossier HTML files: {len(html_paths)} to {output_dir}")
         print(f"Wrote dossier HTML index: {html_index_path}")
 
+        metadata_report = None
         if metadata_by_id is not None:
-            report = build_metadata_coverage_report(dossiers, metadata_by_id)
-            print(render_metadata_coverage_report(report))
+            metadata_report = build_metadata_coverage_report(dossiers, metadata_by_id)
+            print(render_metadata_coverage_report(metadata_report))
             coverage_path = output_dir / "metadata_coverage.json"
             coverage_path.write_text(
-                json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+                json.dumps(metadata_report, indent=2, ensure_ascii=False) + "\n",
                 encoding="utf-8",
             )
             print(f"Wrote metadata coverage JSON: {coverage_path}")
+
+        manifest_path = write_site_manifest_json(
+            build_site_manifest(
+                input_directory=str(Path(args.build_dossier_site)),
+                output_directory=str(output_dir),
+                options={
+                    "member_metadata": metadata_by_id is not None,
+                    "fetch_exposure": args.fetch_exposure,
+                    "recipient_candidate_audit": args.recipient_candidate_audit,
+                },
+                profiles_count=len(profiles),
+                dossiers_count=len(dossiers),
+                json_paths=written_json_paths,
+                html_paths=html_paths,
+                metadata_report=metadata_report,
+            ),
+            output_dir / "build_manifest.json",
+        )
+        print(f"Wrote site build manifest JSON: {manifest_path}")
 
         sys.exit(0)
 
