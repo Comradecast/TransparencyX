@@ -57,7 +57,7 @@ def test_fetch_award_exposure_posts_payload_and_summarizes(monkeypatch):
     assert captured["timeout"] == 5
     assert captured["payload"] == link["payload"]
     assert summary == {
-        "query_recipient_name": "REOF XXV, LLC [AB] SP",
+            "query_recipient_name": "REOF XXV, LLC",
         "award_count": 2,
         "total_award_amount": 13.0,
         "agencies": ["A Agency", "B Agency"],
@@ -76,7 +76,7 @@ def test_fetch_award_exposure_handles_url_error(monkeypatch):
     summary = fetch_award_exposure(build_exposure_link("REOF XXV, LLC [AB] SP"))
 
     assert summary == {
-        "query_recipient_name": "REOF XXV, LLC [AB] SP",
+        "query_recipient_name": "REOF XXV, LLC",
         "award_count": 0,
         "total_award_amount": 0.0,
         "agencies": [],
