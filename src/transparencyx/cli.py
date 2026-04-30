@@ -1,6 +1,7 @@
 import argparse
 import sys
 import json
+import hashlib
 from importlib.metadata import version, PackageNotFoundError
 import datetime
 from pathlib import Path
@@ -73,6 +74,7 @@ def main():
     parser.add_argument("--build-registry", type=str, help="Build a member registry from PDFs in a directory")
     parser.add_argument("--batch-profile", type=str, help="Build profile exports from PDFs in a directory")
     parser.add_argument("--batch-summary", type=str, help="Build a compact profile summary table from PDFs in a directory")
+    parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -176,6 +178,24 @@ def main():
 
         profiles = build_profiles_for_directory(Path(args.batch_summary))
         print(render_batch_summary_table(profiles))
+        sys.exit(0)
+
+    if args.batch_exposure:
+        from transparencyx.profile.batch import build_profiles_for_directory
+        from transparencyx.profile.exposure_table import render_batch_exposure_table
+        from transparencyx.spending.fetch import fetch_award_exposure
+        from transparencyx.spending.linker import link_business_interests_to_award_exposure
+
+        profiles = build_profiles_for_directory(Path(args.batch_exposure))
+        for profile in profiles:
+            asset_rows = profile.get("shape_export", {}).get("trace", {}).get("assets", {}).get("count_rows", [])
+            profile["federal_award_exposure"] = []
+            if asset_rows:
+                db_path = Path("data/profile_batch") / f"{hashlib.sha1(profile['disclosure_path'].encode('utf-8')).hexdigest()}.sqlite"
+                rows = get_normalized_asset_audit_rows(db_path)
+                links = link_business_interests_to_award_exposure(rows)
+                profile["federal_award_exposure"] = [fetch_award_exposure(link) for link in links]
+        print(render_batch_exposure_table(profiles))
         sys.exit(0)
         
     if args.command == "sources":
