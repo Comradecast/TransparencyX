@@ -1,4 +1,8 @@
-from transparencyx.profile.exposure_table import render_batch_exposure_table, summarize_profile_exposure
+from transparencyx.profile.exposure_table import (
+    render_batch_exposure_csv,
+    render_batch_exposure_table,
+    summarize_profile_exposure,
+)
 
 
 def test_summarize_profile_exposure_missing_exposure_zero_row():
@@ -87,3 +91,94 @@ def test_render_batch_exposure_table_has_no_accusation_language():
     assert "self-dealing" not in table
     assert "insider trading" not in table
     assert "conflict confirmed" not in table
+    assert "misconduct" not in table
+    assert "suspicious" not in table
+
+
+def test_render_batch_exposure_csv_header():
+    csv_text = render_batch_exposure_csv([])
+
+    assert csv_text == "member_name,queried_businesses,awards_found,total_award_amount,agencies\n"
+
+
+def test_render_batch_exposure_csv_zero_exposure_row():
+    csv_text = render_batch_exposure_csv([
+        {"member_name": "Member A", "federal_award_exposure": []},
+    ])
+
+    assert csv_text.splitlines()[1] == "Member A,0,0,0.0,"
+
+
+def test_render_batch_exposure_csv_aggregation_row():
+    csv_text = render_batch_exposure_csv([
+        {
+            "member_name": "Member A",
+            "federal_award_exposure": [
+                {"award_count": 2, "total_award_amount": 100.5, "agencies": []},
+                {"award_count": 3, "total_award_amount": 200.0, "agencies": []},
+            ],
+        },
+    ])
+
+    assert csv_text.splitlines()[1] == "Member A,2,5,300.5,"
+
+
+def test_render_batch_exposure_csv_agency_delimiter():
+    csv_text = render_batch_exposure_csv([
+        {
+            "member_name": "Member A",
+            "federal_award_exposure": [
+                {"award_count": 1, "total_award_amount": 1.0, "agencies": ["B Agency", "A Agency"]},
+            ],
+        },
+    ])
+
+    assert csv_text.splitlines()[1] == 'Member A,1,1,1.0,A Agency; B Agency'
+
+
+def test_render_batch_exposure_csv_empty_agencies_blank():
+    csv_text = render_batch_exposure_csv([
+        {"member_name": "Member A", "federal_award_exposure": []},
+    ])
+
+    assert csv_text.splitlines()[1].endswith(",")
+
+
+def test_render_batch_exposure_csv_amount_numeric_not_dollar_formatted():
+    csv_text = render_batch_exposure_csv([
+        {
+            "member_name": "Member A",
+            "federal_award_exposure": [
+                {"award_count": 1, "total_award_amount": 1234.5, "agencies": []},
+            ],
+        },
+    ])
+
+    assert "$" not in csv_text.splitlines()[1]
+    assert "1234.5" in csv_text.splitlines()[1]
+
+
+def test_render_batch_exposure_csv_escaping_for_commas():
+    csv_text = render_batch_exposure_csv([
+        {
+            "member_name": "Member, A",
+            "federal_award_exposure": [
+                {"award_count": 1, "total_award_amount": 1.0, "agencies": ["Agency, A", "Agency B"]},
+            ],
+        },
+    ])
+
+    assert csv_text.splitlines()[1] == '"Member, A",1,1,1.0,"Agency B; Agency, A"'
+
+
+def test_render_batch_exposure_csv_has_no_forbidden_language():
+    csv_text = render_batch_exposure_csv([
+        {"member_name": "Member A", "federal_award_exposure": []},
+    ]).lower()
+
+    assert "corruption" not in csv_text
+    assert "self-dealing" not in csv_text
+    assert "insider trading" not in csv_text
+    assert "conflict confirmed" not in csv_text
+    assert "misconduct" not in csv_text
+    assert "suspicious" not in csv_text

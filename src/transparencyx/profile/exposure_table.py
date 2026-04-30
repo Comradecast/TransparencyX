@@ -1,3 +1,6 @@
+import csv
+import io
+
 from transparencyx.shape.card import format_money
 
 TABLE_COLUMNS = [
@@ -48,3 +51,21 @@ def render_batch_exposure_table(profiles: list[dict]) -> str:
         lines.append(" | ".join(row))
 
     return "\n".join(lines)
+
+
+def render_batch_exposure_csv(profiles: list[dict]) -> str:
+    output = io.StringIO()
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(TABLE_COLUMNS)
+
+    for profile in profiles:
+        summary = summarize_profile_exposure(profile)
+        writer.writerow([
+            summary["member_name"],
+            summary["queried_businesses"],
+            summary["awards_found"],
+            summary["total_award_amount"],
+            "; ".join(summary["agencies"]),
+        ])
+
+    return output.getvalue()

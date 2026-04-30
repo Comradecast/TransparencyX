@@ -75,6 +75,7 @@ def main():
     parser.add_argument("--batch-profile", type=str, help="Build profile exports from PDFs in a directory")
     parser.add_argument("--batch-summary", type=str, help="Build a compact profile summary table from PDFs in a directory")
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
+    parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     
     subparsers = parser.add_subparsers(dest="command", help="Available commands")
     
@@ -182,7 +183,7 @@ def main():
 
     if args.batch_exposure:
         from transparencyx.profile.batch import build_profiles_for_directory
-        from transparencyx.profile.exposure_table import render_batch_exposure_table
+        from transparencyx.profile.exposure_table import render_batch_exposure_csv, render_batch_exposure_table
         from transparencyx.spending.fetch import fetch_award_exposure
         from transparencyx.spending.linker import link_business_interests_to_award_exposure
 
@@ -195,7 +196,13 @@ def main():
                 rows = get_normalized_asset_audit_rows(db_path)
                 links = link_business_interests_to_award_exposure(rows)
                 profile["federal_award_exposure"] = [fetch_award_exposure(link) for link in links]
-        print(render_batch_exposure_table(profiles))
+        if args.output_csv:
+            output_path = Path(args.output_csv)
+            output_path.parent.mkdir(parents=True, exist_ok=True)
+            output_path.write_text(render_batch_exposure_csv(profiles), encoding="utf-8")
+            print(f"Wrote federal award exposure CSV: {output_path}")
+        else:
+            print(render_batch_exposure_table(profiles))
         sys.exit(0)
         
     if args.command == "sources":
