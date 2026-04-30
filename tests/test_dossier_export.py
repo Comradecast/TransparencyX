@@ -1,10 +1,13 @@
 import json
 import sys
 
+import pytest
+
 from transparencyx.dossier.builder import build_member_dossier_from_profile
 from transparencyx.dossier.export import (
     dossier_filename,
     render_member_dossier_json,
+    write_member_dossiers_json,
     write_member_dossier_json,
 )
 from transparencyx.dossier.schema import create_empty_member_dossier
@@ -52,6 +55,84 @@ def test_write_overwrites_deterministically(tmp_path):
 
     assert first == second
     assert first == render_member_dossier_json(dossier)
+
+
+def test_batch_helper_writes_multiple_files(tmp_path):
+    dossiers = [
+        create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi"),
+        create_empty_member_dossier("jane-public", "Jane Public"),
+    ]
+
+    paths = write_member_dossiers_json(dossiers, tmp_path)
+
+    assert paths == [
+        tmp_path / "nancy-pelosi.json",
+        tmp_path / "jane-public.json",
+    ]
+    assert json.loads(paths[0].read_text(encoding="utf-8"))["identity"][
+        "full_name"
+    ] == "Nancy Pelosi"
+    assert json.loads(paths[1].read_text(encoding="utf-8"))["identity"][
+        "full_name"
+    ] == "Jane Public"
+
+
+def test_batch_helper_creates_output_directory(tmp_path):
+    output_dir = tmp_path / "nested" / "dossiers"
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    paths = write_member_dossiers_json([dossier], output_dir)
+
+    assert paths == [output_dir / "nancy-pelosi.json"]
+    assert paths[0].exists()
+
+
+def test_batch_helper_uses_deterministic_filenames(tmp_path):
+    dossiers = [
+        create_empty_member_dossier("Jane Public", "Jane Public"),
+        create_empty_member_dossier("Nancy Pelosi", "Nancy Pelosi"),
+    ]
+
+    paths = write_member_dossiers_json(dossiers, tmp_path)
+
+    assert [path.name for path in paths] == [
+        "jane-public.json",
+        "nancy-pelosi.json",
+    ]
+
+
+def test_batch_helper_duplicate_filename_fails_closed(tmp_path):
+    dossiers = [
+        create_empty_member_dossier("Nancy Pelosi", "Nancy Pelosi"),
+        create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi"),
+    ]
+
+    with pytest.raises(ValueError, match="Duplicate dossier filename: nancy-pelosi.json"):
+        write_member_dossiers_json(dossiers, tmp_path)
+
+    assert list(tmp_path.glob("*.json")) == []
+
+
+def test_batch_json_files_parse_correctly(tmp_path):
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_name": "Nancy Pelosi",
+            "disclosure_year": 2023,
+        }),
+        build_member_dossier_from_profile({
+            "member_name": "Jane Public",
+            "disclosure_year": 2024,
+        }),
+    ]
+
+    paths = write_member_dossiers_json(dossiers, tmp_path)
+    parsed = [
+        json.loads(path.read_text(encoding="utf-8"))
+        for path in paths
+    ]
+
+    assert parsed[0]["financials"]["disclosure_years"] == [2023]
+    assert parsed[1]["financials"]["disclosure_years"] == [2024]
 
 
 def test_dossier_filename_slug_behavior():
@@ -132,6 +213,59 @@ def test_cli_writes_json_file_from_validate_real_path(
     assert data["identity"]["member_id"] == "nancy-pelosi"
     assert data["identity"]["full_name"] == "Nancy Pelosi"
     assert data["financials"]["asset_count"] == 0
+
+
+def test_cli_batch_dossier_export_summary_message(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "dossiers"
+    input_dir.mkdir()
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-dossier-json",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+    monkeypatch.setattr(
+        "transparencyx.profile.batch.build_profiles_for_directory",
+        lambda directory: [
+            {
+                "member_name": "Nancy Pelosi",
+                "disclosure_year": 2023,
+            },
+            {
+                "member_name": "Jane Public",
+                "disclosure_year": 2024,
+            },
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 0
+    assert captured.out == (
+        f"Wrote member dossier JSON files: 2 to {output_dir}\n"
+    )
+    assert json.loads((output_dir / "nancy-pelosi.json").read_text(
+        encoding="utf-8"
+    ))["identity"]["full_name"] == "Nancy Pelosi"
+    assert json.loads((output_dir / "jane-public.json").read_text(
+        encoding="utf-8"
+    ))["identity"]["full_name"] == "Jane Public"
 
 
 def test_json_is_parseable():

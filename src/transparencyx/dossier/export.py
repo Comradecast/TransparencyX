@@ -27,6 +27,25 @@ def write_member_dossier_json(
     return path
 
 
+def write_member_dossiers_json(
+    dossiers: list[MemberDossier],
+    output_dir: str | Path,
+) -> list[Path]:
+    directory = Path(output_dir)
+    filenames = [dossier_filename(dossier) for dossier in dossiers]
+    seen = set()
+    for filename in filenames:
+        if filename in seen:
+            raise ValueError(f"Duplicate dossier filename: {filename}")
+        seen.add(filename)
+
+    directory.mkdir(parents=True, exist_ok=True)
+    return [
+        write_member_dossier_json(dossier, directory / filename)
+        for dossier, filename in zip(dossiers, filenames)
+    ]
+
+
 def dossier_filename(dossier: MemberDossier) -> str:
     member_id = dossier.identity.member_id.strip().lower()
     slug = re.sub(r"[^a-z0-9]+", "-", member_id).strip("-")

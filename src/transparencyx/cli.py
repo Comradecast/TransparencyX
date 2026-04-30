@@ -75,7 +75,10 @@ def main():
     parser.add_argument("--batch-profile", type=str, help="Build profile exports from PDFs in a directory")
     parser.add_argument("--batch-summary", type=str, help="Build a compact profile summary table from PDFs in a directory")
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
+    parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
+    parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
+    parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
     parser.add_argument("--recipient-candidate-audit", action="store_true", help="Print review-only recipient candidates for fetched exposure results")
     parser.add_argument("--candidate-audit-csv", type=str, help="Write recipient candidate audit rows to a CSV file")
@@ -166,11 +169,26 @@ def main():
             print("transparencyx version unknown (not installed)")
         sys.exit(0)
 
-    if args.exposure_diagnostics and not args.batch_exposure and args.command != "validate-real":
+    if args.batch_dossier_json and not args.output_dir:
+        parser.error("--output-dir is required with --batch-dossier-json")
+
+    batch_dossier_with_exposure = args.batch_dossier_json and args.fetch_exposure
+
+    if (
+        args.exposure_diagnostics
+        and not args.batch_exposure
+        and not batch_dossier_with_exposure
+        and args.command != "validate-real"
+    ):
         print("Exposure diagnostics require fetched federal award exposure results.")
         sys.exit(0)
 
-    if args.recipient_candidate_audit and not args.batch_exposure and args.command != "validate-real":
+    if (
+        args.recipient_candidate_audit
+        and not args.batch_exposure
+        and not batch_dossier_with_exposure
+        and args.command != "validate-real"
+    ):
         print("Recipient candidate audit requires fetched federal award exposure results.")
         sys.exit(0)
 
@@ -198,6 +216,41 @@ def main():
 
         profiles = build_profiles_for_directory(Path(args.batch_summary))
         print(render_batch_summary_table(profiles))
+        sys.exit(0)
+
+    if args.batch_dossier_json:
+        from transparencyx.dossier.builder import build_member_dossier_from_profile
+        from transparencyx.dossier.export import write_member_dossiers_json
+        from transparencyx.exposure.candidates import build_recipient_candidate_audit
+        from transparencyx.profile.batch import build_profiles_for_directory
+        from transparencyx.spending.fetch import fetch_award_exposure
+        from transparencyx.spending.linker import link_business_interests_to_award_exposure
+
+        profiles = build_profiles_for_directory(Path(args.batch_dossier_json))
+        if args.fetch_exposure:
+            for profile in profiles:
+                asset_rows = profile.get("shape_export", {}).get("trace", {}).get("assets", {}).get("count_rows", [])
+                profile["federal_award_exposure"] = []
+                if asset_rows:
+                    db_path = Path("data/profile_batch") / f"{hashlib.sha1(profile['disclosure_path'].encode('utf-8')).hexdigest()}.sqlite"
+                    rows = get_normalized_asset_audit_rows(db_path)
+                    links = link_business_interests_to_award_exposure(rows)
+                    profile["federal_award_exposure"] = [fetch_award_exposure(link) for link in links]
+                if args.recipient_candidate_audit:
+                    profile["recipient_candidates"] = build_recipient_candidate_audit(
+                        profile["federal_award_exposure"]
+                    )
+
+        dossiers = [
+            build_member_dossier_from_profile(profile)
+            for profile in profiles
+        ]
+        try:
+            written_paths = write_member_dossiers_json(dossiers, Path(args.output_dir))
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+        print(f"Wrote member dossier JSON files: {len(written_paths)} to {Path(args.output_dir)}")
         sys.exit(0)
 
     if args.batch_exposure:
