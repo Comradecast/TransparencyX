@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from transparencyx.profile.card import render_member_profile_card
+from transparencyx.profile.card import render_federal_award_exposure, render_member_profile_card
 
 
 def make_shape_export():
@@ -92,6 +92,62 @@ def test_profile_card_includes_embedded_financial_shape_card():
     assert "summary_label: Very high disclosed wealth, no trading activity" in card
     assert "Asset Mix:" in card
     assert "Income:" in card
+
+
+def test_profile_card_omits_exposure_section_when_missing():
+    card = render_member_profile_card(make_profile())
+
+    assert "Federal Award Exposure:" not in card
+
+
+def test_profile_card_renders_exposure_section_when_provided():
+    profile = make_profile()
+    profile["federal_award_exposure"] = [
+        {
+            "award_count": 2,
+            "total_award_amount": 100.0,
+            "agencies": ["B Agency", "A Agency"],
+        },
+    ]
+
+    card = render_member_profile_card(profile)
+
+    assert "Federal Award Exposure:" in card
+    assert "- queried business interests: 1" in card
+    assert "- awards found: 2" in card
+    assert "- total award amount: $100" in card
+    assert "- agencies: A Agency, B Agency" in card
+
+
+def test_render_federal_award_exposure_sums_counts_and_amounts():
+    section = render_federal_award_exposure([
+        {"award_count": 2, "total_award_amount": 100.5, "agencies": []},
+        {"award_count": 3, "total_award_amount": 200.0, "agencies": []},
+    ])
+
+    assert "- awards found: 5" in section
+    assert "- total award amount: $300.5" in section
+
+
+def test_render_federal_award_exposure_agencies_sorted_and_deduplicated():
+    section = render_federal_award_exposure([
+        {"award_count": 1, "total_award_amount": 1.0, "agencies": ["Z Agency", "A Agency"]},
+        {"award_count": 1, "total_award_amount": 1.0, "agencies": ["A Agency"]},
+    ])
+
+    assert "- agencies: A Agency, Z Agency" in section
+
+
+def test_render_federal_award_exposure_empty_exposures_safe():
+    section = render_federal_award_exposure([])
+
+    assert section == "\n".join([
+        "Federal Award Exposure:",
+        "- queried business interests: 0",
+        "- awards found: 0",
+        "- total award amount: $0",
+        "- agencies: None",
+    ])
 
 
 def test_profile_card_is_deterministic():

@@ -487,6 +487,11 @@ def main():
                 "shape_export": shape_export,
             }
 
+        def fetch_exposure_results(db_path: Path) -> list[dict]:
+            rows = get_normalized_asset_audit_rows(db_path)
+            links = link_business_interests_to_award_exposure(rows)
+            return [fetch_award_exposure(link) for link in links]
+
         if args.compare:
             politician_a = int(args.compare[0])
             politician_b = int(args.compare[1])
@@ -498,11 +503,12 @@ def main():
             if args.shape_card:
                 print(render_financial_shape_card(export))
             elif args.profile_card:
-                print(render_member_profile_card(build_validate_real_profile(export, identity)))
+                profile = build_validate_real_profile(export, identity)
+                if args.fetch_exposure:
+                    profile["federal_award_exposure"] = fetch_exposure_results(db_path)
+                print(render_member_profile_card(profile))
             elif args.fetch_exposure:
-                rows = get_normalized_asset_audit_rows(db_path)
-                links = link_business_interests_to_award_exposure(rows)
-                print(json.dumps([fetch_award_exposure(link) for link in links], indent=2))
+                print(json.dumps(fetch_exposure_results(db_path), indent=2))
             else:
                 print(json.dumps(export, indent=2))
 
