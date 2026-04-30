@@ -30,7 +30,10 @@ wheels/
 .ruff_cache/
 
 # data
-data/
+data/*
+!data/seed/
+data/seed/*
+!data/seed/member_metadata_seed.csv
 *.sqlite
 *.sqlite3
 
