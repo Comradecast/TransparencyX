@@ -1,15 +1,81 @@
+import csv
 import json
 import sys
+from io import StringIO
 
 import pytest
 
 from transparencyx.dossier.builder import build_member_dossier_from_profile
 from transparencyx.dossier.metadata import (
+    MEMBER_METADATA_COLUMNS,
     MemberMetadata,
     apply_member_metadata,
     load_member_metadata,
+    render_member_metadata_template_csv,
+    write_member_metadata_template_csv,
 )
 from transparencyx.dossier.render import render_member_dossier_summary
+
+
+def test_template_header_matches_member_metadata_columns_exactly():
+    rows = list(csv.reader(StringIO(render_member_metadata_template_csv())))
+
+    assert rows == [MEMBER_METADATA_COLUMNS]
+
+
+def test_template_ends_with_newline():
+    assert render_member_metadata_template_csv().endswith("\n")
+
+
+def test_write_template_creates_parent_dirs(tmp_path):
+    output_path = tmp_path / "nested" / "member_metadata_template.csv"
+
+    returned_path = write_member_metadata_template_csv(output_path)
+
+    assert returned_path == output_path
+    assert output_path.exists()
+    assert list(csv.reader(StringIO(output_path.read_text(encoding="utf-8")))) == [
+        MEMBER_METADATA_COLUMNS
+    ]
+
+
+def test_write_template_overwrites_deterministically(tmp_path):
+    output_path = tmp_path / "member_metadata_template.csv"
+    output_path.write_text("old content", encoding="utf-8")
+
+    write_member_metadata_template_csv(output_path)
+    first = output_path.read_text(encoding="utf-8")
+    write_member_metadata_template_csv(output_path)
+    second = output_path.read_text(encoding="utf-8")
+
+    assert first == second
+    assert first == render_member_metadata_template_csv()
+
+
+def test_cli_writes_template(tmp_path, monkeypatch, capsys):
+    output_path = tmp_path / "member_metadata_template.csv"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--write-member-metadata-template",
+            str(output_path),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 0
+    assert captured.out == f"Wrote member metadata template CSV: {output_path}\n"
+    assert list(csv.reader(StringIO(output_path.read_text(encoding="utf-8")))) == [
+        MEMBER_METADATA_COLUMNS
+    ]
 
 
 def test_load_csv(tmp_path):
@@ -287,7 +353,10 @@ def test_forbidden_language_absent():
         ),
     )
 
-    rendered = render_member_dossier_summary(dossier).lower()
+    rendered = (
+        render_member_dossier_summary(dossier)
+        + render_member_metadata_template_csv()
+    ).lower()
     restricted_terms = [
         "cor" + "ruption",
         "self-" + "dealing",

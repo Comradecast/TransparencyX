@@ -1,9 +1,28 @@
 import csv
 import json
 from dataclasses import dataclass, field
+from io import StringIO
 from pathlib import Path
 
 from transparencyx.dossier.schema import EvidenceSource, MemberDossier
+
+
+MEMBER_METADATA_COLUMNS = [
+    "member_id",
+    "full_name",
+    "chamber",
+    "state",
+    "district",
+    "party",
+    "current_status",
+    "official_salary",
+    "leadership_roles",
+    "committee_assignments",
+    "office_start",
+    "office_end",
+    "source_name",
+    "source_url",
+]
 
 
 @dataclass
@@ -121,6 +140,20 @@ def load_member_metadata(path: str | Path) -> dict[str, MemberMetadata]:
         metadata_by_id[metadata.member_id] = metadata
 
     return metadata_by_id
+
+
+def render_member_metadata_template_csv() -> str:
+    output = StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(MEMBER_METADATA_COLUMNS)
+    return output.getvalue()
+
+
+def write_member_metadata_template_csv(output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(render_member_metadata_template_csv(), encoding="utf-8")
+    return path
 
 
 def apply_member_metadata(

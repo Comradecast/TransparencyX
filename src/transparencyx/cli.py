@@ -79,6 +79,7 @@ def main():
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
+    parser.add_argument("--write-member-metadata-template", type=str, help="Write a blank member metadata CSV template")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -169,6 +170,15 @@ def main():
             print(f"transparencyx version {pkg_version}")
         except PackageNotFoundError:
             print("transparencyx version unknown (not installed)")
+        sys.exit(0)
+
+    if args.write_member_metadata_template:
+        from transparencyx.dossier.metadata import write_member_metadata_template_csv
+
+        output_path = write_member_metadata_template_csv(
+            Path(args.write_member_metadata_template)
+        )
+        print(f"Wrote member metadata template CSV: {output_path}")
         sys.exit(0)
 
     if args.batch_dossier_json and not args.output_dir:
