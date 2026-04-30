@@ -78,6 +78,7 @@ def main():
     parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
+    parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -226,10 +227,23 @@ def main():
             write_dossier_index_json,
             write_member_dossiers_json,
         )
+        from transparencyx.dossier.metadata import (
+            apply_member_metadata,
+            load_member_metadata,
+        )
         from transparencyx.exposure.candidates import build_recipient_candidate_audit
         from transparencyx.profile.batch import build_profiles_for_directory
         from transparencyx.spending.fetch import fetch_award_exposure
         from transparencyx.spending.linker import link_business_interests_to_award_exposure
+
+        metadata_by_id = {}
+        if args.member_metadata:
+            try:
+                metadata_by_id = load_member_metadata(Path(args.member_metadata))
+            except ValueError as error:
+                print(str(error))
+                sys.exit(1)
+            print(f"Loaded member metadata records: {len(metadata_by_id)}")
 
         profiles = build_profiles_for_directory(Path(args.batch_dossier_json))
         if args.fetch_exposure:
@@ -250,6 +264,10 @@ def main():
             build_member_dossier_from_profile(profile)
             for profile in profiles
         ]
+        for dossier in dossiers:
+            metadata = metadata_by_id.get(dossier.identity.member_id)
+            if metadata is not None:
+                apply_member_metadata(dossier, metadata)
         try:
             written_paths = write_member_dossiers_json(dossiers, Path(args.output_dir))
         except ValueError as error:
