@@ -81,6 +81,7 @@ def main():
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
     parser.add_argument("--write-member-metadata-template", type=str, help="Write a blank member metadata CSV template")
     parser.add_argument("--metadata-coverage-json", type=str, help="Write metadata coverage report JSON")
+    parser.add_argument("--html", action="store_true", help="Write HTML files for batch dossier output")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -161,6 +162,7 @@ def main():
     validate_parser.add_argument("--recipient-candidate-audit", action="store_true", help="Print review-only recipient candidates for fetched exposure results")
     validate_parser.add_argument("--candidate-audit-csv", type=str, help="Write recipient candidate audit rows to a CSV file")
     validate_parser.add_argument("--dossier-json", type=str, help="Write canonical member dossier JSON to a file or existing directory")
+    validate_parser.add_argument("--dossier-html", type=str, help="Write canonical member dossier HTML to a file")
     validate_parser.add_argument("--compare", nargs=2, metavar=("A", "B"))
 
     args = parser.parse_args()
@@ -244,6 +246,7 @@ def main():
             load_member_metadata,
             render_metadata_coverage_report,
         )
+        from transparencyx.dossier.html import write_member_dossiers_html
         from transparencyx.exposure.candidates import build_recipient_candidate_audit
         from transparencyx.profile.batch import build_profiles_for_directory
         from transparencyx.spending.fetch import fetch_award_exposure
@@ -287,6 +290,13 @@ def main():
             print(str(error))
             sys.exit(1)
         print(f"Wrote member dossier JSON files: {len(written_paths)} to {Path(args.output_dir)}")
+        if args.html:
+            try:
+                html_paths = write_member_dossiers_html(dossiers, Path(args.output_dir))
+            except ValueError as error:
+                print(str(error))
+                sys.exit(1)
+            print(f"Wrote member dossier HTML files: {len(html_paths)} to {Path(args.output_dir)}")
         if args.index_json:
             index_path = Path(args.index_json)
             if index_path.exists() and index_path.is_dir():
@@ -597,6 +607,7 @@ def main():
             dossier_filename,
             write_member_dossier_json,
         )
+        from transparencyx.dossier.html import write_member_dossier_html
 
         pdf_path = Path(args.pdf)
         if not pdf_path.exists():
@@ -613,6 +624,7 @@ def main():
             or args.fetch_exposure
             or args.compare
             or args.dossier_json
+            or args.dossier_html
         )
 
         def build_validate_real_export(politician_id: int, db_path: Path) -> tuple[dict, Path, dict]:
@@ -704,6 +716,12 @@ def main():
             write_member_dossier_json(dossier, output_path)
             print(f"Wrote member dossier JSON: {output_path}")
 
+        def write_dossier_html(profile: dict) -> None:
+            dossier = build_member_dossier_from_profile(profile)
+            output_path = Path(args.dossier_html)
+            write_member_dossier_html(dossier, output_path)
+            print(f"Wrote member dossier HTML: {output_path}")
+
         if args.compare:
             politician_a = int(args.compare[0])
             politician_b = int(args.compare[1])
@@ -752,6 +770,8 @@ def main():
                         print(f"Wrote recipient candidate audit CSV: {output_path}")
             elif args.dossier_json:
                 write_dossier_json(profile)
+            elif args.dossier_html:
+                write_dossier_html(profile)
             else:
                 if args.exposure_diagnostics:
                     print("Exposure diagnostics require fetched federal award exposure results.")
@@ -763,6 +783,8 @@ def main():
 
             if args.dossier_json and (args.shape_card or args.profile_card or args.fetch_exposure):
                 write_dossier_json(profile)
+            if args.dossier_html and (args.shape_card or args.profile_card or args.fetch_exposure or args.dossier_json):
+                write_dossier_html(profile)
 
         if args.show_assets and not quiet:
             rows = get_normalized_asset_audit_rows(db_path)
