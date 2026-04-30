@@ -156,6 +156,71 @@ def write_member_metadata_template_csv(output_path: str | Path) -> Path:
     return path
 
 
+def build_metadata_coverage_report(
+    dossiers: list[MemberDossier],
+    metadata_map: dict[str, MemberMetadata] | None,
+) -> dict:
+    metadata = metadata_map or {}
+    matched_member_ids = []
+    unmatched_member_ids = []
+    matched_seen = set()
+    unmatched_seen = set()
+    matched_count = 0
+    unmatched_count = 0
+
+    for dossier in dossiers:
+        member_id = dossier.identity.member_id
+        if member_id in metadata:
+            matched_count += 1
+            if member_id not in matched_seen:
+                matched_member_ids.append(member_id)
+                matched_seen.add(member_id)
+        else:
+            unmatched_count += 1
+            if member_id not in unmatched_seen:
+                unmatched_member_ids.append(member_id)
+                unmatched_seen.add(member_id)
+
+    return {
+        "total_dossiers": len(dossiers),
+        "metadata_records_loaded": len(metadata),
+        "matched_dossiers": matched_count,
+        "unmatched_dossiers": unmatched_count,
+        "matched_member_ids": matched_member_ids,
+        "unmatched_member_ids": unmatched_member_ids,
+    }
+
+
+def _render_member_id_list(title: str, member_ids: list[str]) -> list[str]:
+    lines = [title]
+    if not member_ids:
+        lines.append("None")
+    else:
+        lines.extend(f"- {member_id}" for member_id in member_ids)
+    return lines
+
+
+def render_metadata_coverage_report(report: dict) -> str:
+    lines = [
+        "Metadata Coverage Report:",
+        f"- total dossiers: {report['total_dossiers']}",
+        f"- metadata records loaded: {report['metadata_records_loaded']}",
+        f"- matched dossiers: {report['matched_dossiers']}",
+        f"- unmatched dossiers: {report['unmatched_dossiers']}",
+        "",
+        *_render_member_id_list(
+            "matched member ids:",
+            report["matched_member_ids"],
+        ),
+        "",
+        *_render_member_id_list(
+            "unmatched member ids:",
+            report["unmatched_member_ids"],
+        ),
+    ]
+    return "\n".join(lines)
+
+
 def apply_member_metadata(
     dossier: MemberDossier,
     metadata: MemberMetadata,

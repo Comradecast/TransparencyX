@@ -10,7 +10,9 @@ from transparencyx.dossier.metadata import (
     MEMBER_METADATA_COLUMNS,
     MemberMetadata,
     apply_member_metadata,
+    build_metadata_coverage_report,
     load_member_metadata,
+    render_metadata_coverage_report,
     render_member_metadata_template_csv,
     write_member_metadata_template_csv,
 )
@@ -76,6 +78,166 @@ def test_cli_writes_template(tmp_path, monkeypatch, capsys):
     assert list(csv.reader(StringIO(output_path.read_text(encoding="utf-8")))) == [
         MEMBER_METADATA_COLUMNS
     ]
+
+
+def test_metadata_coverage_report_with_full_match():
+    dossiers = [
+        build_member_dossier_from_profile({"member_name": "Nancy Pelosi"}),
+        build_member_dossier_from_profile({"member_name": "Jane Public"}),
+    ]
+    metadata = {
+        "nancy-pelosi": MemberMetadata("nancy-pelosi", "Nancy Pelosi"),
+        "jane-public": MemberMetadata("jane-public", "Jane Public"),
+    }
+
+    report = build_metadata_coverage_report(dossiers, metadata)
+
+    assert report == {
+        "total_dossiers": 2,
+        "metadata_records_loaded": 2,
+        "matched_dossiers": 2,
+        "unmatched_dossiers": 0,
+        "matched_member_ids": ["nancy-pelosi", "jane-public"],
+        "unmatched_member_ids": [],
+    }
+
+
+def test_metadata_coverage_report_with_partial_match():
+    dossiers = [
+        build_member_dossier_from_profile({"member_name": "Nancy Pelosi"}),
+        build_member_dossier_from_profile({"member_name": "John Doe"}),
+    ]
+    metadata = {
+        "nancy-pelosi": MemberMetadata("nancy-pelosi", "Nancy Pelosi"),
+        "jane-public": MemberMetadata("jane-public", "Jane Public"),
+    }
+
+    report = build_metadata_coverage_report(dossiers, metadata)
+
+    assert report["metadata_records_loaded"] == 2
+    assert report["matched_dossiers"] == 1
+    assert report["unmatched_dossiers"] == 1
+    assert report["matched_member_ids"] == ["nancy-pelosi"]
+    assert report["unmatched_member_ids"] == ["john-doe"]
+
+
+def test_metadata_coverage_report_with_no_metadata_map():
+    dossiers = [
+        build_member_dossier_from_profile({"member_name": "Nancy Pelosi"}),
+    ]
+
+    report = build_metadata_coverage_report(dossiers, None)
+
+    assert report == {
+        "total_dossiers": 1,
+        "metadata_records_loaded": 0,
+        "matched_dossiers": 0,
+        "unmatched_dossiers": 1,
+        "matched_member_ids": [],
+        "unmatched_member_ids": ["nancy-pelosi"],
+    }
+
+
+def test_metadata_coverage_report_preserves_order():
+    dossiers = [
+        build_member_dossier_from_profile({"member_name": "John Doe"}),
+        build_member_dossier_from_profile({"member_name": "Nancy Pelosi"}),
+        build_member_dossier_from_profile({"member_name": "Jane Public"}),
+    ]
+    metadata = {
+        "jane-public": MemberMetadata("jane-public", "Jane Public"),
+        "nancy-pelosi": MemberMetadata("nancy-pelosi", "Nancy Pelosi"),
+    }
+
+    report = build_metadata_coverage_report(dossiers, metadata)
+
+    assert report["matched_member_ids"] == ["nancy-pelosi", "jane-public"]
+    assert report["unmatched_member_ids"] == ["john-doe"]
+
+
+def test_metadata_coverage_report_lists_have_no_duplicates():
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_id": "nancy-pelosi",
+            "member_name": "Nancy Pelosi",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "nancy-pelosi",
+            "member_name": "Nancy Pelosi",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "john-doe",
+            "member_name": "John Doe",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "john-doe",
+            "member_name": "John Doe",
+        }),
+    ]
+    metadata = {
+        "nancy-pelosi": MemberMetadata("nancy-pelosi", "Nancy Pelosi"),
+    }
+
+    report = build_metadata_coverage_report(dossiers, metadata)
+
+    assert report["matched_dossiers"] == 2
+    assert report["unmatched_dossiers"] == 2
+    assert report["matched_member_ids"] == ["nancy-pelosi"]
+    assert report["unmatched_member_ids"] == ["john-doe"]
+
+
+def test_render_metadata_coverage_report_formatting():
+    report = {
+        "total_dossiers": 5,
+        "metadata_records_loaded": 3,
+        "matched_dossiers": 3,
+        "unmatched_dossiers": 2,
+        "matched_member_ids": ["nancy-pelosi", "jane-public"],
+        "unmatched_member_ids": ["john-doe", "unknown"],
+    }
+
+    assert render_metadata_coverage_report(report) == "\n".join([
+        "Metadata Coverage Report:",
+        "- total dossiers: 5",
+        "- metadata records loaded: 3",
+        "- matched dossiers: 3",
+        "- unmatched dossiers: 2",
+        "",
+        "matched member ids:",
+        "- nancy-pelosi",
+        "- jane-public",
+        "",
+        "unmatched member ids:",
+        "- john-doe",
+        "- unknown",
+    ])
+
+
+def test_render_metadata_coverage_report_empty_lists_render_none():
+    report = {
+        "total_dossiers": 0,
+        "metadata_records_loaded": 0,
+        "matched_dossiers": 0,
+        "unmatched_dossiers": 0,
+        "matched_member_ids": [],
+        "unmatched_member_ids": [],
+    }
+
+    rendered = render_metadata_coverage_report(report)
+
+    assert "matched member ids:\nNone" in rendered
+    assert "unmatched member ids:\nNone" in rendered
+
+
+def test_metadata_coverage_report_json_parseable():
+    report = build_metadata_coverage_report(
+        [build_member_dossier_from_profile({"member_name": "Nancy Pelosi"})],
+        {"nancy-pelosi": MemberMetadata("nancy-pelosi", "Nancy Pelosi")},
+    )
+
+    parsed = json.loads(json.dumps(report, indent=2))
+
+    assert parsed == report
 
 
 def test_load_csv(tmp_path):
@@ -341,6 +503,68 @@ def test_cli_batch_export_with_metadata(tmp_path, monkeypatch, capsys):
     assert data["evidence_sources"][-1]["source_type"] == "member_metadata"
 
 
+def test_cli_metadata_coverage_report_and_json(tmp_path, monkeypatch, capsys):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "dossiers"
+    coverage_dir = tmp_path / "coverage"
+    metadata_path = tmp_path / "metadata.csv"
+    input_dir.mkdir()
+    coverage_dir.mkdir()
+    metadata_path.write_text(
+        "\n".join([
+            "member_id,full_name,chamber",
+            "nancy-pelosi,Nancy Pelosi,House",
+        ]),
+        encoding="utf-8",
+    )
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-dossier-json",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+            "--member-metadata",
+            str(metadata_path),
+            "--metadata-coverage-json",
+            str(coverage_dir),
+        ],
+    )
+    monkeypatch.setattr(
+        "transparencyx.profile.batch.build_profiles_for_directory",
+        lambda directory: [
+            {"member_name": "Nancy Pelosi"},
+            {"member_name": "John Doe"},
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    coverage_path = coverage_dir / "metadata_coverage.json"
+    report = json.loads(coverage_path.read_text(encoding="utf-8"))
+
+    assert exit_info.value.code == 0
+    assert "Metadata Coverage Report:\n" in captured.out
+    assert "- matched dossiers: 1\n" in captured.out
+    assert "- unmatched dossiers: 1\n" in captured.out
+    assert f"Wrote metadata coverage JSON: {coverage_path}\n" in captured.out
+    assert report == {
+        "total_dossiers": 2,
+        "metadata_records_loaded": 1,
+        "matched_dossiers": 1,
+        "unmatched_dossiers": 1,
+        "matched_member_ids": ["nancy-pelosi"],
+        "unmatched_member_ids": ["john-doe"],
+    }
+
+
 def test_forbidden_language_absent():
     dossier = build_member_dossier_from_profile({"member_name": "Nancy Pelosi"})
     apply_member_metadata(
@@ -356,6 +580,12 @@ def test_forbidden_language_absent():
     rendered = (
         render_member_dossier_summary(dossier)
         + render_member_metadata_template_csv()
+        + render_metadata_coverage_report(
+            build_metadata_coverage_report([dossier], {"nancy-pelosi": MemberMetadata(
+                "nancy-pelosi",
+                "Nancy Pelosi",
+            )})
+        )
     ).lower()
     restricted_terms = [
         "cor" + "ruption",

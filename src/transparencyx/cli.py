@@ -80,6 +80,7 @@ def main():
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
     parser.add_argument("--write-member-metadata-template", type=str, help="Write a blank member metadata CSV template")
+    parser.add_argument("--metadata-coverage-json", type=str, help="Write metadata coverage report JSON")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -239,7 +240,9 @@ def main():
         )
         from transparencyx.dossier.metadata import (
             apply_member_metadata,
+            build_metadata_coverage_report,
             load_member_metadata,
+            render_metadata_coverage_report,
         )
         from transparencyx.exposure.candidates import build_recipient_candidate_audit
         from transparencyx.profile.batch import build_profiles_for_directory
@@ -291,6 +294,19 @@ def main():
             index = build_dossier_index(dossiers, written_paths)
             write_dossier_index_json(index, index_path)
             print(f"Wrote dossier index JSON: {index_path}")
+        if args.member_metadata:
+            report = build_metadata_coverage_report(dossiers, metadata_by_id)
+            print(render_metadata_coverage_report(report))
+            if args.metadata_coverage_json:
+                coverage_path = Path(args.metadata_coverage_json)
+                if coverage_path.exists() and coverage_path.is_dir():
+                    coverage_path = coverage_path / "metadata_coverage.json"
+                coverage_path.parent.mkdir(parents=True, exist_ok=True)
+                coverage_path.write_text(
+                    json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+                    encoding="utf-8",
+                )
+                print(f"Wrote metadata coverage JSON: {coverage_path}")
         sys.exit(0)
 
     if args.batch_exposure:
