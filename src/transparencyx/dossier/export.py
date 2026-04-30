@@ -46,6 +46,49 @@ def write_member_dossiers_json(
     ]
 
 
+def build_dossier_index(
+    dossiers: list[MemberDossier],
+    written_paths: list[Path],
+) -> dict:
+    if len(dossiers) != len(written_paths):
+        raise ValueError("dossiers and written_paths lengths must match")
+
+    return {
+        "dossier_count": len(dossiers),
+        "dossiers": [
+            {
+                "member_id": dossier.identity.member_id,
+                "full_name": dossier.identity.full_name,
+                "chamber": dossier.identity.chamber,
+                "state": dossier.identity.state,
+                "district": dossier.identity.district,
+                "party": dossier.identity.party,
+                "file": Path(path).name,
+            }
+            for dossier, path in zip(dossiers, written_paths)
+        ],
+    }
+
+
+def render_dossier_index_json(index: dict) -> str:
+    return (
+        json.dumps(
+            index,
+            indent=2,
+            ensure_ascii=False,
+            sort_keys=False,
+        )
+        + "\n"
+    )
+
+
+def write_dossier_index_json(index: dict, output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(render_dossier_index_json(index), encoding="utf-8")
+    return path
+
+
 def dossier_filename(dossier: MemberDossier) -> str:
     member_id = dossier.identity.member_id.strip().lower()
     slug = re.sub(r"[^a-z0-9]+", "-", member_id).strip("-")

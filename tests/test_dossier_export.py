@@ -1,12 +1,16 @@
 import json
 import sys
+from pathlib import Path
 
 import pytest
 
 from transparencyx.dossier.builder import build_member_dossier_from_profile
 from transparencyx.dossier.export import (
+    build_dossier_index,
     dossier_filename,
+    render_dossier_index_json,
     render_member_dossier_json,
+    write_dossier_index_json,
     write_member_dossiers_json,
     write_member_dossier_json,
 )
@@ -133,6 +137,114 @@ def test_batch_json_files_parse_correctly(tmp_path):
 
     assert parsed[0]["financials"]["disclosure_years"] == [2023]
     assert parsed[1]["financials"]["disclosure_years"] == [2024]
+
+
+def test_build_dossier_index_basic_output():
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_id": "nancy-pelosi",
+            "member_name": "Nancy Pelosi",
+            "chamber": "House",
+            "state": "CA",
+            "district": "11",
+            "party": "Democratic",
+        })
+    ]
+    paths = [Path("out/dossiers/nancy-pelosi.json")]
+
+    index = build_dossier_index(dossiers, paths)
+
+    assert index == {
+        "dossier_count": 1,
+        "dossiers": [
+            {
+                "member_id": "nancy-pelosi",
+                "full_name": "Nancy Pelosi",
+                "chamber": "House",
+                "state": "CA",
+                "district": "11",
+                "party": "Democratic",
+                "file": "nancy-pelosi.json",
+            }
+        ],
+    }
+
+
+def test_build_dossier_index_uses_file_basename_only():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    index = build_dossier_index(
+        [dossier],
+        [Path("nested/dossiers/nancy-pelosi.json")],
+    )
+
+    assert index["dossiers"][0]["file"] == "nancy-pelosi.json"
+
+
+def test_build_dossier_index_preserves_order(tmp_path):
+    dossiers = [
+        create_empty_member_dossier("jane-public", "Jane Public"),
+        create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi"),
+    ]
+    paths = [
+        tmp_path / "jane-public.json",
+        tmp_path / "nancy-pelosi.json",
+    ]
+
+    index = build_dossier_index(dossiers, paths)
+
+    assert [row["member_id"] for row in index["dossiers"]] == [
+        "jane-public",
+        "nancy-pelosi",
+    ]
+    assert [row["file"] for row in index["dossiers"]] == [
+        "jane-public.json",
+        "nancy-pelosi.json",
+    ]
+
+
+def test_build_dossier_index_length_mismatch_raises_value_error(tmp_path):
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    with pytest.raises(ValueError, match="lengths must match"):
+        build_dossier_index([dossier], [])
+
+
+def test_render_dossier_index_json_parseable():
+    index = {
+        "dossier_count": 1,
+        "dossiers": [
+            {
+                "member_id": "nancy-pelosi",
+                "full_name": "Nancy Pelosi",
+                "chamber": "House",
+                "state": "CA",
+                "district": "11",
+                "party": "Democratic",
+                "file": "nancy-pelosi.json",
+            }
+        ],
+    }
+
+    parsed = json.loads(render_dossier_index_json(index))
+
+    assert parsed == index
+
+
+def test_render_dossier_index_json_ends_with_newline():
+    assert render_dossier_index_json({"dossier_count": 0, "dossiers": []}).endswith(
+        "\n"
+    )
+
+
+def test_write_dossier_index_json_creates_parent_dirs(tmp_path):
+    output_path = tmp_path / "nested" / "index" / "index.json"
+    index = {"dossier_count": 0, "dossiers": []}
+
+    returned_path = write_dossier_index_json(index, output_path)
+
+    assert returned_path == output_path
+    assert json.loads(output_path.read_text(encoding="utf-8")) == index
 
 
 def test_dossier_filename_slug_behavior():
@@ -268,6 +380,71 @@ def test_cli_batch_dossier_export_summary_message(
     ))["identity"]["full_name"] == "Jane Public"
 
 
+def test_cli_batch_dossier_index_summary_message(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "dossiers"
+    index_dir = tmp_path / "manifest"
+    input_dir.mkdir()
+    index_dir.mkdir()
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-dossier-json",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+            "--index-json",
+            str(index_dir),
+        ],
+    )
+    monkeypatch.setattr(
+        "transparencyx.profile.batch.build_profiles_for_directory",
+        lambda directory: [
+            {
+                "member_name": "Nancy Pelosi",
+                "chamber": "House",
+                "state": "CA",
+            },
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    index_path = index_dir / "index.json"
+    index = json.loads(index_path.read_text(encoding="utf-8"))
+
+    assert exit_info.value.code == 0
+    assert captured.out == (
+        f"Wrote member dossier JSON files: 1 to {output_dir}\n"
+        f"Wrote dossier index JSON: {index_path}\n"
+    )
+    assert index == {
+        "dossier_count": 1,
+        "dossiers": [
+            {
+                "member_id": "nancy-pelosi",
+                "full_name": "Nancy Pelosi",
+                "chamber": "House",
+                "state": "CA",
+                "district": None,
+                "party": None,
+                "file": "nancy-pelosi.json",
+            }
+        ],
+    }
+
+
 def test_json_is_parseable():
     dossier = build_member_dossier_from_profile({
         "member_name": "Nancy Pelosi",
@@ -282,7 +459,11 @@ def test_json_is_parseable():
 
 def test_forbidden_language_absent():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
-    rendered = render_member_dossier_json(dossier).lower()
+    index = build_dossier_index([dossier], [Path("nancy-pelosi.json")])
+    rendered = (
+        render_member_dossier_json(dossier)
+        + render_dossier_index_json(index)
+    ).lower()
     restricted_terms = [
         "cor" + "ruption",
         "self-" + "dealing",

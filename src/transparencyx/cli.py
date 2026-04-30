@@ -77,6 +77,7 @@ def main():
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
     parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
+    parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -220,7 +221,11 @@ def main():
 
     if args.batch_dossier_json:
         from transparencyx.dossier.builder import build_member_dossier_from_profile
-        from transparencyx.dossier.export import write_member_dossiers_json
+        from transparencyx.dossier.export import (
+            build_dossier_index,
+            write_dossier_index_json,
+            write_member_dossiers_json,
+        )
         from transparencyx.exposure.candidates import build_recipient_candidate_audit
         from transparencyx.profile.batch import build_profiles_for_directory
         from transparencyx.spending.fetch import fetch_award_exposure
@@ -251,6 +256,13 @@ def main():
             print(str(error))
             sys.exit(1)
         print(f"Wrote member dossier JSON files: {len(written_paths)} to {Path(args.output_dir)}")
+        if args.index_json:
+            index_path = Path(args.index_json)
+            if index_path.exists() and index_path.is_dir():
+                index_path = index_path / "index.json"
+            index = build_dossier_index(dossiers, written_paths)
+            write_dossier_index_json(index, index_path)
+            print(f"Wrote dossier index JSON: {index_path}")
         sys.exit(0)
 
     if args.batch_exposure:
