@@ -99,6 +99,7 @@ def main():
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
     parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
     parser.add_argument("--build-dossier-site", type=str, help="Build a complete static dossier site from PDFs in a directory")
+    parser.add_argument("--validate-dossier-site", type=str, help="Validate generated dossier site artifacts")
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
@@ -206,6 +207,16 @@ def main():
             Path(args.write_member_metadata_template)
         )
         print(f"Wrote member metadata template CSV: {output_path}")
+        sys.exit(0)
+
+    if args.validate_dossier_site:
+        from transparencyx.dossier.validate_site import (
+            render_dossier_site_validation,
+            validate_dossier_site,
+        )
+
+        report = validate_dossier_site(Path(args.validate_dossier_site))
+        print(render_dossier_site_validation(report), end="")
         sys.exit(0)
 
     if (args.batch_dossier_json or args.build_dossier_site) and not args.output_dir:
