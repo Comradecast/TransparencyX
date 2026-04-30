@@ -261,3 +261,71 @@ def write_member_dossiers_html(
         write_member_dossier_html(dossier, directory / filename)
         for dossier, filename in zip(dossiers, filenames)
     ]
+
+
+def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
+    rows = []
+    for dossier in dossiers:
+        identity = dossier.identity
+        filename = dossier_html_filename(dossier)
+        rows.append(
+            "<tr>"
+            f"{_cell(identity.full_name)}"
+            f"{_cell(identity.chamber)}"
+            f"{_cell(identity.state)}"
+            f"{_cell(identity.district)}"
+            f"{_cell(identity.party)}"
+            f'<td><a href="{escape(filename)}">{escape(filename)}</a></td>'
+            "</tr>"
+        )
+
+    table_rows = "\n".join(rows)
+    return f"""<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TransparencyX Dossier Index</title>
+  <style>
+    body {{ font-family: Arial, sans-serif; line-height: 1.45; margin: 2rem; color: #1f2933; }}
+    main {{ max-width: 980px; margin: 0 auto; }}
+    h1 {{ margin: 0 0 0.75rem; }}
+    table {{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }}
+    th, td {{ border: 1px solid #d8dee4; padding: 0.45rem; text-align: left; vertical-align: top; }}
+    th {{ background: #f6f8fa; }}
+  </style>
+</head>
+<body>
+<main>
+  <h1>TransparencyX Dossier Index</h1>
+  <p>total dossier count: {len(dossiers)}</p>
+  <table>
+    <thead>
+      <tr>
+        <th>full_name</th>
+        <th>chamber</th>
+        <th>state</th>
+        <th>district</th>
+        <th>party</th>
+        <th>file</th>
+      </tr>
+    </thead>
+    <tbody>
+{table_rows}
+    </tbody>
+  </table>
+</main>
+</body>
+</html>
+"""
+
+
+def write_dossier_html_index(
+    dossiers: list[MemberDossier],
+    output_path: str | Path,
+) -> Path:
+    path = Path(output_path)
+    if path.exists() and path.is_dir():
+        path = path / "index.html"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(render_dossier_html_index(dossiers), encoding="utf-8")
+    return path

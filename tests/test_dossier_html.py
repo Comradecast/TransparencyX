@@ -4,7 +4,9 @@ import pytest
 
 from transparencyx.dossier.html import (
     dossier_html_filename,
+    render_dossier_html_index,
     render_member_dossier_html,
+    write_dossier_html_index,
     write_member_dossier_html,
     write_member_dossiers_html,
 )
@@ -258,9 +260,157 @@ def test_cli_single_html_export(tmp_path, monkeypatch, capsys):
     assert "Nancy Pelosi" in output_path.read_text(encoding="utf-8")
 
 
+def test_html_index_complete_document():
+    dossiers = [create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert html.startswith("<!doctype html>\n<html")
+    assert "<title>TransparencyX Dossier Index</title>" in html
+    assert "<h1>TransparencyX Dossier Index</h1>" in html
+    assert "</html>\n" in html
+    assert html.endswith("\n")
+
+
+def test_html_index_total_dossier_count():
+    dossiers = [
+        create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi"),
+        create_empty_member_dossier("jane-public", "Jane Public"),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert "<p>total dossier count: 2</p>" in html
+
+
+def test_html_index_links_to_dossier_html_filenames():
+    dossiers = [
+        create_empty_member_dossier("Nancy Pelosi", "Nancy Pelosi"),
+        create_empty_member_dossier("Jane Public", "Jane Public"),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert '<a href="nancy-pelosi.html">nancy-pelosi.html</a>' in html
+    assert '<a href="jane-public.html">jane-public.html</a>' in html
+
+
+def test_html_index_escapes_data_values():
+    dossier = MemberDossier(
+        identity=MemberIdentity(
+            member_id="member-1",
+            full_name="<Jane & Public>",
+            chamber="<House>",
+            state="A&B",
+        ),
+        office=MemberOffice(),
+        financials=DossierFinancials(),
+        exposure=DossierExposure(),
+    )
+
+    html = render_dossier_html_index([dossier])
+
+    assert "&lt;Jane &amp; Public&gt;" in html
+    assert "&lt;House&gt;" in html
+    assert "A&amp;B" in html
+    assert "<Jane & Public>" not in html
+
+
+def test_html_index_missing_values_render_unknown():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_dossier_html_index([dossier])
+
+    assert "<td>Unknown</td>" in html
+
+
+def test_write_html_index_supports_directory_target(tmp_path):
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    output_dir = tmp_path / "site"
+    output_dir.mkdir()
+
+    path = write_dossier_html_index([dossier], output_dir)
+
+    assert path == output_dir / "index.html"
+    assert path.exists()
+    assert "TransparencyX Dossier Index" in path.read_text(encoding="utf-8")
+
+
+def test_cli_html_index_without_html_fails_closed(monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-dossier-json",
+            "input",
+            "--output-dir",
+            "out",
+            "--html-index",
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 0
+    assert captured.out == "HTML index requires HTML dossier export.\n"
+
+
+def test_cli_html_index_success(tmp_path, monkeypatch, capsys):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "dossiers"
+    input_dir.mkdir()
+
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-dossier-json",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+            "--html",
+            "--html-index",
+        ],
+    )
+    monkeypatch.setattr(
+        "transparencyx.profile.batch.build_profiles_for_directory",
+        lambda directory: [
+            {
+                "member_name": "Nancy Pelosi",
+                "chamber": "House",
+            }
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    index_path = output_dir / "index.html"
+
+    assert exit_info.value.code == 0
+    assert f"Wrote dossier HTML index: {index_path}\n" in captured.out
+    assert index_path.exists()
+    assert '<a href="nancy-pelosi.html">nancy-pelosi.html</a>' in index_path.read_text(
+        encoding="utf-8"
+    )
+
+
 def test_forbidden_language_absent():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
-    html = render_member_dossier_html(dossier).lower()
+    html = (
+        render_member_dossier_html(dossier)
+        + render_dossier_html_index([dossier])
+    ).lower()
     restricted_terms = [
         "cor" + "ruption",
         "self-" + "dealing",

@@ -82,6 +82,7 @@ def main():
     parser.add_argument("--write-member-metadata-template", type=str, help="Write a blank member metadata CSV template")
     parser.add_argument("--metadata-coverage-json", type=str, help="Write metadata coverage report JSON")
     parser.add_argument("--html", action="store_true", help="Write HTML files for batch dossier output")
+    parser.add_argument("--html-index", action="store_true", help="Write a static HTML index for batch dossier HTML output")
     parser.add_argument("--output-csv", type=str, help="Write batch exposure table to a CSV file")
     parser.add_argument("--fetch-exposure", action="store_true", help="Fetch federal award exposure for batch dossier JSON output")
     parser.add_argument("--exposure-diagnostics", action="store_true", help="Print diagnostics for fetched federal award exposure results")
@@ -187,6 +188,10 @@ def main():
     if args.batch_dossier_json and not args.output_dir:
         parser.error("--output-dir is required with --batch-dossier-json")
 
+    if args.html_index and not args.html:
+        print("HTML index requires HTML dossier export.")
+        sys.exit(0)
+
     batch_dossier_with_exposure = args.batch_dossier_json and args.fetch_exposure
 
     if (
@@ -246,7 +251,10 @@ def main():
             load_member_metadata,
             render_metadata_coverage_report,
         )
-        from transparencyx.dossier.html import write_member_dossiers_html
+        from transparencyx.dossier.html import (
+            write_dossier_html_index,
+            write_member_dossiers_html,
+        )
         from transparencyx.exposure.candidates import build_recipient_candidate_audit
         from transparencyx.profile.batch import build_profiles_for_directory
         from transparencyx.spending.fetch import fetch_award_exposure
@@ -297,6 +305,9 @@ def main():
                 print(str(error))
                 sys.exit(1)
             print(f"Wrote member dossier HTML files: {len(html_paths)} to {Path(args.output_dir)}")
+            if args.html_index:
+                html_index_path = write_dossier_html_index(dossiers, Path(args.output_dir))
+                print(f"Wrote dossier HTML index: {html_index_path}")
         if args.index_json:
             index_path = Path(args.index_json)
             if index_path.exists() and index_path.is_dir():
