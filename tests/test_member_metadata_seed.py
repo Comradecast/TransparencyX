@@ -6,6 +6,9 @@ import pytest
 
 from transparencyx.dossier.metadata import load_member_metadata
 from transparencyx.dossier.metadata_seed import (
+    build_metadata_source_quality_report,
+    classify_metadata_source,
+    render_metadata_source_quality_report,
     render_member_metadata_seed_validation,
     summarize_member_metadata_by_state,
     summarize_member_metadata_seed,
@@ -40,6 +43,24 @@ def test_plan_contains_key_sections():
     assert "## Section 7 - Expansion Targets" in plan
     assert "Full coverage of current U.S. House (435) and Senate (100)" in plan
     assert "No Wikipedia as primary source" in plan
+
+
+def test_classify_metadata_source_list_urls():
+    assert classify_metadata_source("https://clerk.house.gov/Members") == "list"
+    assert classify_metadata_source("https://clerk.house.gov/Members/ViewMemberList") == "list"
+    assert classify_metadata_source("https://www.senate.gov/senators/") == "list"
+    assert classify_metadata_source("https://www.senate.gov/states/NC/intro.htm") == "list"
+
+
+def test_classify_metadata_source_profile_like_urls():
+    assert classify_metadata_source("https://clerk.house.gov/Members/A000370") == "profile"
+    assert classify_metadata_source("https://www.senate.gov/senators/member-name.htm") == "profile"
+
+
+def test_classify_metadata_source_unknown():
+    assert classify_metadata_source(None) == "unknown"
+    assert classify_metadata_source("") == "unknown"
+    assert classify_metadata_source("https://example.test/member") == "unknown"
 
 
 def test_seed_file_loads_with_load_member_metadata():
@@ -170,6 +191,78 @@ def test_summarize_member_metadata_by_state():
     }
 
 
+def test_metadata_source_quality_report_counts_match():
+    report = build_metadata_source_quality_report(SEED_PATH)
+
+    assert report["records"] == (
+        report["profile_sources"]
+        + report["list_sources"]
+        + report["unknown_sources"]
+    )
+    assert report["list_sources"] == report["records"]
+    assert report["profile_sources"] == 0
+    assert report["unknown_sources"] == 0
+
+
+def test_metadata_source_quality_breakdown_order_preserved():
+    report = build_metadata_source_quality_report(SEED_PATH)
+    seed_member_ids = [row["member_id"] for row in _seed_rows()]
+
+    assert [
+        item["member_id"]
+        for item in report["member_breakdown"]
+    ] == seed_member_ids
+
+
+def test_render_metadata_source_quality_report():
+    report = {
+        "records": 2,
+        "profile_sources": 1,
+        "list_sources": 1,
+        "unknown_sources": 0,
+        "member_breakdown": [
+            {"member_id": "alma-s-adams", "source_type": "list"},
+            {"member_id": "example-member", "source_type": "profile"},
+        ],
+    }
+
+    assert render_metadata_source_quality_report(report) == "\n".join([
+        "Metadata Source Quality Report:",
+        "- records: 2",
+        "- profile sources: 1",
+        "- list sources: 1",
+        "- unknown sources: 0",
+        "",
+        "member breakdown:",
+        "- alma-s-adams: list",
+        "- example-member: profile",
+        "",
+    ])
+
+
+def test_cli_metadata_source_quality(monkeypatch, capsys):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--metadata-source-quality",
+            str(SEED_PATH),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 0
+    assert "Metadata Source Quality Report:\n" in captured.out
+    assert "- list sources: " in captured.out
+
+
 def test_render_output():
     report = validate_member_metadata_seed(SEED_PATH)
     rendered = render_member_metadata_seed_validation(report)
@@ -208,6 +301,9 @@ def test_forbidden_language_absent():
     combined += PLAN_PATH.read_text(encoding="utf-8").lower()
     combined += render_member_metadata_seed_validation(
         validate_member_metadata_seed(SEED_PATH)
+    ).lower()
+    combined += render_metadata_source_quality_report(
+        build_metadata_source_quality_report(SEED_PATH)
     ).lower()
     restricted_terms = [
         "cor" + "ruption",

@@ -1,5 +1,6 @@
 import csv
 from pathlib import Path
+from urllib.parse import urlparse
 
 from transparencyx.dossier.metadata import load_member_metadata
 
@@ -116,6 +117,75 @@ def summarize_member_metadata_by_state(path: str | Path, state: str) -> dict:
         ),
         "senators": sorted(item.full_name for item in senate_rows),
     }
+
+
+def classify_metadata_source(source_url: str | None) -> str:
+    if source_url is None or not source_url.strip():
+        return "unknown"
+
+    parsed = urlparse(source_url.strip())
+    path = parsed.path.rstrip("/")
+    lower_path = path.lower()
+    segments = [
+        segment
+        for segment in lower_path.split("/")
+        if segment
+    ]
+
+    if "clerk.house.gov" in parsed.netloc.lower():
+        if lower_path in {"/members", "/members/viewmemberlist"}:
+            return "list"
+        if len(segments) > 1 and segments[0] == "members":
+            return "profile"
+
+    if "senate.gov" in parsed.netloc.lower():
+        if lower_path in {"/senators", "/senators/index.htm"}:
+            return "list"
+        if len(segments) > 1 and segments[0] == "states":
+            return "list"
+        if len(segments) > 1 and segments[0] == "senators":
+            return "profile"
+
+    return "unknown"
+
+
+def build_metadata_source_quality_report(path: str | Path) -> dict:
+    metadata = load_member_metadata(Path(path))
+    breakdown = [
+        {
+            "member_id": item.member_id,
+            "source_type": classify_metadata_source(item.source_url),
+        }
+        for item in metadata.values()
+    ]
+
+    return {
+        "records": len(breakdown),
+        "profile_sources": sum(1 for item in breakdown if item["source_type"] == "profile"),
+        "list_sources": sum(1 for item in breakdown if item["source_type"] == "list"),
+        "unknown_sources": sum(1 for item in breakdown if item["source_type"] == "unknown"),
+        "member_breakdown": breakdown,
+    }
+
+
+def render_metadata_source_quality_report(report: dict) -> str:
+    lines = [
+        "Metadata Source Quality Report:",
+        f"- records: {report['records']}",
+        f"- profile sources: {report['profile_sources']}",
+        f"- list sources: {report['list_sources']}",
+        f"- unknown sources: {report['unknown_sources']}",
+        "",
+        "member breakdown:",
+    ]
+    if report["member_breakdown"]:
+        lines.extend(
+            f"- {item['member_id']}: {item['source_type']}"
+            for item in report["member_breakdown"]
+        )
+    else:
+        lines.append("None")
+    return "\n".join(lines) + "\n"
 
 
 def render_member_metadata_seed_validation(report: dict) -> str:

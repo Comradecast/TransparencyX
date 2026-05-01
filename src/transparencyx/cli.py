@@ -104,6 +104,7 @@ def main():
     parser.add_argument("--build-dossier-site", type=str, help="Build a complete static dossier site from PDFs in a directory")
     parser.add_argument("--validate-dossier-site", type=str, help="Validate generated dossier site artifacts")
     parser.add_argument("--validate-member-metadata-seed", type=str, help="Validate a member metadata seed CSV")
+    parser.add_argument("--metadata-source-quality", type=str, help="Report member metadata source URL quality")
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
@@ -232,6 +233,16 @@ def main():
 
         report = validate_member_metadata_seed(Path(args.validate_member_metadata_seed))
         print(render_member_metadata_seed_validation(report), end="")
+        sys.exit(0)
+
+    if args.metadata_source_quality:
+        from transparencyx.dossier.metadata_seed import (
+            build_metadata_source_quality_report,
+            render_metadata_source_quality_report,
+        )
+
+        report = build_metadata_source_quality_report(Path(args.metadata_source_quality))
+        print(render_metadata_source_quality_report(report), end="")
         sys.exit(0)
 
     if (args.batch_dossier_json or args.build_dossier_site) and not args.output_dir:
