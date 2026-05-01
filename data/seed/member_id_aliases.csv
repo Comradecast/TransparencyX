@@ -1,0 +1,4 @@
+parsed_member_id,canonical_member_id,source_name,source_url,notes
+valerie-foushee,valerie-p-foushee,Manual review,local audit,Parsed disclosure omits middle initial used in seeded metadata
+deborah-ross,deborah-k-ross,Manual review,local audit,Parsed disclosure omits middle initial used in seeded metadata
+alma-shealey-adams,alma-s-adams,Manual review,local audit,Parsed disclosure uses middle name where seeded metadata uses middle initial
