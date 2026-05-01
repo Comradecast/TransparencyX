@@ -12,9 +12,9 @@
     "dossiers": 6,
     "json_dossiers": 6,
     "html_dossiers": 6,
-    "metadata_records_loaded": 18,
-    "metadata_matched_dossiers": 5,
-    "metadata_unmatched_dossiers": 1,
+    "metadata_records_loaded": 19,
+    "metadata_matched_dossiers": 6,
+    "metadata_unmatched_dossiers": 0,
     "committee_rows_with_assignments": 4,
     "committee_rows_without_assignments": 2
   },

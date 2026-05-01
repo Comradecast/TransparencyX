@@ -42,6 +42,16 @@
       "file": "chuck-edwards.json"
     },
     {
+      "member_id": "nancy-pelosi",
+      "full_name": "Nancy Pelosi",
+      "chamber": "House",
+      "state": "CA",
+      "district": "11",
+      "party": "Democratic",
+      "current_status": "current",
+      "file": "nancy-pelosi.json"
+    },
+    {
       "member_id": "alma-s-adams",
       "full_name": "Alma S. Adams",
       "chamber": "House",
@@ -50,16 +60,6 @@
       "party": "Democratic",
       "current_status": "current",
       "file": "alma-s-adams.json"
-    },
-    {
-      "member_id": "nancy-pelosi",
-      "full_name": "Nancy Pelosi",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "nancy-pelosi.json"
     }
   ]
 }

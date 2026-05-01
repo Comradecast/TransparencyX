@@ -2,14 +2,14 @@
   "identity": {
     "member_id": "nancy-pelosi",
     "full_name": "Nancy Pelosi",
-    "chamber": null,
-    "state": null,
-    "district": null,
-    "party": null,
-    "current_status": null
+    "chamber": "House",
+    "state": "CA",
+    "district": "11",
+    "party": "Democratic",
+    "current_status": "current"
   },
   "office": {
-    "official_salary": null,
+    "official_salary": 174000.0,
     "leadership_roles": [],
     "committee_assignments": [],
     "office_start": null,
@@ -36,6 +36,13 @@
       "source_type": "financial_disclosure_pdf",
       "source_name": "10059734.pdf",
       "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/P000197",
       "retrieved_at": null,
       "notes": null
     }
