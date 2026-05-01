@@ -7,6 +7,18 @@ from transparencyx.shape.trace import build_financial_shape_trace, transaction_t
 from transparencyx.shape.summary import build_financial_shape_summary
 
 
+TRADE_DETAIL_ROW_KEYS = {
+    "id",
+    "asset_name",
+    "trade_date",
+    "transaction_type",
+    "amount_range_text",
+    "amount_min",
+    "amount_max",
+    "transaction_type_label",
+}
+
+
 @pytest.fixture
 def db_path(tmp_path):
     path = tmp_path / "test.sqlite"
@@ -67,6 +79,10 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
     # All returned values are ints (row IDs)
     assert all(isinstance(i, int) for i in trace["assets"]["count_rows"])
     assert all(isinstance(i, int) for i in trace["trades"]["count_rows"])
+    assert all(
+        set(row) == TRADE_DETAIL_ROW_KEYS
+        for row in trace["trades"]["detail_rows"]
+    )
 
     assert trace["trades"]["detail_rows"] == [
         {
@@ -266,6 +282,10 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
     assert all("amount_mid" not in row for row in trace["trades"]["detail_rows"])
     assert all("amount_total" not in row for row in trace["trades"]["detail_rows"])
     assert all("exact_amount" not in row for row in trace["trades"]["detail_rows"])
+    assert all(
+        set(row) == TRADE_DETAIL_ROW_KEYS
+        for row in trace["trades"]["detail_rows"]
+    )
 
 
 def test_transaction_type_label_explicit_mapping_only():
@@ -277,3 +297,59 @@ def test_transaction_type_label_explicit_mapping_only():
     assert transaction_type_label("BUY") is None
     assert transaction_type_label("") is None
     assert transaction_type_label(None) is None
+
+
+def test_trade_detail_rows_preserve_raw_transaction_type_and_add_label(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    cursor.executemany(
+        """
+        INSERT INTO trades (
+            politician_id,
+            raw_disclosure_id,
+            trade_date,
+            asset_name,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max,
+            amount_mid
+        )
+        VALUES (1, 1, '01/01/2023', ?, ?, '$1 - $2', 1, 2, 1.5)
+        """,
+        [
+            ("Purchase Asset", "P"),
+            ("Sale Asset", "S"),
+            ("Exchange Asset", "E"),
+            ("Unknown Asset", "X"),
+            ("Blank Asset", ""),
+            ("Partial Sale Asset", "S (partial)"),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    trace = build_financial_shape_trace(db_path, 1)
+    rows_by_asset = {
+        row["asset_name"]: row
+        for row in trace["trades"]["detail_rows"]
+    }
+
+    assert rows_by_asset["Purchase Asset"]["transaction_type"] == "P"
+    assert rows_by_asset["Purchase Asset"]["transaction_type_label"] == "Purchase"
+    assert rows_by_asset["Sale Asset"]["transaction_type"] == "S"
+    assert rows_by_asset["Sale Asset"]["transaction_type_label"] == "Sale"
+    assert rows_by_asset["Exchange Asset"]["transaction_type"] == "E"
+    assert rows_by_asset["Exchange Asset"]["transaction_type_label"] == "Exchange"
+    assert rows_by_asset["Unknown Asset"]["transaction_type"] == "X"
+    assert rows_by_asset["Unknown Asset"]["transaction_type_label"] is None
+    assert rows_by_asset["Blank Asset"]["transaction_type"] == ""
+    assert rows_by_asset["Blank Asset"]["transaction_type_label"] is None
+    assert rows_by_asset["Partial Sale Asset"]["transaction_type"] == "S (partial)"
+    assert rows_by_asset["Partial Sale Asset"]["transaction_type_label"] is None
+    assert all(set(row) == TRADE_DETAIL_ROW_KEYS for row in rows_by_asset.values())

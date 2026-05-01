@@ -11,6 +11,16 @@ from transparencyx.audit.real_batch import build_real_batch_audit_rows
 
 PELOSI_PDF = Path("data/raw/house/2023/10059734.pdf")
 FOXX_PDF = Path("data/raw/house/2023/10059335.pdf")
+TRADE_DETAIL_ROW_KEYS = {
+    "id",
+    "asset_name",
+    "trade_date",
+    "transaction_type",
+    "amount_range_text",
+    "amount_min",
+    "amount_max",
+    "transaction_type_label",
+}
 
 
 def test_build_profiles_for_directory_finds_pdfs(tmp_path, monkeypatch):
@@ -88,6 +98,10 @@ def test_pelosi_shape_export_from_text_has_expected_transaction_count():
     assert export["summary"]["transaction_count"] == 7
     assert len(export["trace"]["trades"]["count_rows"]) == 7
     assert len(export["trace"]["trades"]["detail_rows"]) == 7
+    assert all(
+        set(row) == TRADE_DETAIL_ROW_KEYS
+        for row in export["trace"]["trades"]["detail_rows"]
+    )
     assert export["trace"]["trades"]["detail_rows"][0] == {
         "id": export["trace"]["trades"]["count_rows"][0],
         "asset_name": "Apple Inc. (AAPL)",
@@ -107,6 +121,10 @@ def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
     assert export["summary"]["transaction_count"] == 74
     assert len(export["trace"]["trades"]["count_rows"]) == 74
     assert len(export["trace"]["trades"]["detail_rows"]) == 74
+    assert all(
+        set(row) == TRADE_DETAIL_ROW_KEYS
+        for row in export["trace"]["trades"]["detail_rows"]
+    )
     assert export["trace"]["trades"]["detail_rows"][0] == {
         "id": export["trace"]["trades"]["count_rows"][0],
         "asset_name": "Altria Group, Inc. (MO)",
