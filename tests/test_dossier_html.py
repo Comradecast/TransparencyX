@@ -192,6 +192,70 @@ def test_parsed_disclosure_financial_summary_renders_existing_values():
     assert "<tr><th>Income range</th><td>$10 - $100</td></tr>" in html
 
 
+def test_member_html_renders_asset_linked_transaction_counts():
+    dossier = MemberDossier(
+        identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
+        office=MemberOffice(),
+        financials=DossierFinancials(asset_count=2, trade_count=1),
+        exposure=DossierExposure(),
+        evidence_sources=[
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name="sample.pdf",
+            )
+        ],
+    )
+    asset_summaries = [
+        {
+            "asset_id": 1,
+            "asset_name": "REOF XXV, LLC [AB] SP",
+            "linked_transaction_count": 1,
+        },
+        {
+            "asset_id": 2,
+            "asset_name": "Apple Inc. (AAPL) [ST] SP",
+            "linked_transaction_count": 0,
+        },
+    ]
+
+    html = render_member_dossier_html(dossier, asset_summaries=asset_summaries)
+
+    assert "<h3>Assets</h3>" in html
+    assert "<td>REOF XXV, LLC [AB] SP</td>" in html
+    assert "<td>Linked Transactions: 1</td>" in html
+    assert "<td>Apple Inc. (AAPL) [ST] SP</td>" in html
+    assert "<td>Linked Transactions: 0</td>" in html
+
+
+def test_member_html_escapes_asset_summary_values():
+    dossier = MemberDossier(
+        identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
+        office=MemberOffice(),
+        financials=DossierFinancials(asset_count=1, trade_count=1),
+        exposure=DossierExposure(),
+        evidence_sources=[
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name="sample.pdf",
+            )
+        ],
+    )
+
+    html = render_member_dossier_html(
+        dossier,
+        asset_summaries=[
+            {
+                "asset_id": 1,
+                "asset_name": "A & B <Holding>",
+                "linked_transaction_count": 1,
+            }
+        ],
+    )
+
+    assert "A &amp; B &lt;Holding&gt;" in html
+    assert "A & B <Holding>" not in html
+
+
 def test_committee_assignments_render_when_present():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
     dossier.office.committee_assignments = [

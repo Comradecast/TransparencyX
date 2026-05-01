@@ -534,6 +534,91 @@ def test_site_build_html_displays_shape_summary_transaction_count(
     assert "<tr><th>Transactions</th><td>7</td></tr>" in html
 
 
+def test_site_build_html_displays_asset_linked_transaction_counts_without_json_change(
+    tmp_path,
+    monkeypatch,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Nancy Pelosi",
+                "disclosure_path": "data/raw/house/2023/10059734.pdf",
+                "shape_export": {
+                    "summary": {
+                        "asset_count": 56,
+                        "transaction_count": 7,
+                        "asset_summaries": [
+                            {
+                                "asset_id": 1,
+                                "asset_name": "REOF XXV, LLC [AB] SP",
+                                "linked_transaction_count": 1,
+                            },
+                            {
+                                "asset_id": 2,
+                                "asset_name": "Apple Inc. (AAPL) [ST] SP",
+                                "linked_transaction_count": 0,
+                            },
+                        ],
+                    },
+                    "trace": {},
+                },
+            },
+            {
+                "member_name": "Virginia Foxx",
+                "disclosure_path": "data/raw/house/2023/10056789.pdf",
+                "shape_export": {
+                    "summary": {
+                        "transaction_count": 74,
+                        "asset_summaries": [
+                            {
+                                "asset_id": 1,
+                                "asset_name": "Altria Group, Inc. (MO) [ST]",
+                                "linked_transaction_count": 4,
+                            },
+                        ],
+                    },
+                    "trace": {},
+                },
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    pelosi_html = (output_dir / "nancy-pelosi.html").read_text(encoding="utf-8")
+    foxx_html = (output_dir / "virginia-foxx.html").read_text(encoding="utf-8")
+    pelosi_json = json.loads((output_dir / "nancy-pelosi.json").read_text(
+        encoding="utf-8"
+    ))
+
+    assert "<td>REOF XXV, LLC [AB] SP</td>" in pelosi_html
+    assert "<td>Linked Transactions: 1</td>" in pelosi_html
+    assert "<td>Apple Inc. (AAPL) [ST] SP</td>" in pelosi_html
+    assert "<td>Linked Transactions: 0</td>" in pelosi_html
+    assert "<td>Altria Group, Inc. (MO) [ST]</td>" in foxx_html
+    assert "<td>Linked Transactions: 4</td>" in foxx_html
+    assert "asset_summaries" not in pelosi_json
+    assert "asset_summaries" not in pelosi_json["financials"]
+
+
 def test_site_build_metadata_coverage_file_exists_when_metadata_provided(
     tmp_path,
     monkeypatch,

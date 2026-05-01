@@ -21,6 +21,35 @@ from transparencyx.normalize.transactions import process_transactions_for_disclo
 DEFAULT_MEMBER_METADATA_SEED = Path("data/seed/member_metadata_seed.csv")
 
 
+def _asset_summaries_from_profile(profile: dict) -> list[dict]:
+    shape_export = profile.get("shape_export")
+    if not isinstance(shape_export, dict):
+        return []
+    summary = shape_export.get("summary")
+    if not isinstance(summary, dict):
+        return []
+    asset_summaries = summary.get("asset_summaries")
+    if not isinstance(asset_summaries, list):
+        return []
+    return [
+        row
+        for row in asset_summaries
+        if isinstance(row, dict)
+    ]
+
+
+def _asset_summaries_by_member_id(
+    dossiers: list,
+    profiles: list[dict],
+) -> dict[str, list[dict]]:
+    summaries_by_member_id = {}
+    for dossier, profile in zip(dossiers, profiles):
+        rows = _asset_summaries_from_profile(profile)
+        if rows:
+            summaries_by_member_id[dossier.identity.member_id] = rows
+    return summaries_by_member_id
+
+
 def get_normalized_asset_audit_rows(db_path: Path):
     """
     Returns normalized asset rows in deterministic insertion order for audit output.
@@ -392,7 +421,14 @@ def main():
 
         try:
             written_json_paths = write_member_dossiers_json(dossiers, output_dir)
-            html_paths = write_member_dossiers_html(dossiers, output_dir)
+            html_paths = write_member_dossiers_html(
+                dossiers,
+                output_dir,
+                asset_summaries_by_member_id=_asset_summaries_by_member_id(
+                    dossiers,
+                    profiles,
+                ),
+            )
         except ValueError as error:
             print(str(error))
             sys.exit(1)
@@ -531,7 +567,14 @@ def main():
             output_dir / "index.json",
         )
         try:
-            html_paths = write_member_dossiers_html(dossiers, output_dir)
+            html_paths = write_member_dossiers_html(
+                dossiers,
+                output_dir,
+                asset_summaries_by_member_id=_asset_summaries_by_member_id(
+                    dossiers,
+                    profiles,
+                ),
+            )
         except ValueError as error:
             print(str(error))
             sys.exit(1)
@@ -644,7 +687,14 @@ def main():
         print(f"Wrote member dossier JSON files: {len(written_paths)} to {Path(args.output_dir)}")
         if args.html:
             try:
-                html_paths = write_member_dossiers_html(dossiers, Path(args.output_dir))
+                html_paths = write_member_dossiers_html(
+                    dossiers,
+                    Path(args.output_dir),
+                    asset_summaries_by_member_id=_asset_summaries_by_member_id(
+                        dossiers,
+                        profiles,
+                    ),
+                )
             except ValueError as error:
                 print(str(error))
                 sys.exit(1)

@@ -119,7 +119,41 @@ def _format_range(minimum, maximum) -> str:
     return f"{_format_money(minimum)} - {_format_money(maximum)}"
 
 
-def _financial_summary_rows(dossier: MemberDossier) -> str:
+def _format_linked_transaction_count(value) -> str:
+    if isinstance(value, int) and not isinstance(value, bool) and value >= 0:
+        return str(value)
+    return "Unknown"
+
+
+def _asset_summary_rows(asset_summaries: list[dict] | None) -> str:
+    if not asset_summaries:
+        return ""
+
+    rows = [
+        "<h3>Assets</h3>",
+        "<table>",
+        "<thead><tr><th>Asset</th><th>Linked Transactions</th></tr></thead>",
+        "<tbody>",
+    ]
+    for row in asset_summaries:
+        if not isinstance(row, dict):
+            continue
+        rows.append(
+            "<tr>"
+            f"{_cell(row.get('asset_name'))}"
+            "<td>Linked Transactions: "
+            f"{_format_linked_transaction_count(row.get('linked_transaction_count'))}"
+            "</td>"
+            "</tr>"
+        )
+    rows.extend(["</tbody>", "</table>"])
+    return "\n".join(rows)
+
+
+def _financial_summary_rows(
+    dossier: MemberDossier,
+    asset_summaries: list[dict] | None = None,
+) -> str:
     if not _has_parsed_disclosure_data(dossier):
         return "<p>No parsed financial disclosure data is attached to this dossier.</p>"
 
@@ -135,7 +169,13 @@ def _financial_summary_rows(dossier: MemberDossier) -> str:
         f"<tr><th>{escape(label)}</th><td>{value}</td></tr>"
         for label, value in rows
     ]
-    return "<table>\n<tbody>\n" + "\n".join(rendered_rows) + "\n</tbody>\n</table>"
+    summary_table = (
+        "<table>\n<tbody>\n" + "\n".join(rendered_rows) + "\n</tbody>\n</table>"
+    )
+    asset_table = _asset_summary_rows(asset_summaries)
+    if asset_table:
+        return summary_table + "\n" + asset_table
+    return summary_table
 
 
 def _cell(value) -> str:
@@ -259,7 +299,10 @@ def _evidence_rows(dossier: MemberDossier) -> str:
     return "\n".join(rows)
 
 
-def render_member_dossier_html(dossier: MemberDossier) -> str:
+def render_member_dossier_html(
+    dossier: MemberDossier,
+    asset_summaries: list[dict] | None = None,
+) -> str:
     identity = dossier.identity
     office = dossier.office
     financials = dossier.financials
@@ -322,7 +365,7 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
   </section>
   <section>
     <h2>Financial Summary</h2>
-{_financial_summary_rows(dossier)}
+{_financial_summary_rows(dossier, asset_summaries)}
   </section>
   <section>
     <h2>Federal Award Exposure</h2>
@@ -347,10 +390,14 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
 def write_member_dossier_html(
     dossier: MemberDossier,
     output_path: str | Path,
+    asset_summaries: list[dict] | None = None,
 ) -> Path:
     path = Path(output_path)
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_member_dossier_html(dossier), encoding="utf-8")
+    path.write_text(
+        render_member_dossier_html(dossier, asset_summaries),
+        encoding="utf-8",
+    )
     return path
 
 
@@ -442,6 +489,7 @@ def _index_nav(groups: dict[str, list[MemberDossier]]) -> str:
 def write_member_dossiers_html(
     dossiers: list[MemberDossier],
     output_dir: str | Path,
+    asset_summaries_by_member_id: dict[str, list[dict]] | None = None,
 ) -> list[Path]:
     directory = Path(output_dir)
     filenames = [dossier_html_filename(dossier) for dossier in dossiers]
@@ -453,7 +501,13 @@ def write_member_dossiers_html(
 
     directory.mkdir(parents=True, exist_ok=True)
     return [
-        write_member_dossier_html(dossier, directory / filename)
+        write_member_dossier_html(
+            dossier,
+            directory / filename,
+            (
+                asset_summaries_by_member_id or {}
+            ).get(dossier.identity.member_id),
+        )
         for dossier, filename in zip(dossiers, filenames)
     ]
 
