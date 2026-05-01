@@ -2,6 +2,26 @@
   "dossier_count": 6,
   "dossiers": [
     {
+      "member_id": "deborah-k-ross",
+      "full_name": "Deborah K. Ross",
+      "chamber": "House",
+      "state": "NC",
+      "district": "2",
+      "party": "Democratic",
+      "current_status": "current",
+      "file": "deborah-k-ross.json"
+    },
+    {
+      "member_id": "valerie-p-foushee",
+      "full_name": "Valerie P. Foushee",
+      "chamber": "House",
+      "state": "NC",
+      "district": "4",
+      "party": "Democratic",
+      "current_status": "current",
+      "file": "valerie-p-foushee.json"
+    },
+    {
       "member_id": "virginia-foxx",
       "full_name": "Virginia Foxx",
       "chamber": "House",
@@ -22,24 +42,14 @@
       "file": "chuck-edwards.json"
     },
     {
-      "member_id": "alma-shealey-adams",
-      "full_name": "Alma Shealey Adams",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "alma-shealey-adams.json"
-    },
-    {
-      "member_id": "deborah-ross",
-      "full_name": "Deborah Ross",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "deborah-ross.json"
+      "member_id": "alma-s-adams",
+      "full_name": "Alma S. Adams",
+      "chamber": "House",
+      "state": "NC",
+      "district": "12",
+      "party": "Democratic",
+      "current_status": "current",
+      "file": "alma-s-adams.json"
     },
     {
       "member_id": "nancy-pelosi",
@@ -50,16 +60,6 @@
       "party": null,
       "current_status": null,
       "file": "nancy-pelosi.json"
-    },
-    {
-      "member_id": "valerie-foushee",
-      "full_name": "Valerie Foushee",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "valerie-foushee.json"
     }
   ]
 }

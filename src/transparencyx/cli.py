@@ -508,7 +508,13 @@ def main():
                 print(str(error))
                 sys.exit(1)
             print(f"Loaded member metadata records: {len(metadata_by_id)}")
+            from transparencyx.dossier.aliases import load_member_aliases
+            aliases = load_member_aliases("data/seed/member_id_aliases.csv")
             for dossier in dossiers:
+                parsed_id = dossier.identity.member_id
+                canonical_id = aliases.get(parsed_id, parsed_id)
+                if canonical_id != parsed_id:
+                    dossier.identity.member_id = canonical_id
                 metadata = metadata_by_id.get(dossier.identity.member_id)
                 if metadata is not None:
                     apply_member_metadata(dossier, metadata)
@@ -619,7 +625,13 @@ def main():
             build_member_dossier_from_profile(profile)
             for profile in profiles
         ]
+        from transparencyx.dossier.aliases import load_member_aliases
+        aliases = load_member_aliases("data/seed/member_id_aliases.csv")
         for dossier in dossiers:
+            parsed_id = dossier.identity.member_id
+            canonical_id = aliases.get(parsed_id, parsed_id)
+            if canonical_id != parsed_id:
+                dossier.identity.member_id = canonical_id
             metadata = metadata_by_id.get(dossier.identity.member_id)
             if metadata is not None:
                 apply_member_metadata(dossier, metadata)

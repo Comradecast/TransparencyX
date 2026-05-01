@@ -13,10 +13,10 @@
     "json_dossiers": 6,
     "html_dossiers": 6,
     "metadata_records_loaded": 18,
-    "metadata_matched_dossiers": 2,
-    "metadata_unmatched_dossiers": 4,
-    "committee_rows_with_assignments": 1,
-    "committee_rows_without_assignments": 5
+    "metadata_matched_dossiers": 5,
+    "metadata_unmatched_dossiers": 1,
+    "committee_rows_with_assignments": 4,
+    "committee_rows_without_assignments": 2
   },
   "artifacts": {
     "json_index": "index.json",
@@ -24,20 +24,20 @@
     "metadata_coverage": "metadata_coverage.json",
     "committee_coverage": "committee_coverage.json",
     "dossier_json_files": [
-      "valerie-foushee.json",
+      "valerie-p-foushee.json",
       "virginia-foxx.json",
       "chuck-edwards.json",
-      "deborah-ross.json",
+      "deborah-k-ross.json",
       "nancy-pelosi.json",
-      "alma-shealey-adams.json"
+      "alma-s-adams.json"
     ],
     "dossier_html_files": [
-      "valerie-foushee.html",
+      "valerie-p-foushee.html",
       "virginia-foxx.html",
       "chuck-edwards.html",
-      "deborah-ross.html",
+      "deborah-k-ross.html",
       "nancy-pelosi.html",
-      "alma-shealey-adams.html"
+      "alma-s-adams.html"
     ]
   }
 }
