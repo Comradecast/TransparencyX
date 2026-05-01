@@ -16,6 +16,12 @@ def test_render_contains_required_artifact_names():
     assert "Individual .html files" in readme
 
 
+def test_render_explains_how_to_open_site():
+    readme = render_site_readme()
+
+    assert "Open index.html in a browser" in readme
+
+
 def test_render_explains_recipient_candidates_review_only():
     readme = render_site_readme()
 

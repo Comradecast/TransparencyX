@@ -439,6 +439,7 @@ def main():
 
         readme_path = write_site_readme(output_dir)
         print(f"Wrote generated site README: {readme_path}")
+        print(f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}")
 
         sys.exit(0)
 

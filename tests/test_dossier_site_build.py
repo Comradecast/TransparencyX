@@ -3,6 +3,8 @@ import sys
 
 import pytest
 
+from transparencyx.dossier.validate_site import validate_dossier_site
+
 
 def _patch_profiles(monkeypatch, profiles=None):
     monkeypatch.setattr(
@@ -68,8 +70,65 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
         f"Wrote dossier HTML index: {output_dir / 'index.html'}",
         f"Wrote site build manifest JSON: {output_dir / 'build_manifest.json'}",
         f"Wrote generated site README: {output_dir / 'README.txt'}",
+        f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}",
         "",
     ])
+
+
+def test_documented_local_demo_site_build_path(tmp_path, monkeypatch, capsys):
+    output_dir = tmp_path / "site"
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Thom Tillis",
+                "disclosure_year": 2023,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            "data/raw",
+            "--output-dir",
+            str(output_dir),
+            "--use-default-member-metadata",
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    html_pages = [
+        path for path in output_dir.glob("*.html")
+        if path.name != "index.html"
+    ]
+    json_pages = [
+        path for path in output_dir.glob("*.json")
+        if path.name not in {
+            "index.json",
+            "build_manifest.json",
+            "metadata_coverage.json",
+            "committee_coverage.json",
+        }
+    ]
+    validation = validate_dossier_site(output_dir)
+
+    assert exit_info.value.code == 0
+    assert (output_dir / "index.html").exists()
+    assert (output_dir / "index.json").exists()
+    assert (output_dir / "build_manifest.json").exists()
+    assert (output_dir / "README.txt").exists()
+    assert html_pages
+    assert json_pages
+    assert validation["passed"] is True
+    assert f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}" in captured.out
 
 
 def test_site_build_json_files_exist_and_parse(tmp_path, monkeypatch):

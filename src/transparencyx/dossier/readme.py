@@ -14,6 +14,9 @@ Artifacts:
 - Individual .json files contain canonical member dossier data.
 - Individual .html files contain static member dossier pages.
 
+Open:
+- Open index.html in a browser to view the generated local site.
+
 Data Notes and Limitations:
 - Federal award exposure rows are exact fetched exposure results.
 - Recipient candidate rows are review-only and are not counted as exposure.

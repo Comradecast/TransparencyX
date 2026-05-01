@@ -29,3 +29,19 @@ transparencyx --version
 transparencyx sources
 transparencyx parse-range "$1,001 - $15,000"
 ```
+
+## Local Demo Site
+
+Build a deterministic local static dossier site from the existing local disclosure data and seeded member metadata:
+
+```bash
+python -m transparencyx --build-dossier-site data/raw --output-dir site --use-default-member-metadata
+```
+
+Open `site/index.html` in a browser to view the generated site.
+
+Validate the generated site artifacts:
+
+```bash
+python -m transparencyx --validate-dossier-site site
+```
