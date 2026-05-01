@@ -35,7 +35,7 @@ transparencyx parse-range "$1,001 - $15,000"
 Build a deterministic local NC delegation demo site from the seeded member metadata:
 
 ```bash
-python -m transparencyx --build-nc-demo-site --output-dir site
+python -m transparencyx --build-nc-demo-site --output-dir docs
 ```
 
 This demo fixture path is built from `data/seed/member_metadata_seed.csv`; it does not fetch new data or add disclosure PDF data.
@@ -43,13 +43,20 @@ This demo fixture path is built from `data/seed/member_metadata_seed.csv`; it do
 Build a static dossier site from existing local disclosure PDFs:
 
 ```bash
-python -m transparencyx --build-dossier-site data/raw --output-dir site --use-default-member-metadata
+python -m transparencyx --build-dossier-site data/raw --output-dir docs --use-default-member-metadata
 ```
 
-Open `site/index.html` in a browser to view the generated site.
+Open `docs/index.html` in a browser to view the generated site.
 
 Validate the generated site artifacts:
 
 ```bash
-python -m transparencyx --validate-dossier-site site
+python -m transparencyx --validate-dossier-site docs
 ```
+
+GitHub Pages setup:
+
+Settings -> Pages
+Source: Deploy from branch
+Branch: main
+Folder: /docs

@@ -1,0 +1,43 @@
+{
+  "identity": {
+    "member_id": "deborah-ross",
+    "full_name": "Deborah Ross",
+    "chamber": null,
+    "state": null,
+    "district": null,
+    "party": null,
+    "current_status": null
+  },
+  "office": {
+    "official_salary": null,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 71,
+    "asset_value_min": 2821571.0,
+    "asset_value_max": 6867000.0,
+    "income_min": 35006.0,
+    "income_max": 115600.0,
+    "trade_count": null,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10059715.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

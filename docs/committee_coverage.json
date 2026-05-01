@@ -1,0 +1,15 @@
+{
+  "total_dossiers": 6,
+  "rows_with_committees": 1,
+  "rows_without_committees": 5,
+  "member_ids_with_committees": [
+    "virginia-foxx"
+  ],
+  "member_ids_without_committees": [
+    "valerie-foushee",
+    "chuck-edwards",
+    "deborah-ross",
+    "nancy-pelosi",
+    "alma-shealey-adams"
+  ]
+}

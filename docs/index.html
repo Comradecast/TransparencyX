@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>TransparencyX Dossier Index</title>
+  <style>
+    body { font-family: Arial, sans-serif; line-height: 1.45; margin: 2rem; color: #1f2933; }
+    main { max-width: 980px; margin: 0 auto; }
+    h1, h2 { margin: 0 0 0.75rem; }
+    .intro { margin: 0 0 1rem; max-width: 760px; }
+    .index-nav { display: flex; gap: 1rem; margin: 0 0 1rem; }
+    .summary { margin: 1rem 0; }
+    .summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }
+    .summary-card { border: 1px solid #d8dee4; padding: 0.65rem; }
+    .summary-card dt { font-weight: 700; margin: 0 0 0.25rem; }
+    .summary-card dd { margin: 0; }
+    table { border-collapse: collapse; width: 100%; font-size: 0.95rem; }
+    th, td { border: 1px solid #d8dee4; padding: 0.45rem; text-align: left; vertical-align: top; }
+    th { background: #f6f8fa; }
+  </style>
+</head>
+<body>
+<main>
+  <h1>TransparencyX Dossier Index</h1>
+  <p class="intro">This is a TransparencyX dossier index. Each row links to a member dossier page. Demo output may be fixture-backed depending on the command used to build the site.</p>
+  <nav class="index-nav">
+    <a href="#house">House</a>
+    <a href="#unknown">Unknown</a>
+  </nav>
+  <section class="summary">
+    <h2>Dataset Summary</h2>
+    <dl class="summary-grid">
+      <div class="summary-card"><dt>Total dossiers</dt><dd>6</dd></div>
+      <div class="summary-card"><dt>House</dt><dd>2</dd></div>
+      <div class="summary-card"><dt>Senate</dt><dd>0</dd></div>
+      <div class="summary-card"><dt>States</dt><dd>NC</dd></div>
+      <div class="summary-card"><dt>Current members</dt><dd>2</dd></div>
+    </dl>
+  </section>
+  <p>total dossier count: 6</p>
+  <section class="index-section">
+    <h2 id="house">House</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>full_name</th>
+        <th>chamber</th>
+        <th>state</th>
+        <th>district</th>
+        <th>party</th>
+        <th>current_status</th>
+        <th>file</th>
+      </tr>
+    </thead>
+      <tbody>
+<tr><td>Virginia Foxx</td><td>House</td><td>NC</td><td>5</td><td>Republican</td><td>current</td><td><a href="virginia-foxx.html">virginia-foxx.html</a></td></tr>
+<tr><td>Chuck Edwards</td><td>House</td><td>NC</td><td>11</td><td>Republican</td><td>current</td><td><a href="chuck-edwards.html">chuck-edwards.html</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+<section class="index-section">
+    <h2 id="unknown">Unknown</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>full_name</th>
+        <th>chamber</th>
+        <th>state</th>
+        <th>district</th>
+        <th>party</th>
+        <th>current_status</th>
+        <th>file</th>
+      </tr>
+    </thead>
+      <tbody>
+<tr><td>Alma Shealey Adams</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="alma-shealey-adams.html">alma-shealey-adams.html</a></td></tr>
+<tr><td>Deborah Ross</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="deborah-ross.html">deborah-ross.html</a></td></tr>
+<tr><td>Nancy Pelosi</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="nancy-pelosi.html">nancy-pelosi.html</a></td></tr>
+<tr><td>Valerie Foushee</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="valerie-foushee.html">valerie-foushee.html</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+</main>
+</body>
+</html>

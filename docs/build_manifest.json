@@ -1,0 +1,43 @@
+{
+  "build_type": "dossier_site",
+  "input_directory": "data\\raw",
+  "output_directory": "docs",
+  "options": {
+    "member_metadata": true,
+    "fetch_exposure": false,
+    "recipient_candidate_audit": false
+  },
+  "counts": {
+    "profiles": 6,
+    "dossiers": 6,
+    "json_dossiers": 6,
+    "html_dossiers": 6,
+    "metadata_records_loaded": 18,
+    "metadata_matched_dossiers": 2,
+    "metadata_unmatched_dossiers": 4,
+    "committee_rows_with_assignments": 1,
+    "committee_rows_without_assignments": 5
+  },
+  "artifacts": {
+    "json_index": "index.json",
+    "html_index": "index.html",
+    "metadata_coverage": "metadata_coverage.json",
+    "committee_coverage": "committee_coverage.json",
+    "dossier_json_files": [
+      "valerie-foushee.json",
+      "virginia-foxx.json",
+      "chuck-edwards.json",
+      "deborah-ross.json",
+      "nancy-pelosi.json",
+      "alma-shealey-adams.json"
+    ],
+    "dossier_html_files": [
+      "valerie-foushee.html",
+      "virginia-foxx.html",
+      "chuck-edwards.html",
+      "deborah-ross.html",
+      "nancy-pelosi.html",
+      "alma-shealey-adams.html"
+    ]
+  }
+}

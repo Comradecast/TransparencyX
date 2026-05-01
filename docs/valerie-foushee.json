@@ -1,0 +1,43 @@
+{
+  "identity": {
+    "member_id": "valerie-foushee",
+    "full_name": "Valerie Foushee",
+    "chamber": null,
+    "state": null,
+    "district": null,
+    "party": null,
+    "current_status": null
+  },
+  "office": {
+    "official_salary": null,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 6,
+    "asset_value_min": 91006.0,
+    "asset_value_max": 232500.0,
+    "income_min": 202.0,
+    "income_max": 1200.0,
+    "trade_count": null,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10057344.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

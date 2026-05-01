@@ -1,0 +1,54 @@
+{
+  "identity": {
+    "member_id": "virginia-foxx",
+    "full_name": "Virginia Foxx",
+    "chamber": "House",
+    "state": "NC",
+    "district": "5",
+    "party": "Republican",
+    "current_status": "current"
+  },
+  "office": {
+    "official_salary": 174000.0,
+    "leadership_roles": [],
+    "committee_assignments": [
+      "Committee on Education and Workforce",
+      "Committee on Oversight and Government Reform",
+      "Committee on Rules"
+    ],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 60,
+    "asset_value_min": 3227350.0,
+    "asset_value_max": 10159400.0,
+    "income_min": 107831.0,
+    "income_max": 299200.0,
+    "trade_count": null,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10059335.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/F000450",
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

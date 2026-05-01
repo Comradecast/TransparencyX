@@ -40,3 +40,4 @@ site/
 
 .pytest_tmp/
 site-real/
+!docs/
