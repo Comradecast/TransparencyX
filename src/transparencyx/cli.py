@@ -17,6 +17,9 @@ from transparencyx.ingest.house import HouseDisclosureRecord, insert_house_raw_d
 from transparencyx.normalize.assets import process_assets_for_disclosure
 
 
+DEFAULT_MEMBER_METADATA_SEED = Path("data/seed/member_metadata_seed.csv")
+
+
 def get_normalized_asset_audit_rows(db_path: Path):
     """
     Returns normalized asset rows in deterministic insertion order for audit output.
@@ -104,6 +107,7 @@ def main():
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
     parser.add_argument("--index-json", type=str, help="Write a dossier index JSON file for batch dossier output")
     parser.add_argument("--member-metadata", type=str, help="Apply offline member metadata from a CSV or JSON file")
+    parser.add_argument("--use-default-member-metadata", action="store_true", help="Use the default member metadata seed for dossier site builds")
     parser.add_argument("--write-member-metadata-template", type=str, help="Write a blank member metadata CSV template")
     parser.add_argument("--metadata-coverage-json", type=str, help="Write metadata coverage report JSON")
     parser.add_argument("--html", action="store_true", help="Write HTML files for batch dossier output")
@@ -233,6 +237,18 @@ def main():
     if (args.batch_dossier_json or args.build_dossier_site) and not args.output_dir:
         parser.error("--output-dir is required with --batch-dossier-json or --build-dossier-site")
 
+    if args.use_default_member_metadata and args.member_metadata:
+        print("Use either --member-metadata or --use-default-member-metadata, not both.")
+        sys.exit(1)
+
+    if args.use_default_member_metadata and not args.build_dossier_site:
+        print("Default member metadata can only be used with dossier site builds.")
+        sys.exit(1)
+
+    if args.use_default_member_metadata and not DEFAULT_MEMBER_METADATA_SEED.exists():
+        print(f"Default member metadata seed file not found: {DEFAULT_MEMBER_METADATA_SEED}")
+        sys.exit(1)
+
     if args.html_index and not args.html:
         print("HTML index requires HTML dossier export.")
         sys.exit(0)
@@ -315,6 +331,11 @@ def main():
         from transparencyx.profile.batch import build_profiles_for_directory
 
         output_dir = Path(args.output_dir)
+        metadata_path = (
+            DEFAULT_MEMBER_METADATA_SEED
+            if args.use_default_member_metadata
+            else Path(args.member_metadata) if args.member_metadata else None
+        )
         profiles = build_profiles_for_directory(Path(args.build_dossier_site))
 
         if args.fetch_exposure:
@@ -329,12 +350,13 @@ def main():
         ]
 
         metadata_by_id = None
-        if args.member_metadata:
+        if metadata_path is not None:
             try:
-                metadata_by_id = load_member_metadata(Path(args.member_metadata))
+                metadata_by_id = load_member_metadata(metadata_path)
             except ValueError as error:
                 print(str(error))
                 sys.exit(1)
+            print(f"Loaded member metadata records: {len(metadata_by_id)}")
             for dossier in dossiers:
                 metadata = metadata_by_id.get(dossier.identity.member_id)
                 if metadata is not None:

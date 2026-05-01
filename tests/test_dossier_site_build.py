@@ -177,6 +177,124 @@ def test_site_build_metadata_coverage_file_exists_when_metadata_provided(
     assert f"Wrote metadata coverage JSON: {output_dir / 'metadata_coverage.json'}" in captured.out
 
 
+def test_site_build_with_default_member_metadata(tmp_path, monkeypatch, capsys):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Thom Tillis",
+                "disclosure_year": 2023,
+            }
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+            "--use-default-member-metadata",
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    dossier = json.loads((output_dir / "thom-tillis.json").read_text(encoding="utf-8"))
+    manifest = json.loads((output_dir / "build_manifest.json").read_text(
+        encoding="utf-8"
+    ))
+    coverage = json.loads((output_dir / "metadata_coverage.json").read_text(
+        encoding="utf-8"
+    ))
+
+    assert exit_info.value.code == 0
+    assert "Loaded member metadata records: " in captured.out
+    assert dossier["identity"]["chamber"] == "Senate"
+    assert dossier["identity"]["state"] == "NC"
+    assert manifest["options"]["member_metadata"] is True
+    assert coverage["matched_member_ids"] == ["thom-tillis"]
+
+
+def test_site_build_default_and_explicit_metadata_fail_closed(
+    tmp_path,
+    monkeypatch,
+    capsys,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    metadata_path = tmp_path / "metadata.csv"
+    input_dir.mkdir()
+    metadata_path.write_text(
+        "member_id,full_name\nnancy-pelosi,Nancy Pelosi\n",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+            "--member-metadata",
+            str(metadata_path),
+            "--use-default-member-metadata",
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 1
+    assert captured.out == (
+        "Use either --member-metadata or --use-default-member-metadata, not both.\n"
+    )
+    assert not output_dir.exists()
+
+
+def test_default_metadata_flag_outside_site_build_fails_closed(
+    monkeypatch,
+    capsys,
+):
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--batch-profile",
+            "input",
+            "--use-default-member-metadata",
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+
+    assert exit_info.value.code == 1
+    assert captured.out == (
+        "Default member metadata can only be used with dossier site builds.\n"
+    )
+
+
 def test_site_build_no_metadata_coverage_file_without_metadata(tmp_path, monkeypatch):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "site"
