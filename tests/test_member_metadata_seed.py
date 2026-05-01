@@ -219,6 +219,7 @@ def test_non_nc_rows_committee_assignments_unchanged():
     assert [item.member_id for item in non_nc_rows] == [
         "alex-padilla",
         "adam-schiff",
+        "nancy-pelosi",
     ]
     assert all(not item.committee_assignments for item in non_nc_rows)
 
@@ -270,19 +271,19 @@ def test_nc_senate_rows_use_official_senator_websites_or_senate_nc_source():
         assert item.source_url.startswith("https://www.tillis.senate.gov/") or item.source_url.startswith("https://www.budd.senate.gov/") or item.source_url == "https://www.senate.gov/states/NC/intro.htm"
 
 
-def test_non_nc_rows_remain_list_sources():
+def test_non_nc_senate_rows_remain_list_sources():
     metadata = load_member_metadata(SEED_PATH)
-    non_nc_rows = [
+    non_nc_senate_rows = [
         item
         for item in metadata.values()
-        if item.state != "NC"
+        if item.state != "NC" and item.chamber == "Senate"
     ]
 
-    assert [item.member_id for item in non_nc_rows] == [
+    assert [item.member_id for item in non_nc_senate_rows] == [
         "alex-padilla",
         "adam-schiff",
     ]
-    for item in non_nc_rows:
+    for item in non_nc_senate_rows:
         assert item.source_name == "Senate.gov Senators"
         assert item.source_url == "https://www.senate.gov/senators/"
         assert classify_metadata_source(item.source_url) == "list"
@@ -354,7 +355,7 @@ def test_metadata_source_quality_report_counts_match():
         + report["list_sources"]
         + report["unknown_sources"]
     )
-    assert report["profile_sources"] == 16
+    assert report["profile_sources"] == 17
     assert report["list_sources"] == 2
     assert report["unknown_sources"] == 0
 

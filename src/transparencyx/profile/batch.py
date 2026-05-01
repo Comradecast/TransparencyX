@@ -5,6 +5,7 @@ from pathlib import Path
 from transparencyx.db.database import get_connection, initialize_database
 from transparencyx.extract.registry import get_extractor_for_source
 from transparencyx.normalize.assets import process_assets_for_disclosure
+from transparencyx.normalize.transactions import process_transactions_for_disclosure
 from transparencyx.profile.identity import extract_member_identity
 from transparencyx.shape.export import build_financial_shape_export
 from transparencyx.sources.registry import get_registered_sources
@@ -58,6 +59,12 @@ def _build_shape_export_from_text(pdf_path: Path, extracted_text: str) -> dict:
         conn.commit()
 
     process_assets_for_disclosure(
+        db_path=db_path,
+        raw_disclosure_id=1,
+        politician_id=politician_id,
+        extracted_text=extracted_text,
+    )
+    process_transactions_for_disclosure(
         db_path=db_path,
         raw_disclosure_id=1,
         politician_id=politician_id,

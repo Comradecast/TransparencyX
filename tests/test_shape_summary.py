@@ -460,7 +460,7 @@ def test_build_summary_label():
     def make_summary(ac, tc, ta, nwb, ad):
         return FinancialShapeSummary(
             politician_id=1, asset_count=ac, asset_value_min=None, asset_value_max=None, asset_value_midpoint=None,
-            trade_count=tc, trade_volume_min=None, trade_volume_max=None, trade_volume_midpoint=None,
+            trade_count=tc, transaction_count=tc, trade_volume_min=None, trade_volume_max=None, trade_volume_midpoint=None,
             trade_activity=ta, net_worth_band=nwb, asset_density=ad, trade_volume_band="UNKNOWN", summary_label=""
         )
     

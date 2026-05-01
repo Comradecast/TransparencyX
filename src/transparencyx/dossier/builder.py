@@ -89,6 +89,22 @@ def _first_int(profile: dict, top_key: str, nested: dict, nested_key: str) -> in
     return _int_or_none(nested.get(nested_key))
 
 
+def _first_int_from_nested_keys(
+    profile: dict,
+    top_key: str,
+    nested: dict,
+    nested_keys: tuple[str, ...],
+) -> int | None:
+    top_value = _int_or_none(profile.get(top_key))
+    if top_value is not None:
+        return top_value
+    for nested_key in nested_keys:
+        nested_value = _int_or_none(nested.get(nested_key))
+        if nested_value is not None:
+            return nested_value
+    return None
+
+
 def _first_number(
     profile: dict,
     top_key: str,
@@ -262,7 +278,12 @@ def build_member_dossier_from_profile(profile: dict) -> MemberDossier:
             ),
             income_min=_first_number(profile, "income_min", income_shape, "income_min"),
             income_max=_first_number(profile, "income_max", income_shape, "income_max"),
-            trade_count=_int_or_none(profile.get("trade_count")),
+            trade_count=_first_int_from_nested_keys(
+                profile,
+                "trade_count",
+                financial_shape,
+                ("transaction_count", "trade_count"),
+            ),
             liability_count=_int_or_none(profile.get("liability_count")),
             business_interests=_business_interests(profile, federal_award_exposure),
         ),

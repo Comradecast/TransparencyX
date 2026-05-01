@@ -47,6 +47,7 @@ class FinancialShapeSummary:
     asset_value_max: Optional[float]
     asset_value_midpoint: Optional[float]
     trade_count: int
+    transaction_count: int
     trade_volume_min: Optional[float]
     trade_volume_max: Optional[float]
     trade_volume_midpoint: Optional[float]
@@ -277,6 +278,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             asset_value_max=asset_value_max,
             asset_value_midpoint=asset_value_midpoint,
             trade_count=trade_count,
+            transaction_count=trade_count,
             trade_volume_min=trade_volume_min,
             trade_volume_max=trade_volume_max,
             trade_volume_midpoint=trade_volume_midpoint,
@@ -304,6 +306,7 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "asset_value_max": summary.asset_value_max,
         "asset_value_midpoint": summary.asset_value_midpoint,
         "trade_count": summary.trade_count,
+        "transaction_count": summary.transaction_count,
         "trade_volume_min": summary.trade_volume_min,
         "trade_volume_max": summary.trade_volume_max,
         "trade_volume_midpoint": summary.trade_volume_midpoint,

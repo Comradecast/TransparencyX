@@ -21,12 +21,12 @@
   },
   "financials": {
     "disclosure_years": [],
-    "asset_count": 60,
+    "asset_count": 53,
     "asset_value_min": 3227350.0,
     "asset_value_max": 10159400.0,
     "income_min": 107831.0,
     "income_max": 299200.0,
-    "trade_count": null,
+    "trade_count": 74,
     "liability_count": null,
     "business_interests": []
   },

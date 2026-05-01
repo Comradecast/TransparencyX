@@ -25,6 +25,7 @@ def _profile(member_name="Jane Public"):
                 "income_min": 201.0,
                 "income_max": 1000.0,
                 "trade_count": 1,
+                "transaction_count": 1,
             }
         },
     }

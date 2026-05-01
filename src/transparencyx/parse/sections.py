@@ -20,6 +20,8 @@ class Section:
 KNOWN_HEADERS = [
     "SCHEDULE A",
     "ASSETS",
+    "SCHEDULE B",
+    "S B: T",
     "INCOME",
     "LIABILITIES",
     "POSITIONS",

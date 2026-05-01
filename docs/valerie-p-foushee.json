@@ -25,7 +25,7 @@
     "asset_value_max": 232500.0,
     "income_min": 202.0,
     "income_max": 1200.0,
-    "trade_count": null,
+    "trade_count": 0,
     "liability_count": null,
     "business_interests": []
   },

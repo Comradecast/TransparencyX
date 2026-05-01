@@ -488,6 +488,52 @@ def test_site_build_html_files_exist(tmp_path, monkeypatch):
     )
 
 
+def test_site_build_html_displays_shape_summary_transaction_count(
+    tmp_path,
+    monkeypatch,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Nancy Pelosi",
+                "disclosure_path": "data/raw/house/2023/10059734.pdf",
+                "shape_export": {
+                    "summary": {
+                        "asset_count": 56,
+                        "transaction_count": 7,
+                    },
+                    "trace": {},
+                },
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    html = (output_dir / "nancy-pelosi.html").read_text(encoding="utf-8")
+
+    assert "<tr><th>Assets</th><td>56</td></tr>" in html
+    assert "<tr><th>Transactions</th><td>7</td></tr>" in html
+
+
 def test_site_build_metadata_coverage_file_exists_when_metadata_provided(
     tmp_path,
     monkeypatch,

@@ -107,7 +107,7 @@ def build_real_batch_audit_rows(
                 "source_pdf": _display(profile.get("disclosure_path")),
                 "asset_count": _display(dossier.financials.asset_count),
                 "income_count": _display(summary.get("income_count")),
-                "transaction_count": _display(summary.get("trade_count")),
+                "transaction_count": _display(summary.get("transaction_count")),
                 "asset_range": _format_range(
                     dossier.financials.asset_value_min,
                     dossier.financials.asset_value_max,

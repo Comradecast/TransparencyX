@@ -15,6 +15,7 @@ from transparencyx.parse.sections import detect_sections
 from transparencyx.db.database import initialize_database, get_connection
 from transparencyx.ingest.house import HouseDisclosureRecord, insert_house_raw_disclosure
 from transparencyx.normalize.assets import process_assets_for_disclosure
+from transparencyx.normalize.transactions import process_transactions_for_disclosure
 
 
 DEFAULT_MEMBER_METADATA_SEED = Path("data/seed/member_metadata_seed.csv")
@@ -903,6 +904,12 @@ def main():
                             politician_id=politician_id,
                             extracted_text=result.extracted_text
                         )
+                        process_transactions_for_disclosure(
+                            db_path=db_path,
+                            raw_disclosure_id=raw_id,
+                            politician_id=politician_id,
+                            extracted_text=result.extracted_text
+                        )
                         processed_count += 1
                         total_inserted += inserted
                         
@@ -1041,8 +1048,15 @@ def main():
                 politician_id=politician_id,
                 extracted_text=result.extracted_text
             )
+            inserted_tx = process_transactions_for_disclosure(
+                db_path=db_path,
+                raw_disclosure_id=1,
+                politician_id=politician_id,
+                extracted_text=result.extracted_text
+            )
             if not quiet:
                 print(f"Normalized assets inserted: {inserted}")
+                print(f"Normalized transactions inserted: {inserted_tx}")
 
             # 6. Build shape export
             return build_financial_shape_export(db_path, politician_id), db_path, identity
