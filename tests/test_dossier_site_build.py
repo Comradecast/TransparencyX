@@ -579,6 +579,16 @@ def test_site_build_html_displays_asset_linked_transaction_counts_without_json_c
                                 "asset_name": "Altria Group, Inc. (MO) [ST]",
                                 "linked_transaction_count": 4,
                             },
+                            {
+                                "asset_id": 2,
+                                "asset_name": "Schwab Value Advantage Money Fund (SWVXX) [MF]",
+                                "linked_transaction_count": 17,
+                                "trade_date": "01/17/2023",
+                                "transaction_type": "P",
+                                "amount_range_text": "$1,001 - $15,000",
+                                "amount_min": 1001.0,
+                                "amount_max": 15000.0,
+                            },
                         ],
                     },
                     "trace": {},
@@ -615,8 +625,22 @@ def test_site_build_html_displays_asset_linked_transaction_counts_without_json_c
     assert "<td>Linked Transactions: 0</td>" in pelosi_html
     assert "<td>Altria Group, Inc. (MO) [ST]</td>" in foxx_html
     assert "<td>Linked Transactions: 4</td>" in foxx_html
+    assert "<td>Schwab Value Advantage Money Fund (SWVXX) [MF]</td>" in foxx_html
+    assert "<td>Linked Transactions: 17</td>" in foxx_html
+    for field_name in (
+        "trade_date",
+        "transaction_type",
+        "amount_range_text",
+        "amount_min",
+        "amount_max",
+    ):
+        assert field_name not in pelosi_html
+        assert field_name not in foxx_html
+    assert "01/17/2023" not in foxx_html
+    assert "$1,001 - $15,000" not in foxx_html
     assert "asset_summaries" not in pelosi_json
     assert "asset_summaries" not in pelosi_json["financials"]
+    assert "linked_transaction_count" not in pelosi_json
 
 
 def test_site_build_metadata_coverage_file_exists_when_metadata_provided(

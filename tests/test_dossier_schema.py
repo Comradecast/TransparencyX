@@ -1,4 +1,5 @@
 import json
+from dataclasses import fields
 
 import pytest
 
@@ -71,6 +72,24 @@ def test_to_dict_uses_deterministic_keys():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
     dossier_dict = dossier.to_dict()
 
+    assert [field.name for field in fields(MemberDossier)] == [
+        "identity",
+        "office",
+        "financials",
+        "exposure",
+        "evidence_sources",
+    ]
+    assert [field.name for field in fields(DossierFinancials)] == [
+        "disclosure_years",
+        "asset_count",
+        "asset_value_min",
+        "asset_value_max",
+        "income_min",
+        "income_max",
+        "trade_count",
+        "liability_count",
+        "business_interests",
+    ]
     assert list(dossier_dict.keys()) == [
         "identity",
         "office",
@@ -87,6 +106,20 @@ def test_to_dict_uses_deterministic_keys():
         "party",
         "current_status",
     ]
+    assert list(dossier_dict["financials"].keys()) == [
+        "disclosure_years",
+        "asset_count",
+        "asset_value_min",
+        "asset_value_max",
+        "income_min",
+        "income_max",
+        "trade_count",
+        "liability_count",
+        "business_interests",
+    ]
+    assert "asset_summaries" not in dossier_dict
+    assert "asset_summaries" not in dossier_dict["financials"]
+    assert "linked_transaction_count" not in dossier_dict["financials"]
 
 
 def test_render_missing_values():

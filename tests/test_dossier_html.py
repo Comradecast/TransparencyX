@@ -216,6 +216,11 @@ def test_member_html_renders_asset_linked_transaction_counts():
             "asset_name": "Apple Inc. (AAPL) [ST] SP",
             "linked_transaction_count": 0,
         },
+        {
+            "asset_id": 3,
+            "asset_name": "Schwab Value Advantage Money Fund (SWVXX) [MF]",
+            "linked_transaction_count": 17,
+        },
     ]
 
     html = render_member_dossier_html(dossier, asset_summaries=asset_summaries)
@@ -225,6 +230,50 @@ def test_member_html_renders_asset_linked_transaction_counts():
     assert "<td>Linked Transactions: 1</td>" in html
     assert "<td>Apple Inc. (AAPL) [ST] SP</td>" in html
     assert "<td>Linked Transactions: 0</td>" in html
+    assert "<td>Schwab Value Advantage Money Fund (SWVXX) [MF]</td>" in html
+    assert "<td>Linked Transactions: 17</td>" in html
+
+
+def test_member_html_linked_transaction_counts_do_not_render_trade_details():
+    dossier = MemberDossier(
+        identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
+        office=MemberOffice(),
+        financials=DossierFinancials(asset_count=1, trade_count=1),
+        exposure=DossierExposure(),
+        evidence_sources=[
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name="sample.pdf",
+            )
+        ],
+    )
+    asset_summaries = [
+        {
+            "asset_id": 1,
+            "asset_name": "REOF XXV, LLC [AB] SP",
+            "linked_transaction_count": 1,
+            "trade_date": "03/17/2023",
+            "transaction_type": "P",
+            "amount_range_text": "$500,001 - $1,000,000",
+            "amount_min": 500001.0,
+            "amount_max": 1000000.0,
+        },
+    ]
+
+    html = render_member_dossier_html(dossier, asset_summaries=asset_summaries)
+
+    assert "<td>REOF XXV, LLC [AB] SP</td>" in html
+    assert "<td>Linked Transactions: 1</td>" in html
+    for field_name in (
+        "trade_date",
+        "transaction_type",
+        "amount_range_text",
+        "amount_min",
+        "amount_max",
+    ):
+        assert field_name not in html
+    assert "03/17/2023" not in html
+    assert "$500,001 - $1,000,000" not in html
 
 
 def test_member_html_escapes_asset_summary_values():
