@@ -111,6 +111,7 @@ def main():
     parser.add_argument("--batch-profile", type=str, help="Build profile exports from PDFs in a directory")
     parser.add_argument("--batch-summary", type=str, help="Build a compact profile summary table from PDFs in a directory")
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
+    parser.add_argument("--audit-real-batch", type=str, help="Print a deterministic audit table for parsed disclosure PDFs in a directory")
     parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
     parser.add_argument("--build-dossier-site", type=str, help="Build a complete static dossier site from PDFs in a directory")
     parser.add_argument("--build-nc-demo-site", action="store_true", help="Build a fixture-backed NC delegation demo static site from seeded metadata")
@@ -327,6 +328,12 @@ def main():
 
         profiles = build_profiles_for_directory(Path(args.batch_summary))
         print(render_batch_summary_table(profiles))
+        sys.exit(0)
+
+    if args.audit_real_batch:
+        from transparencyx.audit.real_batch import audit_real_batch
+
+        print(audit_real_batch(Path(args.audit_real_batch)))
         sys.exit(0)
 
     if args.build_nc_demo_site:
