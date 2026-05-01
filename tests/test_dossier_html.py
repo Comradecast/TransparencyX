@@ -133,7 +133,7 @@ def test_missing_values_render_unknown():
 
     assert "<dt>chamber</dt><dd>Unknown</dd>" in html
     assert "<dt>official salary</dt><dd>Unknown</dd>" in html
-    assert "<dt>asset count</dt><dd>Unknown</dd>" in html
+    assert "No parsed financial disclosure data is attached to this dossier." in html
 
 
 def test_empty_lists_render_none():
@@ -145,6 +145,51 @@ def test_empty_lists_render_none():
     assert "<h2>Committee Assignments</h2>\n<p>None</p>" in html
     assert "<dt>agencies found</dt><dd>None</dd>" in html
     assert "<h2>Evidence Sources</h2>\n<p>None</p>" in html
+
+
+def test_metadata_only_financial_summary_renders_empty_state():
+    dossier = create_empty_member_dossier("alma-s-adams", "Alma S. Adams")
+    dossier.evidence_sources.append(
+        EvidenceSource(
+            source_type="member_metadata",
+            source_name="House Clerk Member Profile",
+        )
+    )
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Financial Summary</h2>" in html
+    assert "No parsed financial disclosure data is attached to this dossier." in html
+
+
+def test_parsed_disclosure_financial_summary_renders_existing_values():
+    dossier = MemberDossier(
+        identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
+        office=MemberOffice(),
+        financials=DossierFinancials(
+            asset_count=5,
+            asset_value_min=1001.0,
+            asset_value_max=15000.0,
+            income_min=10.0,
+            income_max=100.0,
+            trade_count=2,
+        ),
+        exposure=DossierExposure(),
+        evidence_sources=[
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name="sample.pdf",
+            )
+        ],
+    )
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<tr><th>Assets</th><td>5</td></tr>" in html
+    assert "<tr><th>Income entries</th><td>Unknown</td></tr>" in html
+    assert "<tr><th>Transactions</th><td>2</td></tr>" in html
+    assert "<tr><th>Asset range</th><td>$1,001 - $15,000</td></tr>" in html
+    assert "<tr><th>Income range</th><td>$10 - $100</td></tr>" in html
 
 
 def test_committee_assignments_render_when_present():
@@ -217,13 +262,19 @@ def test_money_formatting():
                 {"total_award_amount": 1234.5},
             ]
         ),
+        evidence_sources=[
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name="sample.pdf",
+            )
+        ],
     )
 
     html = render_member_dossier_html(dossier)
 
     assert "<dt>official salary</dt><dd>$174,000</dd>" in html
-    assert "<dt>asset value range</dt><dd>$1,001 - $15,000.50</dd>" in html
-    assert "<dt>income range</dt><dd>$0 - $2,500.25</dd>" in html
+    assert "<tr><th>Asset range</th><td>$1,001 - $15,000.50</td></tr>" in html
+    assert "<tr><th>Income range</th><td>$0 - $2,500.25</td></tr>" in html
     assert "<dt>total award amount</dt><dd>$1,234.50</dd>" in html
 
 
@@ -376,7 +427,12 @@ def test_cli_single_html_export(tmp_path, monkeypatch, capsys):
 
     assert f"Wrote member dossier HTML: {output_path}" in captured.out
     assert output_path.exists()
-    assert "Nancy Pelosi" in output_path.read_text(encoding="utf-8")
+    html = output_path.read_text(encoding="utf-8")
+    assert "Nancy Pelosi" in html
+    assert (
+        "This dossier includes parsed financial disclosure data from a local source file."
+        in html
+    )
 
 
 def test_html_index_complete_document():

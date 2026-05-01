@@ -64,14 +64,21 @@ def _summary_card(label: str, value) -> str:
     )
 
 
+def _has_parsed_disclosure_data(dossier: MemberDossier) -> bool:
+    return any(
+        source.source_type == "financial_disclosure_pdf"
+        for source in dossier.evidence_sources
+    )
+
+
 def _disclosure_data_status_text(dossier: MemberDossier) -> str:
+    if _has_parsed_disclosure_data(dossier):
+        return "This dossier includes parsed financial disclosure data from a local source file."
     source_types = {
         source.source_type
         for source in dossier.evidence_sources
         if source.source_type
     }
-    if "financial_disclosure_pdf" in source_types:
-        return "This dossier includes parsed financial disclosure data from a local source file."
     if "member_metadata" in source_types:
         return (
             "This demo dossier was generated from seeded member metadata. "
@@ -96,6 +103,25 @@ def _format_money(value) -> str:
 
 def _format_range(minimum, maximum) -> str:
     return f"{_format_money(minimum)} - {_format_money(maximum)}"
+
+
+def _financial_summary_rows(dossier: MemberDossier) -> str:
+    if not _has_parsed_disclosure_data(dossier):
+        return "<p>No parsed financial disclosure data is attached to this dossier.</p>"
+
+    financials = dossier.financials
+    rows = [
+        ("Assets", _display(financials.asset_count)),
+        ("Income entries", "Unknown"),
+        ("Transactions", _display(financials.trade_count)),
+        ("Asset range", _format_range(financials.asset_value_min, financials.asset_value_max)),
+        ("Income range", _format_range(financials.income_min, financials.income_max)),
+    ]
+    rendered_rows = [
+        f"<tr><th>{escape(label)}</th><td>{value}</td></tr>"
+        for label, value in rows
+    ]
+    return "<table>\n<tbody>\n" + "\n".join(rendered_rows) + "\n</tbody>\n</table>"
 
 
 def _cell(value) -> str:
@@ -263,15 +289,7 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
   </section>
   <section>
     <h2>Financial Summary</h2>
-    <dl>
-      <dt>disclosure years</dt><dd>{_display_list(financials.disclosure_years)}</dd>
-      <dt>asset count</dt><dd>{_display(financials.asset_count)}</dd>
-      <dt>asset value range</dt><dd>{_format_range(financials.asset_value_min, financials.asset_value_max)}</dd>
-      <dt>income range</dt><dd>{_format_range(financials.income_min, financials.income_max)}</dd>
-      <dt>trade count</dt><dd>{_display(financials.trade_count)}</dd>
-      <dt>liability count</dt><dd>{_display(financials.liability_count)}</dd>
-      <dt>business interests count</dt><dd>{len(financials.business_interests)}</dd>
-    </dl>
+{_financial_summary_rows(dossier)}
   </section>
   <section>
     <h2>Federal Award Exposure</h2>

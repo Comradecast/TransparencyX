@@ -314,6 +314,33 @@ def test_nc_demo_site_member_pages_render_metadata_only_status(tmp_path, monkeyp
     assert validate_dossier_site(output_dir)["passed"] is True
 
 
+def test_nc_demo_site_member_pages_render_no_parsed_financial_summary(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    html = (output_dir / "alma-s-adams.html").read_text(encoding="utf-8")
+
+    assert "<h2>Financial Summary</h2>" in html
+    assert "No parsed financial disclosure data is attached to this dossier." in html
+
+
 def test_nc_demo_site_readme_labels_fixture_dataset(tmp_path, monkeypatch):
     output_dir = tmp_path / "site"
     monkeypatch.setattr(
