@@ -5,6 +5,37 @@ from pathlib import Path
 from transparencyx.dossier.schema import MemberDossier
 
 
+def _clean_sort_text(value) -> str:
+    if value is None:
+        return ""
+    return str(value).strip().casefold()
+
+
+def _district_sort_value(value) -> int:
+    if value is None:
+        return 1_000_000
+    try:
+        return int(str(value).strip())
+    except ValueError:
+        return 1_000_000
+
+
+def _chamber_sort_group(dossier: MemberDossier) -> int:
+    if dossier.identity.chamber == "House":
+        return 0
+    if dossier.identity.chamber == "Senate":
+        return 1
+    return 2
+
+
+def dossier_index_sort_key(dossier: MemberDossier) -> tuple:
+    group = _chamber_sort_group(dossier)
+    name = _clean_sort_text(dossier.identity.full_name)
+    if group == 0:
+        return (group, _district_sort_value(dossier.identity.district), name)
+    return (group, name)
+
+
 def render_member_dossier_json(dossier: MemberDossier) -> str:
     return (
         json.dumps(
@@ -53,6 +84,11 @@ def build_dossier_index(
     if len(dossiers) != len(written_paths):
         raise ValueError("dossiers and written_paths lengths must match")
 
+    sorted_pairs = sorted(
+        zip(dossiers, written_paths),
+        key=lambda item: dossier_index_sort_key(item[0]),
+    )
+
     return {
         "dossier_count": len(dossiers),
         "dossiers": [
@@ -66,7 +102,7 @@ def build_dossier_index(
                 "current_status": dossier.identity.current_status,
                 "file": Path(path).name,
             }
-            for dossier, path in zip(dossiers, written_paths)
+            for dossier, path in sorted_pairs
         ],
     }
 

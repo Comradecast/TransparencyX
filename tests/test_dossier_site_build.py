@@ -253,6 +253,39 @@ def test_nc_demo_site_index_summary_counts(tmp_path, monkeypatch):
     assert "<dt>Current members</dt><dd>16</dd>" in html
 
 
+def test_nc_demo_site_index_json_order_matches_html_order(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    index = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
+    html = (output_dir / "index.html").read_text(encoding="utf-8")
+    files = [row["file"].replace(".json", ".html") for row in index["dossiers"]]
+
+    assert files[:4] == [
+        "donald-g-davis.html",
+        "deborah-k-ross.html",
+        "gregory-f-murphy.html",
+        "valerie-p-foushee.html",
+    ]
+    assert files[-2:] == ["ted-budd.html", "thom-tillis.html"]
+    html_positions = [html.index(filename) for filename in files]
+    assert html_positions == sorted(html_positions)
+
+
 def test_nc_demo_site_member_pages_render_metadata_only_status(tmp_path, monkeypatch):
     output_dir = tmp_path / "site"
     monkeypatch.setattr(

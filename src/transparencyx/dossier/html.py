@@ -2,6 +2,7 @@ import re
 from html import escape
 from pathlib import Path
 
+from transparencyx.dossier.export import dossier_index_sort_key
 from transparencyx.dossier.schema import MemberDossier
 
 
@@ -314,6 +315,85 @@ def dossier_html_filename(dossier: MemberDossier) -> str:
     return f"{slug or 'unknown'}.html"
 
 
+def _index_table_header() -> str:
+    return """<thead>
+      <tr>
+        <th>full_name</th>
+        <th>chamber</th>
+        <th>state</th>
+        <th>district</th>
+        <th>party</th>
+        <th>current_status</th>
+        <th>file</th>
+      </tr>
+    </thead>"""
+
+
+def _index_row(dossier: MemberDossier) -> str:
+    identity = dossier.identity
+    filename = dossier_html_filename(dossier)
+    return (
+        "<tr>"
+        f"{_cell(identity.full_name)}"
+        f"{_cell(identity.chamber)}"
+        f"{_cell(identity.state)}"
+        f"{_cell(identity.district)}"
+        f"{_cell(identity.party)}"
+        f"{_cell(identity.current_status)}"
+        f'<td><a href="{escape(filename)}">{escape(filename)}</a></td>'
+        "</tr>"
+    )
+
+
+def _index_section(title: str, section_id: str, dossiers: list[MemberDossier]) -> str:
+    if not dossiers:
+        return ""
+    rows = "\n".join(_index_row(dossier) for dossier in dossiers)
+    return f"""<section class="index-section">
+    <h2 id="{escape(section_id)}">{escape(title)}</h2>
+    <table>
+      {_index_table_header()}
+      <tbody>
+{rows}
+      </tbody>
+    </table>
+  </section>"""
+
+
+def _index_groups(dossiers: list[MemberDossier]) -> dict[str, list[MemberDossier]]:
+    sorted_dossiers = sorted(dossiers, key=dossier_index_sort_key)
+    return {
+        "house": [
+            dossier
+            for dossier in sorted_dossiers
+            if dossier.identity.chamber == "House"
+        ],
+        "senate": [
+            dossier
+            for dossier in sorted_dossiers
+            if dossier.identity.chamber == "Senate"
+        ],
+        "unknown": [
+            dossier
+            for dossier in sorted_dossiers
+            if dossier.identity.chamber not in {"House", "Senate"}
+        ],
+    }
+
+
+def _index_nav(groups: dict[str, list[MemberDossier]]) -> str:
+    links = []
+    if groups["house"]:
+        links.append('<a href="#house">House</a>')
+    if groups["senate"]:
+        links.append('<a href="#senate">Senate</a>')
+    if groups["unknown"]:
+        links.append('<a href="#unknown">Unknown</a>')
+    if not links:
+        return ""
+    return '<nav class="index-nav">\n    ' + "\n    ".join(links) + "\n  </nav>"
+
+
 def write_member_dossiers_html(
     dossiers: list[MemberDossier],
     output_dir: str | Path,
@@ -334,23 +414,12 @@ def write_member_dossiers_html(
 
 
 def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
-    rows = []
-    for dossier in dossiers:
-        identity = dossier.identity
-        filename = dossier_html_filename(dossier)
-        rows.append(
-            "<tr>"
-            f"{_cell(identity.full_name)}"
-            f"{_cell(identity.chamber)}"
-            f"{_cell(identity.state)}"
-            f"{_cell(identity.district)}"
-            f"{_cell(identity.party)}"
-            f"{_cell(identity.current_status)}"
-            f'<td><a href="{escape(filename)}">{escape(filename)}</a></td>'
-            "</tr>"
-        )
-
-    table_rows = "\n".join(rows)
+    groups = _index_groups(dossiers)
+    sections = "\n".join([
+        _index_section("House", "house", groups["house"]),
+        _index_section("Senate", "senate", groups["senate"]),
+        _index_section("Unknown", "unknown", groups["unknown"]),
+    ]).strip()
     summary = _index_summary(dossiers)
     return f"""<!doctype html>
 <html lang="en">
@@ -362,6 +431,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
     main {{ max-width: 980px; margin: 0 auto; }}
     h1, h2 {{ margin: 0 0 0.75rem; }}
     .intro {{ margin: 0 0 1rem; max-width: 760px; }}
+    .index-nav {{ display: flex; gap: 1rem; margin: 0 0 1rem; }}
     .summary {{ margin: 1rem 0; }}
     .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }}
     .summary-card {{ border: 1px solid #d8dee4; padding: 0.65rem; }}
@@ -376,6 +446,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
 <main>
   <h1>TransparencyX Dossier Index</h1>
   <p class="intro">This is a TransparencyX dossier index. Each row links to a member dossier page. Demo output may be fixture-backed depending on the command used to build the site.</p>
+  {_index_nav(groups)}
   <section class="summary">
     <h2>Dataset Summary</h2>
     <dl class="summary-grid">
@@ -387,22 +458,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
     </dl>
   </section>
   <p>total dossier count: {len(dossiers)}</p>
-  <table>
-    <thead>
-      <tr>
-        <th>full_name</th>
-        <th>chamber</th>
-        <th>state</th>
-        <th>district</th>
-        <th>party</th>
-        <th>current_status</th>
-        <th>file</th>
-      </tr>
-    </thead>
-    <tbody>
-{table_rows}
-    </tbody>
-  </table>
+  {sections}
 </main>
 </body>
 </html>

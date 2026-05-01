@@ -183,25 +183,51 @@ def test_build_dossier_index_uses_file_basename_only():
     assert index["dossiers"][0]["file"] == "nancy-pelosi.json"
 
 
-def test_build_dossier_index_preserves_order(tmp_path):
+def test_build_dossier_index_uses_deterministic_index_order(tmp_path):
     dossiers = [
-        create_empty_member_dossier("jane-public", "Jane Public"),
-        create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi"),
+        build_member_dossier_from_profile({
+            "member_id": "senator-b",
+            "member_name": "Senator B",
+            "chamber": "Senate",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "house-10",
+            "member_name": "House Ten",
+            "chamber": "House",
+            "district": "10",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "house-2",
+            "member_name": "House Two",
+            "chamber": "House",
+            "district": "2",
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "senator-a",
+            "member_name": "Senator A",
+            "chamber": "Senate",
+        }),
     ]
     paths = [
-        tmp_path / "jane-public.json",
-        tmp_path / "nancy-pelosi.json",
+        tmp_path / "senator-b.json",
+        tmp_path / "house-10.json",
+        tmp_path / "house-2.json",
+        tmp_path / "senator-a.json",
     ]
 
     index = build_dossier_index(dossiers, paths)
 
     assert [row["member_id"] for row in index["dossiers"]] == [
-        "jane-public",
-        "nancy-pelosi",
+        "house-2",
+        "house-10",
+        "senator-a",
+        "senator-b",
     ]
     assert [row["file"] for row in index["dossiers"]] == [
-        "jane-public.json",
-        "nancy-pelosi.json",
+        "house-2.json",
+        "house-10.json",
+        "senator-a.json",
+        "senator-b.json",
     ]
 
 

@@ -475,6 +475,94 @@ def test_html_index_links_to_dossier_html_filenames():
     assert '<a href="jane-public.html">jane-public.html</a>' in html
 
 
+def test_html_index_renders_chamber_anchor_navigation():
+    dossiers = [
+        MemberDossier(
+            identity=MemberIdentity("house", "House Member", chamber="House"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+        MemberDossier(
+            identity=MemberIdentity("senate", "Senate Member", chamber="Senate"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert '<nav class="index-nav">' in html
+    assert '<a href="#house">House</a>' in html
+    assert '<a href="#senate">Senate</a>' in html
+
+
+def test_html_index_renders_house_before_senate():
+    dossiers = [
+        MemberDossier(
+            identity=MemberIdentity("senate", "Senate Member", chamber="Senate"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+        MemberDossier(
+            identity=MemberIdentity("house", "House Member", chamber="House"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert html.index('<h2 id="house">House</h2>') < html.index(
+        '<h2 id="senate">Senate</h2>'
+    )
+
+
+def test_html_index_sorts_house_rows_by_numeric_district():
+    dossiers = [
+        MemberDossier(
+            identity=MemberIdentity("house-10", "House Ten", chamber="House", district="10"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+        MemberDossier(
+            identity=MemberIdentity("house-2", "House Two", chamber="House", district="2"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert html.index("house-2.html") < html.index("house-10.html")
+
+
+def test_html_index_sorts_senate_rows_by_name():
+    dossiers = [
+        MemberDossier(
+            identity=MemberIdentity("senator-b", "Senator B", chamber="Senate"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+        MemberDossier(
+            identity=MemberIdentity("senator-a", "Senator A", chamber="Senate"),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert html.index("senator-a.html") < html.index("senator-b.html")
+
+
 def test_html_index_includes_current_status():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
     dossier.identity.current_status = "current"
