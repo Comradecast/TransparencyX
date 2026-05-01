@@ -78,9 +78,64 @@ def test_empty_lists_render_none():
     html = render_member_dossier_html(dossier)
 
     assert "<dt>leadership roles</dt><dd>None</dd>" in html
-    assert "<dt>committee assignments</dt><dd>None</dd>" in html
+    assert "<h2>Committee Assignments</h2>\n<p>None</p>" in html
     assert "<dt>agencies found</dt><dd>None</dd>" in html
     assert "<h2>Evidence Sources</h2>\n<p>None</p>" in html
+
+
+def test_committee_assignments_render_when_present():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.office.committee_assignments = [
+        "Committee on Appropriations",
+        "Committee on Rules",
+    ]
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Committee Assignments</h2>" in html
+    assert "<li>Committee on Appropriations</li>" in html
+    assert "<li>Committee on Rules</li>" in html
+    assert html.index("<li>Committee on Appropriations</li>") < html.index(
+        "<li>Committee on Rules</li>"
+    )
+
+
+def test_empty_committee_assignments_render_none():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.office.committee_assignments = []
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Committee Assignments</h2>\n<p>None</p>" in html
+
+
+def test_none_committee_assignments_render_none():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.office.committee_assignments = None
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Committee Assignments</h2>\n<p>None</p>" in html
+
+
+def test_committee_assignments_are_html_escaped():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.office.committee_assignments = ["Committee <A&B>"]
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<li>Committee &lt;A&amp;B&gt;</li>" in html
+    assert "Committee <A&B>" not in html
+
+
+def test_committee_assignments_section_precedes_financial_summary():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_member_dossier_html(dossier)
+
+    assert html.index("<h2>Committee Assignments</h2>") < html.index(
+        "<h2>Financial Summary</h2>"
+    )
 
 
 def test_money_formatting():

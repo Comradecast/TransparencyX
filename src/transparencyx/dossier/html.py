@@ -17,6 +17,13 @@ def _display_list(values: list) -> str:
     return ", ".join(escape(str(value)) for value in values)
 
 
+def _plain_list_section(values: list | None) -> str:
+    if not values:
+        return "<p>None</p>"
+    items = [f"<li>{escape(str(value))}</li>" for value in values]
+    return "<ul>\n" + "\n".join(items) + "\n</ul>"
+
+
 def _display_bool(value) -> str:
     return "Yes" if value else "No"
 
@@ -181,11 +188,14 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
     </dl>
   </header>
   <section>
+    <h2>Committee Assignments</h2>
+{_plain_list_section(getattr(office, "committee_assignments", None))}
+  </section>
+  <section>
     <h2>Office</h2>
     <dl>
       <dt>official salary</dt><dd>{_format_money(office.official_salary)}</dd>
       <dt>leadership roles</dt><dd>{_display_list(office.leadership_roles)}</dd>
-      <dt>committee assignments</dt><dd>{_display_list(office.committee_assignments)}</dd>
       <dt>office start</dt><dd>{_display(office.office_start)}</dd>
       <dt>office end</dt><dd>{_display(office.office_end)}</dd>
     </dl>
