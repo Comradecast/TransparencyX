@@ -1,11 +1,18 @@
 member_id,full_name,chamber,state,district,party,current_status,official_salary,leadership_roles,committee_assignments,office_start,office_end,source_name,source_url
 alma-s-adams,Alma S. Adams,House,NC,12,Democratic,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
-don-davis,Don Davis,House,NC,1,Democratic,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+donald-g-davis,Donald G. Davis,House,NC,1,Democratic,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 deborah-k-ross,Deborah K. Ross,House,NC,2,Democratic,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+gregory-f-murphy,Gregory F. Murphy,House,NC,3,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 valerie-p-foushee,Valerie P. Foushee,House,NC,4,Democratic,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 virginia-foxx,Virginia Foxx,House,NC,5,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+addison-p-mcdowell,Addison P. McDowell,House,NC,6,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+david-rouzer,David Rouzer,House,NC,7,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+mark-harris,Mark Harris,House,NC,8,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 richard-hudson,Richard Hudson,House,NC,9,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+pat-harrigan,Pat Harrigan,House,NC,10,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 chuck-edwards,Chuck Edwards,House,NC,11,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+brad-knott,Brad Knott,House,NC,13,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
+tim-moore,Tim Moore,House,NC,14,Republican,current,174000,,,,,House Clerk Member List,https://clerk.house.gov/Members/ViewMemberList
 thom-tillis,Thom Tillis,Senate,NC,,Republican,current,174000,,,,,Senate.gov North Carolina Senators,https://www.senate.gov/states/NC/intro.htm
 ted-budd,Ted Budd,Senate,NC,,Republican,current,174000,,,,,Senate.gov North Carolina Senators,https://www.senate.gov/states/NC/intro.htm
 alex-padilla,Alex Padilla,Senate,CA,,Democratic,current,174000,,,,,Senate.gov Senators,https://www.senate.gov/senators/

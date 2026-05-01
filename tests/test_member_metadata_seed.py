@@ -7,6 +7,7 @@ import pytest
 from transparencyx.dossier.metadata import load_member_metadata
 from transparencyx.dossier.metadata_seed import (
     render_member_metadata_seed_validation,
+    summarize_member_metadata_by_state,
     summarize_member_metadata_seed,
     validate_member_metadata_seed,
 )
@@ -66,6 +67,51 @@ def test_seed_includes_north_carolina_member():
     assert any(item.state == "NC" for item in metadata.values())
 
 
+def test_nc_has_complete_expected_count():
+    summary = summarize_member_metadata_by_state(SEED_PATH, "NC")
+
+    assert summary["records"] == 16
+
+
+def test_nc_has_14_house_records():
+    summary = summarize_member_metadata_by_state(SEED_PATH, "NC")
+
+    assert summary["house_records"] == 14
+
+
+def test_nc_has_2_senate_records():
+    summary = summarize_member_metadata_by_state(SEED_PATH, "NC")
+
+    assert summary["senate_records"] == 2
+
+
+def test_nc_house_districts_include_1_through_14():
+    summary = summarize_member_metadata_by_state(SEED_PATH, "NC")
+
+    assert summary["house_districts"] == [
+        str(district)
+        for district in range(1, 15)
+    ]
+
+
+def test_nc_senate_rows_have_blank_district():
+    metadata = load_member_metadata(SEED_PATH)
+    nc_senators = [
+        item
+        for item in metadata.values()
+        if item.state == "NC" and item.chamber == "Senate"
+    ]
+
+    assert len(nc_senators) == 2
+    assert all(item.district is None for item in nc_senators)
+
+
+def test_every_nc_row_has_source_name_or_source_url():
+    for row in _seed_rows():
+        if row["state"] == "NC":
+            assert row["source_name"].strip() or row["source_url"].strip()
+
+
 def test_every_seed_row_has_source_name_or_source_url():
     for row in _seed_rows():
         assert row["source_name"].strip() or row["source_url"].strip()
@@ -106,6 +152,22 @@ def test_summarize_member_metadata_seed():
     assert summary["senate"] > 0
     assert "NC" in summary["states"]
     assert summary["states"] == sorted(summary["states"])
+
+
+def test_summarize_member_metadata_by_state():
+    summary = summarize_member_metadata_by_state(SEED_PATH, "nc")
+
+    assert summary == {
+        "state": "NC",
+        "records": 16,
+        "house_records": 14,
+        "senate_records": 2,
+        "house_districts": [
+            str(district)
+            for district in range(1, 15)
+        ],
+        "senators": ["Ted Budd", "Thom Tillis"],
+    }
 
 
 def test_render_output():

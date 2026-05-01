@@ -79,6 +79,45 @@ def summarize_member_metadata_seed(path: str | Path) -> dict:
     }
 
 
+def _district_sort_key(district: str) -> tuple[int, str]:
+    try:
+        return (0, f"{int(district):03d}")
+    except ValueError:
+        return (1, district)
+
+
+def summarize_member_metadata_by_state(path: str | Path, state: str) -> dict:
+    metadata = load_member_metadata(Path(path))
+    state_code = state.strip().upper()
+    rows = [
+        item
+        for item in metadata.values()
+        if item.state == state_code
+    ]
+    house_rows = [
+        item
+        for item in rows
+        if item.chamber == "House"
+    ]
+    senate_rows = [
+        item
+        for item in rows
+        if item.chamber == "Senate"
+    ]
+
+    return {
+        "state": state_code,
+        "records": len(rows),
+        "house_records": len(house_rows),
+        "senate_records": len(senate_rows),
+        "house_districts": sorted(
+            [item.district for item in house_rows if item.district],
+            key=_district_sort_key,
+        ),
+        "senators": sorted(item.full_name for item in senate_rows),
+    }
+
+
 def render_member_metadata_seed_validation(report: dict) -> str:
     status = "PASS" if report["passed"] else "FAIL"
     duplicate_member_ids = report["duplicate_member_ids"]
