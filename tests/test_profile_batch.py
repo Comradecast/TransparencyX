@@ -88,9 +88,14 @@ def test_build_profiles_for_directory_empty_directory_returns_empty_list(tmp_pat
 def test_pelosi_schedule_b_transactions_flow_to_shape_summary():
     profile = build_profile_for_pdf(PELOSI_PDF)
     summary = profile["shape_export"]["summary"]
+    linked_count_total = sum(
+        row["linked_transaction_count"]
+        for row in summary["asset_summaries"]
+    )
 
     assert summary["asset_count"] == 56
     assert summary["transaction_count"] == 7
+    assert linked_count_total <= 7
 
 
 def test_pelosi_shape_export_from_text_has_expected_transaction_count():
@@ -127,6 +132,14 @@ def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
     export = _build_shape_export_from_text(FOXX_PDF, extracted_text or "")
 
     assert export["summary"]["transaction_count"] == 74
+    assert sum(
+        row["linked_transaction_count"]
+        for row in export["summary"]["asset_summaries"]
+    ) == 48
+    assert any(
+        row["linked_transaction_count"] > 1
+        for row in export["summary"]["asset_summaries"]
+    )
     assert len(export["trace"]["trades"]["count_rows"]) == 74
     assert len(export["trace"]["trades"]["detail_rows"]) == 74
     assert all(

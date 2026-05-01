@@ -5,6 +5,7 @@ from typing import Optional
 
 from transparencyx.db.database import get_connection
 from transparencyx.normalize.assets import classify_asset_quality, parse_value_range
+from transparencyx.shape.trace import build_financial_shape_trace
 
 ASSET_CATEGORY_ORDER = [
     "stock",
@@ -57,6 +58,7 @@ class FinancialShapeSummary:
     trade_volume_band: str
     summary_label: str
     asset_category_counts: dict[str, int] = field(default_factory=dict)
+    asset_summaries: list[dict] = field(default_factory=list)
     income_count: int = 0
     income_min: Optional[float] = None
     income_max: Optional[float] = None
@@ -75,6 +77,35 @@ def compute_asset_category_counts(usable_assets) -> dict[str, int]:
         category_counts[category] += 1
 
     return category_counts
+
+
+def compute_asset_summaries(usable_assets, linked_transaction_counts: dict[int, int]) -> list[dict]:
+    return [
+        {
+            "asset_id": row["id"],
+            "asset_name": row["asset_name"],
+            "linked_transaction_count": linked_transaction_counts.get(row["id"], 0),
+        }
+        for row in usable_assets
+    ]
+
+
+def compute_linked_transaction_counts(trace: dict) -> dict[int, int]:
+    counts = {}
+    trades = trace.get("trades")
+    if not isinstance(trades, dict):
+        return counts
+    detail_rows = trades.get("detail_rows")
+    if not isinstance(detail_rows, list):
+        return counts
+
+    for row in detail_rows:
+        if not isinstance(row, dict):
+            continue
+        linked_asset_id = row.get("linked_asset_id")
+        if isinstance(linked_asset_id, int) and not isinstance(linked_asset_id, bool):
+            counts[linked_asset_id] = counts.get(linked_asset_id, 0) + 1
+    return counts
 
 
 def extract_income_signal(text: str) -> dict | None:
@@ -226,6 +257,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         # Aggregate usable normalized assets
         cursor.execute("""
             SELECT 
+                id,
                 asset_name,
                 asset_category,
                 original_value_range,
@@ -240,6 +272,13 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         
         asset_count = len(usable_assets)
         asset_category_counts = compute_asset_category_counts(usable_assets)
+        linked_transaction_counts = compute_linked_transaction_counts(
+            build_financial_shape_trace(db_path, politician_id)
+        )
+        asset_summaries = compute_asset_summaries(
+            usable_assets,
+            linked_transaction_counts,
+        )
         income_shape = compute_income_shape(usable_assets)
         value_min_rows = [row["value_min"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
         value_max_rows = [row["value_max"] for row in usable_assets if row["value_min"] is not None and row["value_max"] is not None]
@@ -288,6 +327,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             trade_volume_band=trade_volume_band,
             summary_label="",
             asset_category_counts=asset_category_counts,
+            asset_summaries=asset_summaries,
             income_count=income_shape["income_count"],
             income_min=income_shape["income_min"],
             income_max=income_shape["income_max"],
@@ -316,6 +356,7 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "trade_volume_band": summary.trade_volume_band,
         "summary_label": summary.summary_label,
         "asset_category_counts": summary.asset_category_counts,
+        "asset_summaries": summary.asset_summaries,
         "income_count": summary.income_count,
         "income_min": summary.income_min,
         "income_max": summary.income_max,

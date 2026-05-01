@@ -8,6 +8,7 @@ from transparencyx.shape.summary import (
     build_financial_shape_summary, 
     summary_to_dict,
     compute_asset_category_counts,
+    compute_linked_transaction_counts,
     compute_income_shape,
     extract_income_signal,
     get_net_worth_band,
@@ -63,6 +64,7 @@ def test_empty_politician_shape(db_path):
         "other": 0,
         "unknown": 0,
     }
+    assert summary.asset_summaries == []
     assert summary.income_count == 0
     assert summary.income_min is None
     assert summary.income_max is None
@@ -219,6 +221,18 @@ def test_assets_aggregate_correctly(db_path):
     assert summary.asset_value_min == 11.0
     assert summary.asset_value_max == 25.0
     assert summary.asset_value_midpoint == 18.0
+    assert summary.asset_summaries == [
+        {
+            "asset_id": 1,
+            "asset_name": "A",
+            "linked_transaction_count": 0,
+        },
+        {
+            "asset_id": 2,
+            "asset_name": "B",
+            "linked_transaction_count": 0,
+        },
+    ]
 
 def test_assets_aggregate_only_usable_assets(db_path):
     conn = sqlite3.connect(db_path)
@@ -283,6 +297,91 @@ def test_trades_aggregate_correctly(db_path):
     assert summary.trade_volume_max == 25.0
     assert summary.trade_volume_midpoint == 118.0
     assert summary.trade_activity == "LOW"
+
+
+def test_asset_summaries_count_existing_trace_linkages(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    cursor.execute("""
+        INSERT INTO normalized_assets (
+            id,
+            raw_disclosure_id,
+            politician_id,
+            asset_name,
+            asset_category,
+            original_value_range,
+            value_min,
+            value_max,
+            value_midpoint,
+            confidence,
+            created_at
+        )
+        VALUES
+        (10, 1, 1, 'Exact Asset, Inc. (EXA) [ST] SP', 'stock', '$1 - $2', 1, 2, 1.5, 'medium', 'now'),
+        (11, 1, 1, 'Unlinked Asset, Inc. (UNA) [ST] SP', 'stock', '$1 - $2', 1, 2, 1.5, 'medium', 'now')
+    """)
+    cursor.executemany(
+        """
+        INSERT INTO trades (
+            politician_id,
+            raw_disclosure_id,
+            trade_date,
+            asset_name,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max,
+            amount_mid
+        )
+        VALUES (1, 1, '01/01/2023', ?, 'P', '$1 - $2', 1, 2, 1.5)
+        """,
+        [
+            ("Exact Asset, Inc. (EXA)",),
+            ("Exact Asset, Inc. (EXA)",),
+            ("Exact Asset Inc. (EXA)",),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    summary = build_financial_shape_summary(db_path, 1)
+
+    assert summary.asset_count == 2
+    assert summary.transaction_count == 3
+    assert summary.asset_summaries == [
+        {
+            "asset_id": 10,
+            "asset_name": "Exact Asset, Inc. (EXA) [ST] SP",
+            "linked_transaction_count": 2,
+        },
+        {
+            "asset_id": 11,
+            "asset_name": "Unlinked Asset, Inc. (UNA) [ST] SP",
+            "linked_transaction_count": 0,
+        },
+    ]
+
+
+def test_compute_linked_transaction_counts_uses_trace_linked_asset_ids_only():
+    counts = compute_linked_transaction_counts({
+        "trades": {
+            "detail_rows": [
+                {"linked_asset_id": 10},
+                {"linked_asset_id": 10},
+                {"linked_asset_id": None},
+                {"asset_name": "Unlinked"},
+                {"linked_asset_id": "10"},
+                {"linked_asset_id": False},
+            ],
+        },
+    })
+
+    assert counts == {10: 2}
 
 def test_trade_bounds_ignore_null_max(db_path):
     """Rows with NULL max must be excluded from bounds but still counted."""
@@ -400,6 +499,7 @@ def test_summary_to_dict(db_path):
         "other": 0,
         "unknown": 0,
     }
+    assert d["asset_summaries"] == []
     assert d["income_count"] == 0
     assert d["income_min"] is None
     assert d["income_max"] is None
