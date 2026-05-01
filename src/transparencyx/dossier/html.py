@@ -166,6 +166,7 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
     main {{ max-width: 980px; margin: 0 auto; }}
     section {{ border-top: 1px solid #d8dee4; padding: 1rem 0; }}
     h1, h2 {{ margin: 0 0 0.75rem; }}
+    .nav {{ margin: 0 0 1rem; }}
     dl {{ display: grid; grid-template-columns: 220px 1fr; gap: 0.4rem 1rem; }}
     dt {{ font-weight: 700; }}
     dd {{ margin: 0; }}
@@ -176,6 +177,7 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
 </head>
 <body>
 <main>
+  <nav class="nav"><a href="index.html">Back to index</a></nav>
   <header>
     <h1>{_display(identity.full_name)}</h1>
     <dl>
@@ -300,6 +302,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
     body {{ font-family: Arial, sans-serif; line-height: 1.45; margin: 2rem; color: #1f2933; }}
     main {{ max-width: 980px; margin: 0 auto; }}
     h1 {{ margin: 0 0 0.75rem; }}
+    .intro {{ margin: 0 0 1rem; max-width: 760px; }}
     table {{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }}
     th, td {{ border: 1px solid #d8dee4; padding: 0.45rem; text-align: left; vertical-align: top; }}
     th {{ background: #f6f8fa; }}
@@ -308,6 +311,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
 <body>
 <main>
   <h1>TransparencyX Dossier Index</h1>
+  <p class="intro">This is a TransparencyX dossier index. Each row links to a member dossier page. Demo output may be fixture-backed depending on the command used to build the site.</p>
   <p>total dossier count: {len(dossiers)}</p>
   <table>
     <thead>

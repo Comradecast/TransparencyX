@@ -34,6 +34,17 @@ def test_complete_html_document():
     assert "<title>TransparencyX Dossier - Nancy Pelosi</title>" in html
 
 
+def test_member_page_links_back_to_index():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_member_dossier_html(dossier)
+
+    assert '<a href="index.html">Back to index</a>' in html
+    assert html.index('<a href="index.html">Back to index</a>') < html.index(
+        "<h1>Nancy Pelosi</h1>"
+    )
+
+
 def test_escaped_member_and_data_values():
     dossier = MemberDossier(
         identity=MemberIdentity(
@@ -336,6 +347,18 @@ def test_html_index_total_dossier_count():
     html = render_dossier_html_index(dossiers)
 
     assert "<p>total dossier count: 2</p>" in html
+
+
+def test_html_index_contains_intro_text():
+    dossiers = [create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert (
+        '<p class="intro">This is a TransparencyX dossier index. '
+        "Each row links to a member dossier page. "
+        "Demo output may be fixture-backed depending on the command used to build the site.</p>"
+    ) in html
 
 
 def test_html_index_links_to_dossier_html_filenames():
