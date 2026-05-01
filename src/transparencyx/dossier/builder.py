@@ -170,6 +170,16 @@ def _evidence_sources(profile: dict) -> list[EvidenceSource]:
             )
         )
 
+    disclosure_path = _first_text(profile, "disclosure_path")
+    if disclosure_path is not None:
+        sources.append(
+            EvidenceSource(
+                source_type="financial_disclosure_pdf",
+                source_name=_source_name(disclosure_path),
+                source_url=None,
+            )
+        )
+
     source_url = _first_text(profile, "source_url")
     if source_url is not None:
         sources.append(

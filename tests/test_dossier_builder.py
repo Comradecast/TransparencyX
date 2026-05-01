@@ -169,15 +169,18 @@ def test_evidence_source_from_source_pdf_source_path_source_url():
         "member_name": "Nancy Pelosi",
         "source_pdf": "data/raw/house/sample.pdf",
         "source_path": "data/raw/house/other.pdf",
+        "disclosure_path": "data/raw/house/local.pdf",
         "source_url": "https://example.test/disclosure.pdf",
     })
 
     assert [source.source_name for source in dossier.evidence_sources] == [
         "sample.pdf",
         "other.pdf",
+        "local.pdf",
         "disclosure.pdf",
     ]
     assert [source.source_url for source in dossier.evidence_sources] == [
+        None,
         None,
         None,
         "https://example.test/disclosure.pdf",
