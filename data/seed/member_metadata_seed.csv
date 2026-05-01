@@ -1,10 +1,10 @@
 member_id,full_name,chamber,state,district,party,current_status,official_salary,leadership_roles,committee_assignments,office_start,office_end,source_name,source_url
-alma-s-adams,Alma S. Adams,House,NC,12,Democratic,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/A000370
-donald-g-davis,Donald G. Davis,House,NC,1,Democratic,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/D000230
-deborah-k-ross,Deborah K. Ross,House,NC,2,Democratic,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/R000305
-gregory-f-murphy,Gregory F. Murphy,House,NC,3,Republican,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/M001210
-valerie-p-foushee,Valerie P. Foushee,House,NC,4,Democratic,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/F000477
-virginia-foxx,Virginia Foxx,House,NC,5,Republican,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/F000450
+alma-s-adams,Alma S. Adams,House,NC,12,Democratic,current,174000,,Committee on Agriculture|Committee on Education and Workforce,,,House Clerk Member Profile,https://clerk.house.gov/members/A000370
+donald-g-davis,Donald G. Davis,House,NC,1,Democratic,current,174000,,Committee on Agriculture|Committee on Armed Services,,,House Clerk Member Profile,https://clerk.house.gov/members/D000230
+deborah-k-ross,Deborah K. Ross,House,NC,2,Democratic,current,174000,,"Committee on Ethics|Committee on Science, Space, and Technology|Committee on the Judiciary",,,House Clerk Member Profile,https://clerk.house.gov/members/R000305
+gregory-f-murphy,Gregory F. Murphy,House,NC,3,Republican,current,174000,,Committee on House Administration|Committee on Veterans' Affairs|Committee on Ways and Means|Joint Committee on Printing,,,House Clerk Member Profile,https://clerk.house.gov/members/M001210
+valerie-p-foushee,Valerie P. Foushee,House,NC,4,Democratic,current,174000,,"Committee on Science, Space, and Technology|Committee on Transportation and Infrastructure",,,House Clerk Member Profile,https://clerk.house.gov/members/F000477
+virginia-foxx,Virginia Foxx,House,NC,5,Republican,current,174000,,Committee on Education and Workforce|Committee on Oversight and Government Reform|Committee on Rules,,,House Clerk Member Profile,https://clerk.house.gov/members/F000450
 addison-p-mcdowell,Addison P. McDowell,House,NC,6,Republican,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/M001240
 david-rouzer,David Rouzer,House,NC,7,Republican,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/R000603
 mark-harris,Mark Harris,House,NC,8,Republican,current,174000,,,,,House Clerk Member Profile,https://clerk.house.gov/members/H001102

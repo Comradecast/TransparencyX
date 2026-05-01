@@ -11,6 +11,7 @@ from transparencyx.dossier.metadata_seed import (
     classify_metadata_source,
     render_metadata_source_quality_report,
     render_member_metadata_seed_validation,
+    summarize_committee_assignment_coverage_by_state,
     summarize_member_metadata_by_state,
     summarize_member_metadata_seed,
     validate_member_metadata_seed,
@@ -127,6 +128,99 @@ def test_nc_senate_rows_have_blank_district():
 
     assert len(nc_senators) == 2
     assert all(item.district is None for item in nc_senators)
+
+
+def test_nc_has_at_least_one_row_with_committee_assignments():
+    summary = summarize_committee_assignment_coverage_by_state(SEED_PATH, "NC")
+
+    assert summary["rows_with_committees"] > 0
+
+
+def test_nc_committee_assignments_parse_as_list():
+    metadata = load_member_metadata(SEED_PATH)
+
+    assert metadata["alma-s-adams"].committee_assignments == [
+        "Committee on Agriculture",
+        "Committee on Education and Workforce",
+    ]
+    assert metadata["deborah-k-ross"].committee_assignments == [
+        "Committee on Ethics",
+        "Committee on Science, Space, and Technology",
+        "Committee on the Judiciary",
+    ]
+
+
+def test_nc_committee_coverage_summary_works():
+    summary = summarize_committee_assignment_coverage_by_state(SEED_PATH, "nc")
+
+    assert summary["state"] == "NC"
+    assert summary["records"] == 16
+    assert summary["rows_with_committees"] == 6
+    assert summary["rows_without_committees"] == 10
+    assert summary["member_ids_without_committees"] == [
+        "addison-p-mcdowell",
+        "david-rouzer",
+        "mark-harris",
+        "richard-hudson",
+        "pat-harrigan",
+        "chuck-edwards",
+        "brad-knott",
+        "tim-moore",
+        "thom-tillis",
+        "ted-budd",
+    ]
+
+
+def test_nc_committee_rows_have_source_name_or_source_url():
+    metadata = load_member_metadata(SEED_PATH)
+    rows = [
+        item
+        for item in metadata.values()
+        if item.state == "NC" and item.committee_assignments
+    ]
+
+    assert rows
+    for item in rows:
+        assert item.source_name or item.source_url
+
+
+def test_no_subcommittee_names_are_required():
+    metadata = load_member_metadata(SEED_PATH)
+    all_nc_committees = [
+        committee
+        for item in metadata.values()
+        if item.state == "NC"
+        for committee in item.committee_assignments
+    ]
+
+    assert "Nutrition and Foreign Agriculture" not in all_nc_committees
+    assert "Readiness" not in all_nc_committees
+    assert "Energy" not in all_nc_committees
+
+
+def test_nc_leadership_roles_remain_blank():
+    metadata = load_member_metadata(SEED_PATH)
+
+    assert all(
+        not item.leadership_roles
+        for item in metadata.values()
+        if item.state == "NC"
+    )
+
+
+def test_non_nc_rows_committee_assignments_unchanged():
+    metadata = load_member_metadata(SEED_PATH)
+    non_nc_rows = [
+        item
+        for item in metadata.values()
+        if item.state != "NC"
+    ]
+
+    assert [item.member_id for item in non_nc_rows] == [
+        "alex-padilla",
+        "adam-schiff",
+    ]
+    assert all(not item.committee_assignments for item in non_nc_rows)
 
 
 def test_every_nc_row_has_source_name_or_source_url():

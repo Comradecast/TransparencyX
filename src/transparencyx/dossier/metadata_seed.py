@@ -119,6 +119,33 @@ def summarize_member_metadata_by_state(path: str | Path, state: str) -> dict:
     }
 
 
+def summarize_committee_assignment_coverage_by_state(path: str | Path, state: str) -> dict:
+    metadata = load_member_metadata(Path(path))
+    state_code = state.strip().upper()
+    rows = [
+        item
+        for item in metadata.values()
+        if item.state == state_code
+    ]
+    rows_with_committees = [
+        item
+        for item in rows
+        if item.committee_assignments
+    ]
+
+    return {
+        "state": state_code,
+        "records": len(rows),
+        "rows_with_committees": len(rows_with_committees),
+        "rows_without_committees": len(rows) - len(rows_with_committees),
+        "member_ids_without_committees": [
+            item.member_id
+            for item in rows
+            if not item.committee_assignments
+        ],
+    }
+
+
 def classify_metadata_source(source_url: str | None) -> str:
     if source_url is None or not source_url.strip():
         return "unknown"
