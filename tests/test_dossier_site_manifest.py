@@ -44,11 +44,14 @@ def test_manifest_without_metadata():
             "metadata_records_loaded": 0,
             "metadata_matched_dossiers": 0,
             "metadata_unmatched_dossiers": 0,
+            "committee_rows_with_assignments": 0,
+            "committee_rows_without_assignments": 0,
         },
         "artifacts": {
             "json_index": "index.json",
             "html_index": "index.html",
             "metadata_coverage": None,
+            "committee_coverage": None,
             "dossier_json_files": ["nancy-pelosi.json"],
             "dossier_html_files": ["nancy-pelosi.html"],
         },
@@ -89,6 +92,33 @@ def test_manifest_with_metadata_report():
     assert manifest["counts"]["metadata_matched_dossiers"] == 1
     assert manifest["counts"]["metadata_unmatched_dossiers"] == 1
     assert manifest["artifacts"]["metadata_coverage"] == "metadata_coverage.json"
+    assert manifest["artifacts"]["committee_coverage"] is None
+
+
+def test_manifest_with_committee_report():
+    committee_report = {
+        "total_dossiers": 2,
+        "rows_with_committees": 1,
+        "rows_without_committees": 1,
+        "member_ids_with_committees": ["alma-s-adams"],
+        "member_ids_without_committees": ["thom-tillis"],
+    }
+
+    manifest = build_site_manifest(
+        input_directory="input",
+        output_directory="out",
+        options={"member_metadata": True},
+        profiles_count=2,
+        dossiers_count=2,
+        json_paths=[Path("out/alma-s-adams.json"), Path("out/thom-tillis.json")],
+        html_paths=[Path("out/alma-s-adams.html"), Path("out/thom-tillis.html")],
+        metadata_report=None,
+        committee_report=committee_report,
+    )
+
+    assert manifest["counts"]["committee_rows_with_assignments"] == 1
+    assert manifest["counts"]["committee_rows_without_assignments"] == 1
+    assert manifest["artifacts"]["committee_coverage"] == "committee_coverage.json"
 
 
 def test_manifest_artifact_basenames_only():

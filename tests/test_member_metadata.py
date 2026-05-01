@@ -10,10 +10,13 @@ from transparencyx.dossier.metadata import (
     MEMBER_METADATA_COLUMNS,
     MemberMetadata,
     apply_member_metadata,
+    build_committee_coverage_report,
     build_metadata_coverage_report,
     load_member_metadata,
+    render_committee_coverage_report,
     render_metadata_coverage_report,
     render_member_metadata_template_csv,
+    write_committee_coverage_json,
     write_member_metadata_template_csv,
 )
 from transparencyx.dossier.render import render_member_dossier_summary
@@ -238,6 +241,142 @@ def test_metadata_coverage_report_json_parseable():
     parsed = json.loads(json.dumps(report, indent=2))
 
     assert parsed == report
+
+
+def test_committee_coverage_report_with_full_coverage():
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_name": "Alma S. Adams",
+            "committee_assignments": ["Committee on Agriculture"],
+        }),
+        build_member_dossier_from_profile({
+            "member_name": "Donald G. Davis",
+            "committee_assignments": ["Committee on Armed Services"],
+        }),
+    ]
+
+    report = build_committee_coverage_report(dossiers)
+
+    assert report == {
+        "total_dossiers": 2,
+        "rows_with_committees": 2,
+        "rows_without_committees": 0,
+        "member_ids_with_committees": ["alma-s-adams", "donald-g-davis"],
+        "member_ids_without_committees": [],
+    }
+
+
+def test_committee_coverage_report_with_partial_coverage():
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_name": "Alma S. Adams",
+            "committee_assignments": ["Committee on Agriculture"],
+        }),
+        build_member_dossier_from_profile({"member_name": "Thom Tillis"}),
+    ]
+
+    report = build_committee_coverage_report(dossiers)
+
+    assert report["rows_with_committees"] == 1
+    assert report["rows_without_committees"] == 1
+    assert report["member_ids_with_committees"] == ["alma-s-adams"]
+    assert report["member_ids_without_committees"] == ["thom-tillis"]
+
+
+def test_committee_coverage_report_with_no_coverage():
+    dossiers = [
+        build_member_dossier_from_profile({"member_name": "Thom Tillis"}),
+        build_member_dossier_from_profile({"member_name": "Ted Budd"}),
+    ]
+
+    report = build_committee_coverage_report(dossiers)
+
+    assert report["rows_with_committees"] == 0
+    assert report["rows_without_committees"] == 2
+    assert report["member_ids_with_committees"] == []
+    assert report["member_ids_without_committees"] == ["thom-tillis", "ted-budd"]
+
+
+def test_committee_coverage_report_lists_have_no_duplicates():
+    dossiers = [
+        build_member_dossier_from_profile({
+            "member_id": "alma-s-adams",
+            "member_name": "Alma S. Adams",
+            "committee_assignments": ["Committee on Agriculture"],
+        }),
+        build_member_dossier_from_profile({
+            "member_id": "alma-s-adams",
+            "member_name": "Alma S. Adams",
+            "committee_assignments": ["Committee on Agriculture"],
+        }),
+        build_member_dossier_from_profile({"member_id": "ted-budd", "member_name": "Ted Budd"}),
+        build_member_dossier_from_profile({"member_id": "ted-budd", "member_name": "Ted Budd"}),
+    ]
+
+    report = build_committee_coverage_report(dossiers)
+
+    assert report["rows_with_committees"] == 2
+    assert report["rows_without_committees"] == 2
+    assert report["member_ids_with_committees"] == ["alma-s-adams"]
+    assert report["member_ids_without_committees"] == ["ted-budd"]
+
+
+def test_render_committee_coverage_report_formatting():
+    report = {
+        "total_dossiers": 3,
+        "rows_with_committees": 2,
+        "rows_without_committees": 1,
+        "member_ids_with_committees": ["alma-s-adams", "donald-g-davis"],
+        "member_ids_without_committees": ["thom-tillis"],
+    }
+
+    assert render_committee_coverage_report(report) == "\n".join([
+        "Committee Coverage Report:",
+        "- total dossiers: 3",
+        "- rows with committees: 2",
+        "- rows without committees: 1",
+        "",
+        "member ids with committees:",
+        "- alma-s-adams",
+        "- donald-g-davis",
+        "",
+        "member ids without committees:",
+        "- thom-tillis",
+        "",
+    ])
+
+
+def test_render_committee_coverage_report_empty_lists_render_none():
+    report = {
+        "total_dossiers": 0,
+        "rows_with_committees": 0,
+        "rows_without_committees": 0,
+        "member_ids_with_committees": [],
+        "member_ids_without_committees": [],
+    }
+
+    rendered = render_committee_coverage_report(report)
+
+    assert rendered.endswith("\n")
+    assert "member ids with committees:\nNone" in rendered
+    assert "member ids without committees:\nNone" in rendered
+
+
+def test_write_committee_coverage_json(tmp_path):
+    report = {
+        "total_dossiers": 1,
+        "rows_with_committees": 1,
+        "rows_without_committees": 0,
+        "member_ids_with_committees": ["alma-s-adams"],
+        "member_ids_without_committees": [],
+    }
+    path = tmp_path / "nested" / "committee_coverage.json"
+
+    returned = write_committee_coverage_json(report, path)
+
+    assert returned == path
+    assert path.read_text(encoding="utf-8").endswith("\n")
+    assert json.loads(path.read_text(encoding="utf-8")) == report
 
 
 def test_load_csv(tmp_path):

@@ -330,9 +330,12 @@ def main():
         )
         from transparencyx.dossier.metadata import (
             apply_member_metadata,
+            build_committee_coverage_report,
             build_metadata_coverage_report,
             load_member_metadata,
+            render_committee_coverage_report,
             render_metadata_coverage_report,
+            write_committee_coverage_json,
         )
         from transparencyx.dossier.manifest import (
             build_site_manifest,
@@ -396,6 +399,7 @@ def main():
         print(f"Wrote dossier HTML index: {html_index_path}")
 
         metadata_report = None
+        committee_report = None
         if metadata_by_id is not None:
             metadata_report = build_metadata_coverage_report(dossiers, metadata_by_id)
             print(render_metadata_coverage_report(metadata_report))
@@ -405,6 +409,13 @@ def main():
                 encoding="utf-8",
             )
             print(f"Wrote metadata coverage JSON: {coverage_path}")
+            committee_report = build_committee_coverage_report(dossiers)
+            print(render_committee_coverage_report(committee_report), end="")
+            committee_coverage_path = write_committee_coverage_json(
+                committee_report,
+                output_dir / "committee_coverage.json",
+            )
+            print(f"Wrote committee coverage JSON: {committee_coverage_path}")
 
         manifest_path = write_site_manifest_json(
             build_site_manifest(
@@ -420,6 +431,7 @@ def main():
                 json_paths=written_json_paths,
                 html_paths=html_paths,
                 metadata_report=metadata_report,
+                committee_report=committee_report,
             ),
             output_dir / "build_manifest.json",
         )

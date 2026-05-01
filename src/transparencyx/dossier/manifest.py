@@ -11,9 +11,11 @@ def build_site_manifest(
     json_paths: list[Path],
     html_paths: list[Path],
     metadata_report: dict | None,
+    committee_report: dict | None = None,
 ) -> dict:
     metadata_present = bool(options.get("member_metadata"))
     metadata_coverage = "metadata_coverage.json" if metadata_present else None
+    committee_coverage = "committee_coverage.json" if committee_report is not None else None
 
     return {
         "build_type": "dossier_site",
@@ -44,11 +46,22 @@ def build_site_manifest(
                 if metadata_report is not None
                 else 0
             ),
+            "committee_rows_with_assignments": (
+                committee_report["rows_with_committees"]
+                if committee_report is not None
+                else 0
+            ),
+            "committee_rows_without_assignments": (
+                committee_report["rows_without_committees"]
+                if committee_report is not None
+                else 0
+            ),
         },
         "artifacts": {
             "json_index": "index.json",
             "html_index": "index.html",
             "metadata_coverage": metadata_coverage,
+            "committee_coverage": committee_coverage,
             "dossier_json_files": [Path(path).name for path in json_paths],
             "dossier_html_files": [Path(path).name for path in html_paths],
         },

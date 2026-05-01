@@ -221,6 +221,66 @@ def render_metadata_coverage_report(report: dict) -> str:
     return "\n".join(lines)
 
 
+def build_committee_coverage_report(dossiers: list[MemberDossier]) -> dict:
+    member_ids_with_committees = []
+    member_ids_without_committees = []
+    with_seen = set()
+    without_seen = set()
+    rows_with_committees = 0
+    rows_without_committees = 0
+
+    for dossier in dossiers:
+        member_id = dossier.identity.member_id
+        if dossier.office.committee_assignments:
+            rows_with_committees += 1
+            if member_id not in with_seen:
+                member_ids_with_committees.append(member_id)
+                with_seen.add(member_id)
+        else:
+            rows_without_committees += 1
+            if member_id not in without_seen:
+                member_ids_without_committees.append(member_id)
+                without_seen.add(member_id)
+
+    return {
+        "total_dossiers": len(dossiers),
+        "rows_with_committees": rows_with_committees,
+        "rows_without_committees": rows_without_committees,
+        "member_ids_with_committees": member_ids_with_committees,
+        "member_ids_without_committees": member_ids_without_committees,
+    }
+
+
+def render_committee_coverage_report(report: dict) -> str:
+    lines = [
+        "Committee Coverage Report:",
+        f"- total dossiers: {report['total_dossiers']}",
+        f"- rows with committees: {report['rows_with_committees']}",
+        f"- rows without committees: {report['rows_without_committees']}",
+        "",
+        *_render_member_id_list(
+            "member ids with committees:",
+            report["member_ids_with_committees"],
+        ),
+        "",
+        *_render_member_id_list(
+            "member ids without committees:",
+            report["member_ids_without_committees"],
+        ),
+    ]
+    return "\n".join(lines) + "\n"
+
+
+def write_committee_coverage_json(report: dict, output_path: str | Path) -> Path:
+    path = Path(output_path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        json.dumps(report, indent=2, ensure_ascii=False) + "\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def apply_member_metadata(
     dossier: MemberDossier,
     metadata: MemberMetadata,

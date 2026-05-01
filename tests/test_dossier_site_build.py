@@ -60,6 +60,7 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
     assert (output_dir / "build_manifest.json").exists()
     assert (output_dir / "README.txt").exists()
     assert not (output_dir / "metadata_coverage.json").exists()
+    assert not (output_dir / "committee_coverage.json").exists()
     assert captured.out == "\n".join([
         f"Wrote member dossier JSON files: 2 to {output_dir}",
         f"Wrote dossier index JSON: {output_dir / 'index.json'}",
@@ -141,8 +142,8 @@ def test_site_build_metadata_coverage_file_exists_when_metadata_provided(
     input_dir.mkdir()
     metadata_path.write_text(
         "\n".join([
-            "member_id,full_name,chamber",
-            "nancy-pelosi,Nancy Pelosi,House",
+            "member_id,full_name,chamber,committee_assignments",
+            "nancy-pelosi,Nancy Pelosi,House,Committee on Rules",
         ]),
         encoding="utf-8",
     )
@@ -170,11 +171,24 @@ def test_site_build_metadata_coverage_file_exists_when_metadata_provided(
     report = json.loads((output_dir / "metadata_coverage.json").read_text(
         encoding="utf-8"
     ))
+    committee_report = json.loads((output_dir / "committee_coverage.json").read_text(
+        encoding="utf-8"
+    ))
+    manifest = json.loads((output_dir / "build_manifest.json").read_text(
+        encoding="utf-8"
+    ))
 
     assert exit_info.value.code == 0
     assert report["matched_member_ids"] == ["nancy-pelosi"]
     assert report["unmatched_member_ids"] == ["jane-public"]
+    assert committee_report["rows_with_committees"] == 1
+    assert committee_report["rows_without_committees"] == 1
+    assert committee_report["member_ids_with_committees"] == ["nancy-pelosi"]
+    assert manifest["counts"]["committee_rows_with_assignments"] == 1
+    assert manifest["counts"]["committee_rows_without_assignments"] == 1
+    assert manifest["artifacts"]["committee_coverage"] == "committee_coverage.json"
     assert f"Wrote metadata coverage JSON: {output_dir / 'metadata_coverage.json'}" in captured.out
+    assert f"Wrote committee coverage JSON: {output_dir / 'committee_coverage.json'}" in captured.out
 
 
 def test_site_build_with_default_member_metadata(tmp_path, monkeypatch, capsys):
@@ -216,6 +230,9 @@ def test_site_build_with_default_member_metadata(tmp_path, monkeypatch, capsys):
     coverage = json.loads((output_dir / "metadata_coverage.json").read_text(
         encoding="utf-8"
     ))
+    committee_coverage = json.loads((output_dir / "committee_coverage.json").read_text(
+        encoding="utf-8"
+    ))
 
     assert exit_info.value.code == 0
     assert "Loaded member metadata records: " in captured.out
@@ -223,6 +240,7 @@ def test_site_build_with_default_member_metadata(tmp_path, monkeypatch, capsys):
     assert dossier["identity"]["state"] == "NC"
     assert manifest["options"]["member_metadata"] is True
     assert coverage["matched_member_ids"] == ["thom-tillis"]
+    assert committee_coverage["member_ids_without_committees"] == ["thom-tillis"]
 
 
 def test_site_build_default_and_explicit_metadata_fail_closed(
@@ -318,6 +336,7 @@ def test_site_build_no_metadata_coverage_file_without_metadata(tmp_path, monkeyp
         main()
 
     assert not (output_dir / "metadata_coverage.json").exists()
+    assert not (output_dir / "committee_coverage.json").exists()
 
 
 def test_site_build_missing_output_dir_fails_closed(tmp_path, monkeypatch, capsys):
