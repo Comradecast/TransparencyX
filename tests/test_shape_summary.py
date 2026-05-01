@@ -18,6 +18,12 @@ from transparencyx.shape.summary import (
     FinancialShapeSummary
 )
 
+ASSET_SUMMARY_ROW_KEYS = {
+    "asset_id",
+    "asset_name",
+    "linked_transaction_count",
+}
+
 @pytest.fixture
 def db_path(tmp_path):
     path = tmp_path / "test.sqlite"
@@ -517,6 +523,68 @@ def test_summary_to_dict(db_path):
     
     # Ensure it's json serializable
     json.dumps(d)
+
+
+def test_summary_to_dict_exports_asset_summaries_contract(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    cursor.execute("""
+        INSERT INTO normalized_assets (
+            id,
+            raw_disclosure_id,
+            politician_id,
+            asset_name,
+            asset_category,
+            original_value_range,
+            value_min,
+            value_max,
+            value_midpoint,
+            confidence,
+            created_at
+        )
+        VALUES (10, 1, 1, 'Exact Asset, Inc. (EXA) [ST] SP', 'stock', '$1 - $2', 1, 2, 1.5, 'medium', 'now')
+    """)
+    cursor.execute("""
+        INSERT INTO trades (
+            politician_id,
+            raw_disclosure_id,
+            trade_date,
+            asset_name,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max,
+            amount_mid
+        )
+        VALUES (1, 1, '01/01/2023', 'Exact Asset, Inc. (EXA)', 'P', '$1 - $2', 1, 2, 1.5)
+    """)
+    conn.commit()
+    conn.close()
+
+    exported = summary_to_dict(build_financial_shape_summary(db_path, 1))
+
+    assert "asset_count" in exported
+    assert "transaction_count" in exported
+    assert "asset_summaries" in exported
+    assert exported["asset_count"] == 1
+    assert exported["transaction_count"] == 1
+    assert exported["asset_summaries"] == [
+        {
+            "asset_id": 10,
+            "asset_name": "Exact Asset, Inc. (EXA) [ST] SP",
+            "linked_transaction_count": 1,
+        }
+    ]
+    for row in exported["asset_summaries"]:
+        assert set(row) == ASSET_SUMMARY_ROW_KEYS
+        assert isinstance(row["linked_transaction_count"], int)
+        assert not isinstance(row["linked_transaction_count"], bool)
+        assert row["linked_transaction_count"] >= 0
 
 @pytest.mark.parametrize("val, expected", [
     (None, "UNKNOWN"),

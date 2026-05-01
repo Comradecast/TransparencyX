@@ -7,6 +7,13 @@ from transparencyx.db.schema import get_schema_sql
 from transparencyx.shape.export import build_financial_shape_export
 
 
+ASSET_SUMMARY_ROW_KEYS = {
+    "asset_id",
+    "asset_name",
+    "linked_transaction_count",
+}
+
+
 @pytest.fixture
 def db_path(tmp_path):
     path = tmp_path / "test.sqlite"
@@ -52,9 +59,23 @@ def test_shape_export_contains_summary_and_trace(db_path):
     # Summary keys
     summary = export["summary"]
     assert "asset_count" in summary
+    assert "transaction_count" in summary
+    assert "asset_summaries" in summary
     assert "trade_count" in summary
     assert "net_worth_band" in summary
     assert "summary_label" in summary
+    assert summary["asset_summaries"] == [
+        {
+            "asset_id": 1,
+            "asset_name": "StockA",
+            "linked_transaction_count": 1,
+        }
+    ]
+    for row in summary["asset_summaries"]:
+        assert set(row) == ASSET_SUMMARY_ROW_KEYS
+        assert isinstance(row["linked_transaction_count"], int)
+        assert not isinstance(row["linked_transaction_count"], bool)
+        assert row["linked_transaction_count"] >= 0
 
     # Trace keys
     trace = export["trace"]
