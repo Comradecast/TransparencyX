@@ -16,6 +16,8 @@ TRADE_DETAIL_ROW_KEYS = {
     "amount_min",
     "amount_max",
     "transaction_type_label",
+    "linked_asset_id",
+    "linked_asset_name",
 }
 
 
@@ -94,6 +96,8 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "amount_range_text": "$1-$5",
             "amount_min": 1.0,
             "amount_max": 5.0,
+            "linked_asset_id": None,
+            "linked_asset_name": None,
         },
         {
             "id": trace["trades"]["count_rows"][1],
@@ -104,6 +108,8 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "amount_range_text": "$10-$20",
             "amount_min": 10.0,
             "amount_max": 20.0,
+            "linked_asset_id": None,
+            "linked_asset_name": None,
         },
         {
             "id": trace["trades"]["count_rows"][2],
@@ -114,6 +120,8 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "amount_range_text": "Over $50,000",
             "amount_min": 50000.0,
             "amount_max": None,
+            "linked_asset_id": None,
+            "linked_asset_name": None,
         },
     ]
 
@@ -267,6 +275,8 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
             "amount_range_text": "$500,001 - $1,000,000",
             "amount_min": 500001.0,
             "amount_max": 1000000.0,
+            "linked_asset_id": None,
+            "linked_asset_name": None,
         },
         {
             "id": trace["trades"]["count_rows"][1],
@@ -277,6 +287,8 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
             "amount_range_text": "$1.00",
             "amount_min": None,
             "amount_max": None,
+            "linked_asset_id": None,
+            "linked_asset_name": None,
         },
     ]
     assert all("amount_mid" not in row for row in trace["trades"]["detail_rows"])
@@ -352,4 +364,72 @@ def test_trade_detail_rows_preserve_raw_transaction_type_and_add_label(db_path):
     assert rows_by_asset["Blank Asset"]["transaction_type_label"] is None
     assert rows_by_asset["Partial Sale Asset"]["transaction_type"] == "S (partial)"
     assert rows_by_asset["Partial Sale Asset"]["transaction_type_label"] is None
+    assert all(set(row) == TRADE_DETAIL_ROW_KEYS for row in rows_by_asset.values())
+
+
+def test_trade_detail_rows_link_assets_by_exact_normalized_name_only(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    cursor.execute("""
+        INSERT INTO normalized_assets (
+            id,
+            raw_disclosure_id,
+            politician_id,
+            asset_name,
+            asset_category,
+            original_value_range,
+            value_min,
+            value_max,
+            value_midpoint,
+            confidence,
+            created_at
+        )
+        VALUES
+        (10, 1, 1, 'Exact Asset, Inc. (EXA) [ST] SP', 'stock', '$1 - $2', 1, 2, 1.5, 'medium', 'now'),
+        (11, 1, 1, 'Duplicate Asset, Inc. (DUP) [ST] SP', 'stock', '$1 - $2', 1, 2, 1.5, 'medium', 'now'),
+        (12, 1, 1, 'Duplicate Asset, Inc. (DUP) [OP] SP', 'option', '$1 - $2', 1, 2, 1.5, 'medium', 'now')
+    """)
+    cursor.executemany(
+        """
+        INSERT INTO trades (
+            politician_id,
+            raw_disclosure_id,
+            trade_date,
+            asset_name,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max,
+            amount_mid
+        )
+        VALUES (1, 1, '01/01/2023', ?, 'P', '$1 - $2', 1, 2, 1.5)
+        """,
+        [
+            ("Exact Asset, Inc. (EXA)",),
+            ("Exact Asset Inc. (EXA)",),
+            ("Duplicate Asset, Inc. (DUP)",),
+        ],
+    )
+    conn.commit()
+    conn.close()
+
+    trace = build_financial_shape_trace(db_path, 1)
+    rows_by_asset = {
+        row["asset_name"]: row
+        for row in trace["trades"]["detail_rows"]
+    }
+
+    assert rows_by_asset["Exact Asset, Inc. (EXA)"]["linked_asset_id"] == 10
+    assert rows_by_asset["Exact Asset, Inc. (EXA)"]["linked_asset_name"] == (
+        "Exact Asset, Inc. (EXA) [ST] SP"
+    )
+    assert rows_by_asset["Exact Asset Inc. (EXA)"]["linked_asset_id"] is None
+    assert rows_by_asset["Exact Asset Inc. (EXA)"]["linked_asset_name"] is None
+    assert rows_by_asset["Duplicate Asset, Inc. (DUP)"]["linked_asset_id"] is None
+    assert rows_by_asset["Duplicate Asset, Inc. (DUP)"]["linked_asset_name"] is None
     assert all(set(row) == TRADE_DETAIL_ROW_KEYS for row in rows_by_asset.values())

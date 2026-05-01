@@ -20,6 +20,8 @@ TRADE_DETAIL_ROW_KEYS = {
     "amount_min",
     "amount_max",
     "transaction_type_label",
+    "linked_asset_id",
+    "linked_asset_name",
 }
 
 
@@ -111,7 +113,13 @@ def test_pelosi_shape_export_from_text_has_expected_transaction_count():
         "amount_range_text": "$500,001 - $1,000,000",
         "amount_min": 500001.0,
         "amount_max": 1000000.0,
+        "linked_asset_id": None,
+        "linked_asset_name": None,
     }
+    assert any(
+        row["linked_asset_id"] is not None
+        for row in export["trace"]["trades"]["detail_rows"]
+    )
 
 
 def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
@@ -134,7 +142,13 @@ def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
         "amount_range_text": "$1,001 - $15,000",
         "amount_min": 1001.0,
         "amount_max": 15000.0,
+        "linked_asset_id": 1,
+        "linked_asset_name": "Altria Group, Inc. (MO) [ST]",
     }
+    assert any(
+        row["linked_asset_id"] is not None
+        for row in export["trace"]["trades"]["detail_rows"]
+    )
 
 
 def test_real_batch_audit_uses_shape_summary_transaction_count():

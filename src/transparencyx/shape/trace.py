@@ -1,7 +1,9 @@
 from pathlib import Path
+import re
 from typing import List
 
 from transparencyx.db.database import get_connection
+from transparencyx.normalize.assets import clean_asset_name
 
 
 TRANSACTION_TYPE_LABELS = {
@@ -9,6 +11,9 @@ TRANSACTION_TYPE_LABELS = {
     "S": "Sale",
     "E": "Exchange",
 }
+ASSET_LINK_SUFFIX_PATTERN = re.compile(
+    r"\s+\[[A-Z]{2}\](?:\s+(?:SP|JT|DC))?$"
+)
 
 
 def _fetch_ids(cursor, query: str, params: tuple) -> List[int]:
@@ -23,7 +28,40 @@ def transaction_type_label(transaction_type: str | None) -> str | None:
     return TRANSACTION_TYPE_LABELS.get(transaction_type.strip().upper())
 
 
+def _asset_link_name(asset_name: str | None) -> str | None:
+    if asset_name is None:
+        return None
+    cleaned = clean_asset_name(asset_name)
+    if not cleaned:
+        return None
+    return ASSET_LINK_SUFFIX_PATTERN.sub("", cleaned).strip() or None
+
+
+def _fetch_asset_link_index(cursor, politician_id: int) -> dict[str, dict | None]:
+    cursor.execute(
+        """
+        SELECT id, asset_name
+        FROM normalized_assets
+        WHERE politician_id = ?
+        ORDER BY id ASC
+        """,
+        (politician_id,),
+    )
+    index = {}
+    for row in cursor.fetchall():
+        link_name = _asset_link_name(row["asset_name"])
+        if link_name is None:
+            continue
+        asset_row = {"id": row["id"], "asset_name": row["asset_name"]}
+        if link_name in index:
+            index[link_name] = None
+        else:
+            index[link_name] = asset_row
+    return index
+
+
 def _fetch_trade_detail_rows(cursor, politician_id: int) -> list[dict]:
+    asset_link_index = _fetch_asset_link_index(cursor, politician_id)
     cursor.execute(
         """
         SELECT
@@ -45,6 +83,13 @@ def _fetch_trade_detail_rows(cursor, politician_id: int) -> list[dict]:
         detail_row = dict(row)
         detail_row["transaction_type_label"] = transaction_type_label(
             detail_row["transaction_type"]
+        )
+        linked_asset = asset_link_index.get(_asset_link_name(detail_row["asset_name"]))
+        detail_row["linked_asset_id"] = (
+            linked_asset["id"] if linked_asset is not None else None
+        )
+        detail_row["linked_asset_name"] = (
+            linked_asset["asset_name"] if linked_asset is not None else None
         )
         detail_rows.append(detail_row)
     return detail_rows
