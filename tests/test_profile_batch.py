@@ -10,6 +10,7 @@ from transparencyx.audit.real_batch import build_real_batch_audit_rows
 
 
 PELOSI_PDF = Path("data/raw/house/2023/10059734.pdf")
+FOXX_PDF = Path("data/raw/house/2023/10059335.pdf")
 
 
 def test_build_profiles_for_directory_finds_pdfs(tmp_path, monkeypatch):
@@ -86,6 +87,34 @@ def test_pelosi_shape_export_from_text_has_expected_transaction_count():
 
     assert export["summary"]["transaction_count"] == 7
     assert len(export["trace"]["trades"]["count_rows"]) == 7
+    assert len(export["trace"]["trades"]["detail_rows"]) == 7
+    assert export["trace"]["trades"]["detail_rows"][0] == {
+        "id": export["trace"]["trades"]["count_rows"][0],
+        "asset_name": "Apple Inc. (AAPL)",
+        "trade_date": "03/17/2023",
+        "transaction_type": "P",
+        "amount_range_text": "$500,001 - $1,000,000",
+        "amount_min": 500001.0,
+        "amount_max": 1000000.0,
+    }
+
+
+def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
+    extracted_text = _extract_text_from_pdf(FOXX_PDF)
+    export = _build_shape_export_from_text(FOXX_PDF, extracted_text or "")
+
+    assert export["summary"]["transaction_count"] == 74
+    assert len(export["trace"]["trades"]["count_rows"]) == 74
+    assert len(export["trace"]["trades"]["detail_rows"]) == 74
+    assert export["trace"]["trades"]["detail_rows"][0] == {
+        "id": export["trace"]["trades"]["count_rows"][0],
+        "asset_name": "Altria Group, Inc. (MO)",
+        "trade_date": "01/17/2023",
+        "transaction_type": "P",
+        "amount_range_text": "$1,001 - $15,000",
+        "amount_min": 1001.0,
+        "amount_max": 15000.0,
+    }
 
 
 def test_real_batch_audit_uses_shape_summary_transaction_count():

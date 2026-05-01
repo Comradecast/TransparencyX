@@ -10,6 +10,26 @@ def _fetch_ids(cursor, query: str, params: tuple) -> List[int]:
     return [row[0] for row in cursor.fetchall()]
 
 
+def _fetch_trade_detail_rows(cursor, politician_id: int) -> list[dict]:
+    cursor.execute(
+        """
+        SELECT
+            id,
+            asset_name,
+            trade_date,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max
+        FROM trades
+        WHERE politician_id = ?
+        ORDER BY id ASC
+        """,
+        (politician_id,),
+    )
+    return [dict(row) for row in cursor.fetchall()]
+
+
 def build_financial_shape_trace(db_path: Path, politician_id: int) -> dict:
     """
     Returns traceability metadata listing the source row IDs
@@ -19,6 +39,7 @@ def build_financial_shape_trace(db_path: Path, politician_id: int) -> dict:
       - count_rows: all row IDs for the politician
       - bounds_rows: row IDs where both min and max are non-null
       - midpoint_rows: row IDs where midpoint is non-null
+      - detail_rows: factual trade row fields used for trace review
 
     All lists are ordered by id ASC.
     """
@@ -51,6 +72,8 @@ def build_financial_shape_trace(db_path: Path, politician_id: int) -> dict:
             "SELECT id FROM trades WHERE politician_id = ? AND amount_mid IS NOT NULL ORDER BY id ASC",
             (politician_id,))
 
+        trade_detail_rows = _fetch_trade_detail_rows(cursor, politician_id)
+
         return {
             "politician_id": politician_id,
             "assets": {
@@ -62,5 +85,6 @@ def build_financial_shape_trace(db_path: Path, politician_id: int) -> dict:
                 "count_rows": trade_count_rows,
                 "bounds_rows": trade_bounds_rows,
                 "midpoint_rows": trade_midpoint_rows,
+                "detail_rows": trade_detail_rows,
             },
         }

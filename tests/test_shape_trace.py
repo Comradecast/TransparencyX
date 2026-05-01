@@ -68,6 +68,36 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
     assert all(isinstance(i, int) for i in trace["assets"]["count_rows"])
     assert all(isinstance(i, int) for i in trace["trades"]["count_rows"])
 
+    assert trace["trades"]["detail_rows"] == [
+        {
+            "id": trace["trades"]["count_rows"][0],
+            "asset_name": "X",
+            "trade_date": None,
+            "transaction_type": "BUY",
+            "amount_range_text": "$1-$5",
+            "amount_min": 1.0,
+            "amount_max": 5.0,
+        },
+        {
+            "id": trace["trades"]["count_rows"][1],
+            "asset_name": "Y",
+            "trade_date": None,
+            "transaction_type": "SELL",
+            "amount_range_text": "$10-$20",
+            "amount_min": 10.0,
+            "amount_max": 20.0,
+        },
+        {
+            "id": trace["trades"]["count_rows"][2],
+            "asset_name": "Z",
+            "trade_date": None,
+            "transaction_type": "BUY",
+            "amount_range_text": "Over $50,000",
+            "amount_min": 50000.0,
+            "amount_max": None,
+        },
+    ]
+
 
 def test_trace_bounds_filters_correctly(db_path):
     """bounds_rows must exclude row IDs where min or max is NULL."""
@@ -177,3 +207,57 @@ def test_trace_midpoint_includes_partial_rows(db_path):
     assert asset_ids[1] not in trace["assets"]["bounds_rows"]
     assert trade_ids[1] in trace["trades"]["midpoint_rows"]
     assert trade_ids[1] not in trace["trades"]["bounds_rows"]
+
+
+def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
+
+    cursor.execute("""
+        INSERT INTO raw_disclosures (id, source_chamber, source_name, filing_year, retrieved_at, raw_metadata_json, created_at)
+        VALUES (1, 'house', 'test', 2023, 'now', '{}', 'now')
+    """)
+    cursor.execute("""
+        INSERT INTO trades (
+            politician_id,
+            raw_disclosure_id,
+            trade_date,
+            asset_name,
+            transaction_type,
+            amount_range_text,
+            amount_min,
+            amount_max,
+            amount_mid
+        )
+        VALUES
+        (1, 1, '03/17/2023', 'Apple Inc. (AAPL)', 'P', '$500,001 - $1,000,000', 500001, 1000000, 750000.5),
+        (1, 1, '01/20/2023', 'Roblox Corporation Class A (RBLX)', 'S', '$1.00', NULL, NULL, NULL)
+    """)
+    conn.commit()
+    conn.close()
+
+    trace = build_financial_shape_trace(db_path, 1)
+
+    assert trace["trades"]["detail_rows"] == [
+        {
+            "id": trace["trades"]["count_rows"][0],
+            "asset_name": "Apple Inc. (AAPL)",
+            "trade_date": "03/17/2023",
+            "transaction_type": "P",
+            "amount_range_text": "$500,001 - $1,000,000",
+            "amount_min": 500001.0,
+            "amount_max": 1000000.0,
+        },
+        {
+            "id": trace["trades"]["count_rows"][1],
+            "asset_name": "Roblox Corporation Class A (RBLX)",
+            "trade_date": "01/20/2023",
+            "transaction_type": "S",
+            "amount_range_text": "$1.00",
+            "amount_min": None,
+            "amount_max": None,
+        },
+    ]
+    assert all("amount_mid" not in row for row in trace["trades"]["detail_rows"])
+    assert all("amount_total" not in row for row in trace["trades"]["detail_rows"])
+    assert all("exact_amount" not in row for row in trace["trades"]["detail_rows"])
