@@ -101,6 +101,20 @@ def _format_money(value) -> str:
     return f"${number:,.2f}"
 
 
+def _format_count(value) -> str:
+    if value is None or value == "":
+        return "Unknown"
+    if isinstance(value, bool):
+        return "Unknown"
+    try:
+        number = float(value)
+    except (TypeError, ValueError):
+        return _display(value)
+    if number.is_integer():
+        return str(int(number))
+    return str(number)
+
+
 def _format_range(minimum, maximum) -> str:
     return f"{_format_money(minimum)} - {_format_money(maximum)}"
 
@@ -157,6 +171,26 @@ def _agencies(exposures: list[dict]) -> list[str]:
             if agency:
                 agencies.add(str(agency))
     return sorted(agencies)
+
+
+def _federal_award_exposure_rows(exposures: list[dict]) -> str:
+    if not exposures:
+        return "<p>No federal award exposure data available.</p>"
+
+    rows = [
+        ("Matched business interests", _format_count(len(exposures))),
+        ("Awards found", _format_count(_sum_numeric(exposures, "award_count"))),
+        (
+            "Total award amount",
+            _format_money(_sum_numeric(exposures, "total_award_amount")),
+        ),
+        ("Agencies", _display_list(_agencies(exposures))),
+    ]
+    rendered_rows = [
+        f"<tr><th>{escape(label)}</th><td>{value}</td></tr>"
+        for label, value in rows
+    ]
+    return "<table>\n<tbody>\n" + "\n".join(rendered_rows) + "\n</tbody>\n</table>"
 
 
 def _candidate_rows(candidates: list[dict]) -> str:
@@ -232,7 +266,6 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
     exposure = dossier.exposure
     exposure_rows = exposure.federal_award_exposure
     candidates = exposure.recipient_candidates
-    agencies = _agencies(exposure_rows)
 
     document = f"""<!doctype html>
 <html lang="en">
@@ -293,13 +326,7 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
   </section>
   <section>
     <h2>Federal Award Exposure</h2>
-    <dl>
-      <dt>exposure rows count</dt><dd>{len(exposure_rows)}</dd>
-      <dt>exposure counted</dt><dd>{_display_bool(exposure.exposure_counted)}</dd>
-      <dt>total awards found</dt><dd>{_display(_sum_numeric(exposure_rows, "award_count"))}</dd>
-      <dt>total award amount</dt><dd>{_format_money(_sum_numeric(exposure_rows, "total_award_amount"))}</dd>
-      <dt>agencies found</dt><dd>{_display_list(agencies)}</dd>
-    </dl>
+{_federal_award_exposure_rows(exposure_rows)}
   </section>
   <section>
     <h2>Recipient Candidates</h2>

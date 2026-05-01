@@ -143,7 +143,7 @@ def test_empty_lists_render_none():
 
     assert "<dt>leadership roles</dt><dd>None</dd>" in html
     assert "<h2>Committee Assignments</h2>\n<p>None</p>" in html
-    assert "<dt>agencies found</dt><dd>None</dd>" in html
+    assert "No federal award exposure data available." in html
     assert "<h2>Evidence Sources</h2>\n<p>None</p>" in html
 
 
@@ -275,7 +275,46 @@ def test_money_formatting():
     assert "<dt>official salary</dt><dd>$174,000</dd>" in html
     assert "<tr><th>Asset range</th><td>$1,001 - $15,000.50</td></tr>" in html
     assert "<tr><th>Income range</th><td>$0 - $2,500.25</td></tr>" in html
-    assert "<dt>total award amount</dt><dd>$1,234.50</dd>" in html
+    assert "<tr><th>Total award amount</th><td>$1,234.50</td></tr>" in html
+
+
+def test_federal_award_exposure_renders_existing_results():
+    dossier = MemberDossier(
+        identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
+        office=MemberOffice(),
+        financials=DossierFinancials(),
+        exposure=DossierExposure(
+            federal_award_exposure=[
+                {
+                    "award_count": 2,
+                    "total_award_amount": 100.5,
+                    "agencies": ["Z Agency", "A Agency"],
+                },
+                {
+                    "award_count": 3,
+                    "total_award_amount": 200.0,
+                    "agencies": ["A Agency"],
+                },
+            ]
+        ),
+    )
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Federal Award Exposure</h2>" in html
+    assert "<tr><th>Matched business interests</th><td>2</td></tr>" in html
+    assert "<tr><th>Awards found</th><td>5</td></tr>" in html
+    assert "<tr><th>Total award amount</th><td>$300.50</td></tr>" in html
+    assert "<tr><th>Agencies</th><td>A Agency, Z Agency</td></tr>" in html
+
+
+def test_federal_award_exposure_empty_state_renders_when_none_exists():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Federal Award Exposure</h2>" in html
+    assert "No federal award exposure data available." in html
 
 
 def test_boolean_yes_no():
@@ -283,15 +322,17 @@ def test_boolean_yes_no():
         identity=MemberIdentity("nancy-pelosi", "Nancy Pelosi"),
         office=MemberOffice(),
         financials=DossierFinancials(),
-        exposure=DossierExposure(exposure_counted=True),
+        exposure=DossierExposure(
+            recipient_candidates=[{"exposure_counted": True}]
+        ),
     )
 
     html = render_member_dossier_html(dossier)
 
-    assert "<dt>exposure counted</dt><dd>Yes</dd>" in html
+    assert "<td>Yes</td>" in html
 
-    dossier.exposure.exposure_counted = False
-    assert "<dt>exposure counted</dt><dd>No</dd>" in render_member_dossier_html(dossier)
+    dossier.exposure.recipient_candidates = [{"exposure_counted": False}]
+    assert "<td>No</td>" in render_member_dossier_html(dossier)
 
 
 def test_candidate_table_renders_review_only_and_not_counted():
@@ -746,12 +787,18 @@ def test_forbidden_language_absent():
         + render_dossier_html_index([dossier])
     ).lower()
     restricted_terms = [
+        "accusation",
         "cor" + "ruption",
+        "conflict",
+        "influence",
+        "ranking",
+        "risk",
+        "score",
         "self-" + "dealing",
         "insider trading " + "confirmed",
-        "conflict " + "confirmed",
         "mis" + "conduct",
         "sus" + "picious",
+        "wrongdoing",
     ]
 
     for term in restricted_terms:
