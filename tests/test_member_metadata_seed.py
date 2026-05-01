@@ -7,6 +7,7 @@ import pytest
 from transparencyx.dossier.metadata import load_member_metadata
 from transparencyx.dossier.metadata_seed import (
     build_metadata_source_quality_report,
+    build_metadata_source_quality_report_by_state,
     classify_metadata_source,
     render_metadata_source_quality_report,
     render_member_metadata_seed_validation,
@@ -55,6 +56,7 @@ def test_classify_metadata_source_list_urls():
 def test_classify_metadata_source_profile_like_urls():
     assert classify_metadata_source("https://clerk.house.gov/Members/A000370") == "profile"
     assert classify_metadata_source("https://www.senate.gov/senators/member-name.htm") == "profile"
+    assert classify_metadata_source("https://www.tillis.senate.gov/") == "profile"
 
 
 def test_classify_metadata_source_unknown():
@@ -133,6 +135,65 @@ def test_every_nc_row_has_source_name_or_source_url():
             assert row["source_name"].strip() or row["source_url"].strip()
 
 
+def test_nc_source_quality_has_profile_sources():
+    report = build_metadata_source_quality_report_by_state(SEED_PATH, "NC")
+
+    assert report["records"] == 16
+    assert report["profile_sources"] == 16
+    assert report["list_sources"] == 0
+    assert report["unknown_sources"] == 0
+
+
+def test_nc_house_rows_use_house_clerk_profile_urls():
+    metadata = load_member_metadata(SEED_PATH)
+    nc_house_rows = [
+        item
+        for item in metadata.values()
+        if item.state == "NC" and item.chamber == "House"
+    ]
+
+    assert len(nc_house_rows) == 14
+    for item in nc_house_rows:
+        assert item.source_name == "House Clerk Member Profile"
+        assert item.source_url.startswith("https://clerk.house.gov/members/")
+        assert classify_metadata_source(item.source_url) == "profile"
+
+
+def test_nc_senate_rows_use_official_senator_websites_or_senate_nc_source():
+    metadata = load_member_metadata(SEED_PATH)
+    nc_senate_rows = [
+        item
+        for item in metadata.values()
+        if item.state == "NC" and item.chamber == "Senate"
+    ]
+
+    assert len(nc_senate_rows) == 2
+    for item in nc_senate_rows:
+        assert item.source_name in {
+            "Official Senate Member Website",
+            "Senate.gov North Carolina Senators",
+        }
+        assert item.source_url.startswith("https://www.tillis.senate.gov/") or item.source_url.startswith("https://www.budd.senate.gov/") or item.source_url == "https://www.senate.gov/states/NC/intro.htm"
+
+
+def test_non_nc_rows_remain_list_sources():
+    metadata = load_member_metadata(SEED_PATH)
+    non_nc_rows = [
+        item
+        for item in metadata.values()
+        if item.state != "NC"
+    ]
+
+    assert [item.member_id for item in non_nc_rows] == [
+        "alex-padilla",
+        "adam-schiff",
+    ]
+    for item in non_nc_rows:
+        assert item.source_name == "Senate.gov Senators"
+        assert item.source_url == "https://www.senate.gov/senators/"
+        assert classify_metadata_source(item.source_url) == "list"
+
+
 def test_every_seed_row_has_source_name_or_source_url():
     for row in _seed_rows():
         assert row["source_name"].strip() or row["source_url"].strip()
@@ -199,8 +260,8 @@ def test_metadata_source_quality_report_counts_match():
         + report["list_sources"]
         + report["unknown_sources"]
     )
-    assert report["list_sources"] == report["records"]
-    assert report["profile_sources"] == 0
+    assert report["profile_sources"] == 16
+    assert report["list_sources"] == 2
     assert report["unknown_sources"] == 0
 
 

@@ -139,6 +139,8 @@ def classify_metadata_source(source_url: str | None) -> str:
             return "profile"
 
     if "senate.gov" in parsed.netloc.lower():
+        if parsed.netloc.lower().endswith(".senate.gov") and parsed.netloc.lower() != "www.senate.gov":
+            return "profile"
         if lower_path in {"/senators", "/senators/index.htm"}:
             return "list"
         if len(segments) > 1 and segments[0] == "states":
@@ -149,14 +151,13 @@ def classify_metadata_source(source_url: str | None) -> str:
     return "unknown"
 
 
-def build_metadata_source_quality_report(path: str | Path) -> dict:
-    metadata = load_member_metadata(Path(path))
+def _source_quality_report_from_items(items) -> dict:
     breakdown = [
         {
             "member_id": item.member_id,
             "source_type": classify_metadata_source(item.source_url),
         }
-        for item in metadata.values()
+        for item in items
     ]
 
     return {
@@ -166,6 +167,21 @@ def build_metadata_source_quality_report(path: str | Path) -> dict:
         "unknown_sources": sum(1 for item in breakdown if item["source_type"] == "unknown"),
         "member_breakdown": breakdown,
     }
+
+
+def build_metadata_source_quality_report(path: str | Path) -> dict:
+    metadata = load_member_metadata(Path(path))
+    return _source_quality_report_from_items(metadata.values())
+
+
+def build_metadata_source_quality_report_by_state(path: str | Path, state: str) -> dict:
+    metadata = load_member_metadata(Path(path))
+    state_code = state.strip().upper()
+    return _source_quality_report_from_items(
+        item
+        for item in metadata.values()
+        if item.state == state_code
+    )
 
 
 def render_metadata_source_quality_report(report: dict) -> str:
