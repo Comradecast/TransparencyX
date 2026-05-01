@@ -28,6 +28,57 @@ def _display_bool(value) -> str:
     return "Yes" if value else "No"
 
 
+def _clean_text(value) -> str | None:
+    if value is None:
+        return None
+    text = str(value).strip()
+    return text or None
+
+
+def _index_summary(dossiers: list[MemberDossier]) -> dict:
+    states = {
+        state
+        for dossier in dossiers
+        if (state := _clean_text(dossier.identity.state)) is not None
+    }
+    return {
+        "total": len(dossiers),
+        "house": sum(1 for dossier in dossiers if dossier.identity.chamber == "House"),
+        "senate": sum(1 for dossier in dossiers if dossier.identity.chamber == "Senate"),
+        "states": ", ".join(sorted(states)) if states else "Unknown",
+        "current": sum(
+            1
+            for dossier in dossiers
+            if str(dossier.identity.current_status or "").strip().lower() == "current"
+        ),
+    }
+
+
+def _summary_card(label: str, value) -> str:
+    return (
+        '<div class="summary-card">'
+        f"<dt>{escape(label)}</dt>"
+        f"<dd>{escape(str(value))}</dd>"
+        "</div>"
+    )
+
+
+def _disclosure_data_status_text(dossier: MemberDossier) -> str:
+    source_types = {
+        source.source_type
+        for source in dossier.evidence_sources
+        if source.source_type
+    }
+    if "financial_disclosure_pdf" in source_types:
+        return "This dossier includes parsed financial disclosure data from a local source file."
+    if "member_metadata" in source_types:
+        return (
+            "This demo dossier was generated from seeded member metadata. "
+            "No parsed financial disclosure PDF is attached to this dossier."
+        )
+    return "Disclosure data status is not specified."
+
+
 def _format_money(value) -> str:
     if value is None or value == "":
         return "Unknown"
@@ -167,6 +218,9 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
     section {{ border-top: 1px solid #d8dee4; padding: 1rem 0; }}
     h1, h2 {{ margin: 0 0 0.75rem; }}
     .nav {{ margin: 0 0 1rem; }}
+    .status-banner {{ border: 1px solid #d8dee4; padding: 0.75rem; margin: 0 0 1rem; }}
+    .status-banner h2 {{ font-size: 1rem; margin: 0 0 0.35rem; }}
+    .status-banner p {{ margin: 0; }}
     dl {{ display: grid; grid-template-columns: 220px 1fr; gap: 0.4rem 1rem; }}
     dt {{ font-weight: 700; }}
     dd {{ margin: 0; }}
@@ -180,6 +234,10 @@ def render_member_dossier_html(dossier: MemberDossier) -> str:
   <nav class="nav"><a href="index.html">Back to index</a></nav>
   <header>
     <h1>{_display(identity.full_name)}</h1>
+    <section class="status-banner">
+      <h2>Disclosure Data Status</h2>
+      <p>{_display(_disclosure_data_status_text(dossier))}</p>
+    </section>
     <dl>
       <dt>member id</dt><dd>{_display(identity.member_id)}</dd>
       <dt>chamber</dt><dd>{_display(identity.chamber)}</dd>
@@ -293,6 +351,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
         )
 
     table_rows = "\n".join(rows)
+    summary = _index_summary(dossiers)
     return f"""<!doctype html>
 <html lang="en">
 <head>
@@ -301,8 +360,13 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
   <style>
     body {{ font-family: Arial, sans-serif; line-height: 1.45; margin: 2rem; color: #1f2933; }}
     main {{ max-width: 980px; margin: 0 auto; }}
-    h1 {{ margin: 0 0 0.75rem; }}
+    h1, h2 {{ margin: 0 0 0.75rem; }}
     .intro {{ margin: 0 0 1rem; max-width: 760px; }}
+    .summary {{ margin: 1rem 0; }}
+    .summary-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0.75rem; }}
+    .summary-card {{ border: 1px solid #d8dee4; padding: 0.65rem; }}
+    .summary-card dt {{ font-weight: 700; margin: 0 0 0.25rem; }}
+    .summary-card dd {{ margin: 0; }}
     table {{ border-collapse: collapse; width: 100%; font-size: 0.95rem; }}
     th, td {{ border: 1px solid #d8dee4; padding: 0.45rem; text-align: left; vertical-align: top; }}
     th {{ background: #f6f8fa; }}
@@ -312,6 +376,16 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
 <main>
   <h1>TransparencyX Dossier Index</h1>
   <p class="intro">This is a TransparencyX dossier index. Each row links to a member dossier page. Demo output may be fixture-backed depending on the command used to build the site.</p>
+  <section class="summary">
+    <h2>Dataset Summary</h2>
+    <dl class="summary-grid">
+      {_summary_card("Total dossiers", summary["total"])}
+      {_summary_card("House", summary["house"])}
+      {_summary_card("Senate", summary["senate"])}
+      {_summary_card("States", summary["states"])}
+      {_summary_card("Current members", summary["current"])}
+    </dl>
+  </section>
   <p>total dossier count: {len(dossiers)}</p>
   <table>
     <thead>

@@ -45,6 +45,59 @@ def test_member_page_links_back_to_index():
     )
 
 
+def test_member_page_renders_parsed_disclosure_status():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.evidence_sources.append(
+        EvidenceSource(
+            source_type="financial_disclosure_pdf",
+            source_name="sample.pdf",
+        )
+    )
+
+    html = render_member_dossier_html(dossier)
+
+    assert "<h2>Disclosure Data Status</h2>" in html
+    assert (
+        "This dossier includes parsed financial disclosure data from a local source file."
+        in html
+    )
+
+
+def test_member_page_renders_metadata_only_disclosure_status():
+    dossier = create_empty_member_dossier("alma-s-adams", "Alma S. Adams")
+    dossier.evidence_sources.append(
+        EvidenceSource(
+            source_type="member_metadata",
+            source_name="House Clerk Member Profile",
+        )
+    )
+
+    html = render_member_dossier_html(dossier)
+
+    assert (
+        "This demo dossier was generated from seeded member metadata. "
+        "No parsed financial disclosure PDF is attached to this dossier."
+    ) in html
+
+
+def test_member_page_renders_unspecified_disclosure_status():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_member_dossier_html(dossier)
+
+    assert "Disclosure data status is not specified." in html
+
+
+def test_disclosure_status_appears_before_financial_sections():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_member_dossier_html(dossier)
+
+    assert html.index("<h2>Disclosure Data Status</h2>") < html.index(
+        "<h2>Financial Summary</h2>"
+    )
+
+
 def test_escaped_member_and_data_values():
     dossier = MemberDossier(
         identity=MemberIdentity(
@@ -359,6 +412,55 @@ def test_html_index_contains_intro_text():
         "Each row links to a member dossier page. "
         "Demo output may be fixture-backed depending on the command used to build the site.</p>"
     ) in html
+
+
+def test_html_index_renders_dataset_summary():
+    dossiers = [
+        MemberDossier(
+            identity=MemberIdentity(
+                "alma-s-adams",
+                "Alma S. Adams",
+                chamber="House",
+                state="NC",
+                district="12",
+                party="Democratic",
+                current_status="current",
+            ),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+        MemberDossier(
+            identity=MemberIdentity(
+                "thom-tillis",
+                "Thom Tillis",
+                chamber="Senate",
+                state="NC",
+                party="Republican",
+                current_status="current",
+            ),
+            office=MemberOffice(),
+            financials=DossierFinancials(),
+            exposure=DossierExposure(),
+        ),
+    ]
+
+    html = render_dossier_html_index(dossiers)
+
+    assert "<h2>Dataset Summary</h2>" in html
+    assert "<dt>Total dossiers</dt><dd>2</dd>" in html
+    assert "<dt>House</dt><dd>1</dd>" in html
+    assert "<dt>Senate</dt><dd>1</dd>" in html
+    assert "<dt>States</dt><dd>NC</dd>" in html
+    assert "<dt>Current members</dt><dd>2</dd>" in html
+
+
+def test_html_index_summary_renders_unknown_for_missing_states():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_dossier_html_index([dossier])
+
+    assert "<dt>States</dt><dd>Unknown</dd>" in html
 
 
 def test_html_index_links_to_dossier_html_filenames():

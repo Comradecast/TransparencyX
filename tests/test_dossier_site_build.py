@@ -225,6 +225,62 @@ def test_nc_demo_site_index_rows_include_house_and_senate_metadata(
     }
 
 
+def test_nc_demo_site_index_summary_counts(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    html = (output_dir / "index.html").read_text(encoding="utf-8")
+
+    assert "<h2>Dataset Summary</h2>" in html
+    assert "<dt>Total dossiers</dt><dd>16</dd>" in html
+    assert "<dt>House</dt><dd>14</dd>" in html
+    assert "<dt>Senate</dt><dd>2</dd>" in html
+    assert "<dt>States</dt><dd>NC</dd>" in html
+    assert "<dt>Current members</dt><dd>16</dd>" in html
+
+
+def test_nc_demo_site_member_pages_render_metadata_only_status(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    html = (output_dir / "alma-s-adams.html").read_text(encoding="utf-8")
+
+    assert "<h2>Disclosure Data Status</h2>" in html
+    assert (
+        "This demo dossier was generated from seeded member metadata. "
+        "No parsed financial disclosure PDF is attached to this dossier."
+    ) in html
+    assert validate_dossier_site(output_dir)["passed"] is True
+
+
 def test_nc_demo_site_readme_labels_fixture_dataset(tmp_path, monkeypatch):
     output_dir = tmp_path / "site"
     monkeypatch.setattr(
