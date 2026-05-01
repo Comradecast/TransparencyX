@@ -4,10 +4,23 @@ from typing import List
 from transparencyx.db.database import get_connection
 
 
+TRANSACTION_TYPE_LABELS = {
+    "P": "Purchase",
+    "S": "Sale",
+    "E": "Exchange",
+}
+
+
 def _fetch_ids(cursor, query: str, params: tuple) -> List[int]:
     """Execute a query and return a flat list of IDs from the first column."""
     cursor.execute(query, params)
     return [row[0] for row in cursor.fetchall()]
+
+
+def transaction_type_label(transaction_type: str | None) -> str | None:
+    if transaction_type is None:
+        return None
+    return TRANSACTION_TYPE_LABELS.get(transaction_type.strip().upper())
 
 
 def _fetch_trade_detail_rows(cursor, politician_id: int) -> list[dict]:
@@ -27,7 +40,14 @@ def _fetch_trade_detail_rows(cursor, politician_id: int) -> list[dict]:
         """,
         (politician_id,),
     )
-    return [dict(row) for row in cursor.fetchall()]
+    detail_rows = []
+    for row in cursor.fetchall():
+        detail_row = dict(row)
+        detail_row["transaction_type_label"] = transaction_type_label(
+            detail_row["transaction_type"]
+        )
+        detail_rows.append(detail_row)
+    return detail_rows
 
 
 def build_financial_shape_trace(db_path: Path, politician_id: int) -> dict:

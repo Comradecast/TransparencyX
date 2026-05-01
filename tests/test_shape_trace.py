@@ -3,7 +3,7 @@ import pytest
 from pathlib import Path
 
 from transparencyx.db.schema import get_schema_sql
-from transparencyx.shape.trace import build_financial_shape_trace
+from transparencyx.shape.trace import build_financial_shape_trace, transaction_type_label
 from transparencyx.shape.summary import build_financial_shape_summary
 
 
@@ -74,6 +74,7 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "asset_name": "X",
             "trade_date": None,
             "transaction_type": "BUY",
+            "transaction_type_label": None,
             "amount_range_text": "$1-$5",
             "amount_min": 1.0,
             "amount_max": 5.0,
@@ -83,6 +84,7 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "asset_name": "Y",
             "trade_date": None,
             "transaction_type": "SELL",
+            "transaction_type_label": None,
             "amount_range_text": "$10-$20",
             "amount_min": 10.0,
             "amount_max": 20.0,
@@ -92,6 +94,7 @@ def test_trace_keeps_all_asset_rows_when_summary_filters_noise(db_path):
             "asset_name": "Z",
             "trade_date": None,
             "transaction_type": "BUY",
+            "transaction_type_label": None,
             "amount_range_text": "Over $50,000",
             "amount_min": 50000.0,
             "amount_max": None,
@@ -244,6 +247,7 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
             "asset_name": "Apple Inc. (AAPL)",
             "trade_date": "03/17/2023",
             "transaction_type": "P",
+            "transaction_type_label": "Purchase",
             "amount_range_text": "$500,001 - $1,000,000",
             "amount_min": 500001.0,
             "amount_max": 1000000.0,
@@ -253,6 +257,7 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
             "asset_name": "Roblox Corporation Class A (RBLX)",
             "trade_date": "01/20/2023",
             "transaction_type": "S",
+            "transaction_type_label": "Sale",
             "amount_range_text": "$1.00",
             "amount_min": None,
             "amount_max": None,
@@ -261,3 +266,14 @@ def test_trade_detail_rows_exclude_totals_and_inferred_values(db_path):
     assert all("amount_mid" not in row for row in trace["trades"]["detail_rows"])
     assert all("amount_total" not in row for row in trace["trades"]["detail_rows"])
     assert all("exact_amount" not in row for row in trace["trades"]["detail_rows"])
+
+
+def test_transaction_type_label_explicit_mapping_only():
+    assert transaction_type_label("P") == "Purchase"
+    assert transaction_type_label("S") == "Sale"
+    assert transaction_type_label("E") == "Exchange"
+    assert transaction_type_label(" p ") == "Purchase"
+    assert transaction_type_label("S (partial)") is None
+    assert transaction_type_label("BUY") is None
+    assert transaction_type_label("") is None
+    assert transaction_type_label(None) is None
