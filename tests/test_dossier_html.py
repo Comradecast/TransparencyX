@@ -350,6 +350,16 @@ def test_html_index_links_to_dossier_html_filenames():
     assert '<a href="jane-public.html">jane-public.html</a>' in html
 
 
+def test_html_index_includes_current_status():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dossier.identity.current_status = "current"
+
+    html = render_dossier_html_index([dossier])
+
+    assert "<th>current_status</th>" in html
+    assert "<td>current</td>" in html
+
+
 def test_html_index_escapes_data_values():
     dossier = MemberDossier(
         identity=MemberIdentity(

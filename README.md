@@ -32,7 +32,15 @@ transparencyx parse-range "$1,001 - $15,000"
 
 ## Local Demo Site
 
-Build a deterministic local static dossier site from the existing local disclosure data and seeded member metadata:
+Build a deterministic local NC delegation demo site from the seeded member metadata:
+
+```bash
+python -m transparencyx --build-nc-demo-site --output-dir site
+```
+
+This demo fixture path is built from `data/seed/member_metadata_seed.csv`; it does not fetch new data or add disclosure PDF data.
+
+Build a static dossier site from existing local disclosure PDFs:
 
 ```bash
 python -m transparencyx --build-dossier-site data/raw --output-dir site --use-default-member-metadata

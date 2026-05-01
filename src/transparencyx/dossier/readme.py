@@ -1,11 +1,19 @@
 from pathlib import Path
 
 
-def render_site_readme() -> str:
-    return """TransparencyX Generated Dossier Site
+def render_site_readme(demo_dataset: str | None = None) -> str:
+    demo_section = ""
+    if demo_dataset:
+        demo_section = f"""Demo Dataset:
+- {demo_dataset}
+
+"""
+
+    return f"""TransparencyX Generated Dossier Site
 
 This folder contains generated TransparencyX dossier site artifacts.
 
+{demo_section}\
 Artifacts:
 - index.html is the static browser entry point.
 - index.json is the machine-readable dossier index.
@@ -24,9 +32,12 @@ Data Notes and Limitations:
 """
 
 
-def write_site_readme(output_dir: str | Path) -> Path:
+def write_site_readme(
+    output_dir: str | Path,
+    demo_dataset: str | None = None,
+) -> Path:
     directory = Path(output_dir)
     directory.mkdir(parents=True, exist_ok=True)
     path = directory / "README.txt"
-    path.write_text(render_site_readme(), encoding="utf-8")
+    path.write_text(render_site_readme(demo_dataset), encoding="utf-8")
     return path

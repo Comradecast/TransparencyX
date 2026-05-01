@@ -131,6 +131,188 @@ def test_documented_local_demo_site_build_path(tmp_path, monkeypatch, capsys):
     assert f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}" in captured.out
 
 
+def test_nc_demo_site_build_produces_valid_seeded_delegation(tmp_path, monkeypatch, capsys):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit) as exit_info:
+        main()
+
+    captured = capsys.readouterr()
+    index = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
+    validation = validate_dossier_site(output_dir)
+    html_pages = [
+        path for path in output_dir.glob("*.html")
+        if path.name != "index.html"
+    ]
+    json_pages = [
+        path for path in output_dir.glob("*.json")
+        if path.name not in {
+            "index.json",
+            "build_manifest.json",
+            "metadata_coverage.json",
+            "committee_coverage.json",
+        }
+    ]
+
+    assert exit_info.value.code == 0
+    assert index["dossier_count"] == 16
+    assert len(html_pages) == 16
+    assert len(json_pages) == 16
+    assert validation["passed"] is True
+    assert "Built NC delegation demo fixture site:" in captured.out
+    assert (output_dir / "metadata_coverage.json").exists()
+    assert (output_dir / "committee_coverage.json").exists()
+
+
+def test_nc_demo_site_index_rows_include_house_and_senate_metadata(
+    tmp_path,
+    monkeypatch,
+):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    index = json.loads((output_dir / "index.json").read_text(encoding="utf-8"))
+    rows_by_id = {
+        row["member_id"]: row
+        for row in index["dossiers"]
+    }
+
+    assert rows_by_id["alma-s-adams"] == {
+        "member_id": "alma-s-adams",
+        "full_name": "Alma S. Adams",
+        "chamber": "House",
+        "state": "NC",
+        "district": "12",
+        "party": "Democratic",
+        "current_status": "current",
+        "file": "alma-s-adams.json",
+    }
+    assert rows_by_id["thom-tillis"] == {
+        "member_id": "thom-tillis",
+        "full_name": "Thom Tillis",
+        "chamber": "Senate",
+        "state": "NC",
+        "district": None,
+        "party": "Republican",
+        "current_status": "current",
+        "file": "thom-tillis.json",
+    }
+
+
+def test_nc_demo_site_readme_labels_fixture_dataset(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    readme = (output_dir / "README.txt").read_text(encoding="utf-8")
+
+    assert "Demo Dataset:" in readme
+    assert "NC delegation fixture built from data/seed/member_metadata_seed.csv" in readme
+    assert "Open index.html in a browser" in readme
+
+
+def test_nc_demo_site_generation_is_deterministic(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    first = {
+        path.relative_to(output_dir).as_posix(): path.read_text(encoding="utf-8")
+        for path in sorted(output_dir.glob("*"))
+        if path.is_file()
+    }
+
+    with pytest.raises(SystemExit):
+        main()
+
+    second = {
+        path.relative_to(output_dir).as_posix(): path.read_text(encoding="utf-8")
+        for path in sorted(output_dir.glob("*"))
+        if path.is_file()
+    }
+
+    assert second == first
+
+
+def test_nc_demo_site_removes_stale_generated_site_files(tmp_path, monkeypatch):
+    output_dir = tmp_path / "site"
+    output_dir.mkdir()
+    (output_dir / "nancy-pelosi.html").write_text("stale", encoding="utf-8")
+    (output_dir / "nancy-pelosi.json").write_text("{}", encoding="utf-8")
+    (output_dir / "notes.txt").write_text("keep", encoding="utf-8")
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-nc-demo-site",
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    assert not (output_dir / "nancy-pelosi.html").exists()
+    assert not (output_dir / "nancy-pelosi.json").exists()
+    assert (output_dir / "notes.txt").read_text(encoding="utf-8") == "keep"
+
+
 def test_site_build_json_files_exist_and_parse(tmp_path, monkeypatch):
     input_dir = tmp_path / "input"
     output_dir = tmp_path / "site"

@@ -63,6 +63,7 @@ def build_dossier_index(
                 "state": dossier.identity.state,
                 "district": dossier.identity.district,
                 "party": dossier.identity.party,
+                "current_status": dossier.identity.current_status,
                 "file": Path(path).name,
             }
             for dossier, path in zip(dossiers, written_paths)

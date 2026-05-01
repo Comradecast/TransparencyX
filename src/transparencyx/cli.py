@@ -86,6 +86,17 @@ def attach_federal_award_exposure_to_profiles(
             )
 
 
+def clear_static_site_artifacts(output_dir: Path) -> None:
+    if not output_dir.exists():
+        return
+    for path in output_dir.iterdir():
+        if path.is_file() and (
+            path.suffix.lower() in {".html", ".json"}
+            or path.name == "README.txt"
+        ):
+            path.unlink()
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="TransparencyX: A Python civic-data project that consolidates U.S. congressional financial disclosure information."
@@ -102,6 +113,7 @@ def main():
     parser.add_argument("--batch-exposure", type=str, help="Build a compact federal award exposure table from PDFs in a directory")
     parser.add_argument("--batch-dossier-json", type=str, help="Build canonical member dossier JSON files from PDFs in a directory")
     parser.add_argument("--build-dossier-site", type=str, help="Build a complete static dossier site from PDFs in a directory")
+    parser.add_argument("--build-nc-demo-site", action="store_true", help="Build a fixture-backed NC delegation demo static site from seeded metadata")
     parser.add_argument("--validate-dossier-site", type=str, help="Validate generated dossier site artifacts")
     parser.add_argument("--validate-member-metadata-seed", type=str, help="Validate a member metadata seed CSV")
     parser.add_argument("--metadata-source-quality", type=str, help="Report member metadata source URL quality")
@@ -245,18 +257,18 @@ def main():
         print(render_metadata_source_quality_report(report), end="")
         sys.exit(0)
 
-    if (args.batch_dossier_json or args.build_dossier_site) and not args.output_dir:
-        parser.error("--output-dir is required with --batch-dossier-json or --build-dossier-site")
+    if (args.batch_dossier_json or args.build_dossier_site or args.build_nc_demo_site) and not args.output_dir:
+        parser.error("--output-dir is required with --batch-dossier-json, --build-dossier-site, or --build-nc-demo-site")
 
     if args.use_default_member_metadata and args.member_metadata:
         print("Use either --member-metadata or --use-default-member-metadata, not both.")
         sys.exit(1)
 
-    if args.use_default_member_metadata and not args.build_dossier_site:
+    if args.use_default_member_metadata and not args.build_dossier_site and not args.build_nc_demo_site:
         print("Default member metadata can only be used with dossier site builds.")
         sys.exit(1)
 
-    if args.use_default_member_metadata and not DEFAULT_MEMBER_METADATA_SEED.exists():
+    if (args.use_default_member_metadata or args.build_nc_demo_site) and not DEFAULT_MEMBER_METADATA_SEED.exists():
         print(f"Default member metadata seed file not found: {DEFAULT_MEMBER_METADATA_SEED}")
         sys.exit(1)
 
@@ -315,6 +327,124 @@ def main():
 
         profiles = build_profiles_for_directory(Path(args.batch_summary))
         print(render_batch_summary_table(profiles))
+        sys.exit(0)
+
+    if args.build_nc_demo_site:
+        from transparencyx.dossier.builder import build_member_dossier_from_profile
+        from transparencyx.dossier.export import (
+            build_dossier_index,
+            write_dossier_index_json,
+            write_member_dossiers_json,
+        )
+        from transparencyx.dossier.html import (
+            write_dossier_html_index,
+            write_member_dossiers_html,
+        )
+        from transparencyx.dossier.metadata import (
+            apply_member_metadata,
+            build_committee_coverage_report,
+            build_metadata_coverage_report,
+            load_member_metadata,
+            render_committee_coverage_report,
+            render_metadata_coverage_report,
+            write_committee_coverage_json,
+        )
+        from transparencyx.dossier.manifest import (
+            build_site_manifest,
+            write_site_manifest_json,
+        )
+        from transparencyx.dossier.readme import write_site_readme
+
+        output_dir = Path(args.output_dir)
+        clear_static_site_artifacts(output_dir)
+        try:
+            metadata_by_id = load_member_metadata(DEFAULT_MEMBER_METADATA_SEED)
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+
+        nc_metadata = [
+            metadata
+            for metadata in metadata_by_id.values()
+            if metadata.state == "NC"
+        ]
+        profiles = [
+            {
+                "member_id": metadata.member_id,
+                "member_name": metadata.full_name,
+            }
+            for metadata in nc_metadata
+        ]
+        dossiers = [
+            build_member_dossier_from_profile(profile)
+            for profile in profiles
+        ]
+        for dossier in dossiers:
+            apply_member_metadata(dossier, metadata_by_id[dossier.identity.member_id])
+
+        try:
+            written_json_paths = write_member_dossiers_json(dossiers, output_dir)
+            html_paths = write_member_dossiers_html(dossiers, output_dir)
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+
+        index_json_path = write_dossier_index_json(
+            build_dossier_index(dossiers, written_json_paths),
+            output_dir / "index.json",
+        )
+        html_index_path = write_dossier_html_index(dossiers, output_dir / "index.html")
+
+        metadata_report = build_metadata_coverage_report(dossiers, metadata_by_id)
+        coverage_path = output_dir / "metadata_coverage.json"
+        coverage_path.write_text(
+            json.dumps(metadata_report, indent=2, ensure_ascii=False) + "\n",
+            encoding="utf-8",
+        )
+        committee_report = build_committee_coverage_report(dossiers)
+        committee_coverage_path = write_committee_coverage_json(
+            committee_report,
+            output_dir / "committee_coverage.json",
+        )
+        manifest_path = write_site_manifest_json(
+            build_site_manifest(
+                input_directory=str(DEFAULT_MEMBER_METADATA_SEED),
+                output_directory=str(output_dir),
+                options={
+                    "member_metadata": True,
+                    "fetch_exposure": False,
+                    "recipient_candidate_audit": False,
+                },
+                profiles_count=len(profiles),
+                dossiers_count=len(dossiers),
+                json_paths=written_json_paths,
+                html_paths=html_paths,
+                metadata_report=metadata_report,
+                committee_report=committee_report,
+            ),
+            output_dir / "build_manifest.json",
+        )
+        readme_path = write_site_readme(
+            output_dir,
+            demo_dataset=(
+                "NC delegation fixture built from data/seed/member_metadata_seed.csv; "
+                "no disclosure PDFs or fetched exposure rows are included."
+            ),
+        )
+
+        print(f"Built NC delegation demo fixture site: {output_dir}")
+        print(f"Loaded member metadata records: {len(metadata_by_id)}")
+        print(f"Wrote member dossier JSON files: {len(written_json_paths)} to {output_dir}")
+        print(f"Wrote dossier index JSON: {index_json_path}")
+        print(f"Wrote member dossier HTML files: {len(html_paths)} to {output_dir}")
+        print(f"Wrote dossier HTML index: {html_index_path}")
+        print(render_metadata_coverage_report(metadata_report))
+        print(f"Wrote metadata coverage JSON: {coverage_path}")
+        print(render_committee_coverage_report(committee_report), end="")
+        print(f"Wrote committee coverage JSON: {committee_coverage_path}")
+        print(f"Wrote site build manifest JSON: {manifest_path}")
+        print(f"Wrote generated site README: {readme_path}")
+        print(f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}")
         sys.exit(0)
 
     if args.build_dossier_site:

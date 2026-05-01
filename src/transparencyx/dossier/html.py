@@ -285,6 +285,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
             f"{_cell(identity.state)}"
             f"{_cell(identity.district)}"
             f"{_cell(identity.party)}"
+            f"{_cell(identity.current_status)}"
             f'<td><a href="{escape(filename)}">{escape(filename)}</a></td>'
             "</tr>"
         )
@@ -316,6 +317,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
         <th>state</th>
         <th>district</th>
         <th>party</th>
+        <th>current_status</th>
         <th>file</th>
       </tr>
     </thead>

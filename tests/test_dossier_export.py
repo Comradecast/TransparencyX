@@ -148,6 +148,7 @@ def test_build_dossier_index_basic_output():
             "state": "CA",
             "district": "11",
             "party": "Democratic",
+            "current_status": "current",
         })
     ]
     paths = [Path("out/dossiers/nancy-pelosi.json")]
@@ -164,6 +165,7 @@ def test_build_dossier_index_basic_output():
                 "state": "CA",
                 "district": "11",
                 "party": "Democratic",
+                "current_status": "current",
                 "file": "nancy-pelosi.json",
             }
         ],
@@ -439,6 +441,7 @@ def test_cli_batch_dossier_index_summary_message(
                 "state": "CA",
                 "district": None,
                 "party": None,
+                "current_status": None,
                 "file": "nancy-pelosi.json",
             }
         ],
