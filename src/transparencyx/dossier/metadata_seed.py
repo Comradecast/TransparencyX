@@ -63,6 +63,22 @@ def validate_member_metadata_seed(path: str | Path) -> dict:
     }
 
 
+def summarize_member_metadata_seed(path: str | Path) -> dict:
+    metadata = load_member_metadata(Path(path))
+    states = sorted({
+        item.state
+        for item in metadata.values()
+        if item.state
+    })
+
+    return {
+        "records": len(metadata),
+        "house": sum(1 for item in metadata.values() if item.chamber == "House"),
+        "senate": sum(1 for item in metadata.values() if item.chamber == "Senate"),
+        "states": states,
+    }
+
+
 def render_member_metadata_seed_validation(report: dict) -> str:
     status = "PASS" if report["passed"] else "FAIL"
     duplicate_member_ids = report["duplicate_member_ids"]

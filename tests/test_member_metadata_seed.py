@@ -7,11 +7,13 @@ import pytest
 from transparencyx.dossier.metadata import load_member_metadata
 from transparencyx.dossier.metadata_seed import (
     render_member_metadata_seed_validation,
+    summarize_member_metadata_seed,
     validate_member_metadata_seed,
 )
 
 
 SEED_PATH = Path("data/seed/member_metadata_seed.csv")
+PLAN_PATH = Path("docs/member_metadata_expansion_plan.md")
 
 
 def _seed_rows():
@@ -21,6 +23,22 @@ def _seed_rows():
 
 def test_seed_file_exists():
     assert SEED_PATH.exists()
+
+
+def test_plan_file_exists():
+    assert PLAN_PATH.exists()
+
+
+def test_plan_contains_key_sections():
+    plan = PLAN_PATH.read_text(encoding="utf-8")
+
+    assert "## Section 1 - Scope" in plan
+    assert "## Section 2 - Required Fields (Authoritative)" in plan
+    assert "## Section 3 - Approved Data Sources" in plan
+    assert "## Section 5 - Update Workflow" in plan
+    assert "## Section 7 - Expansion Targets" in plan
+    assert "Full coverage of current U.S. House (435) and Senate (100)" in plan
+    assert "No Wikipedia as primary source" in plan
 
 
 def test_seed_file_loads_with_load_member_metadata():
@@ -80,6 +98,16 @@ def test_validator_pass():
     assert report["errors"] == []
 
 
+def test_summarize_member_metadata_seed():
+    summary = summarize_member_metadata_seed(SEED_PATH)
+
+    assert summary["records"] >= 10
+    assert summary["house"] > 0
+    assert summary["senate"] > 0
+    assert "NC" in summary["states"]
+    assert summary["states"] == sorted(summary["states"])
+
+
 def test_render_output():
     report = validate_member_metadata_seed(SEED_PATH)
     rendered = render_member_metadata_seed_validation(report)
@@ -115,6 +143,7 @@ def test_cli_validate_member_metadata_seed(monkeypatch, capsys):
 
 def test_forbidden_language_absent():
     combined = SEED_PATH.read_text(encoding="utf-8").lower()
+    combined += PLAN_PATH.read_text(encoding="utf-8").lower()
     combined += render_member_metadata_seed_validation(
         validate_member_metadata_seed(SEED_PATH)
     ).lower()
