@@ -700,6 +700,26 @@ def test_html_index_renders_dataset_validation_report_values():
     )
 
 
+def test_html_index_renders_dataset_sources():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+
+    html = render_dossier_html_index(
+        [dossier],
+        dataset_sources=[
+            "data/raw/house/2023/10056789.pdf",
+            "data/raw/house/2023/10059734.pdf",
+        ],
+    )
+
+    assert "<h2>Dataset Sources</h2>" in html
+    assert "<p>total source count: 2</p>" in html
+    assert "<li>data/raw/house/2023/10056789.pdf</li>" in html
+    assert "<li>data/raw/house/2023/10059734.pdf</li>" in html
+    assert html.index("data/raw/house/2023/10056789.pdf") < html.index(
+        "data/raw/house/2023/10059734.pdf"
+    )
+
+
 def test_html_index_summary_renders_unknown_for_missing_states():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
 

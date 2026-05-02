@@ -115,6 +115,25 @@ def _dataset_validation_section(dataset_validation: dict | None) -> str:
     )
 
 
+def _dataset_sources_section(dataset_sources: list[str] | None) -> str:
+    if not dataset_sources:
+        return ""
+
+    items = "\n".join(
+        f"      <li>{escape(source)}</li>"
+        for source in dataset_sources
+    )
+    return (
+        '<section class="dataset-sources">\n'
+        "    <h2>Dataset Sources</h2>\n"
+        f"    <p>total source count: {len(dataset_sources)}</p>\n"
+        "    <ul>\n"
+        f"{items}\n"
+        "    </ul>\n"
+        "  </section>"
+    )
+
+
 def _has_parsed_disclosure_data(dossier: MemberDossier) -> bool:
     return any(
         source.source_type == "financial_disclosure_pdf"
@@ -569,6 +588,7 @@ def write_member_dossiers_html(
 def render_dossier_html_index(
     dossiers: list[MemberDossier],
     dataset_validation: dict | None = None,
+    dataset_sources: list[str] | None = None,
 ) -> str:
     groups = _index_groups(dossiers)
     sections = "\n".join([
@@ -614,6 +634,7 @@ def render_dossier_html_index(
     </dl>
   </section>
   {_dataset_validation_section(dataset_validation)}
+  {_dataset_sources_section(dataset_sources)}
   <p>total dossier count: {len(dossiers)}</p>
   {sections}
 </main>
@@ -626,13 +647,14 @@ def write_dossier_html_index(
     dossiers: list[MemberDossier],
     output_path: str | Path,
     dataset_validation: dict | None = None,
+    dataset_sources: list[str] | None = None,
 ) -> Path:
     path = Path(output_path)
     if path.exists() and path.is_dir():
         path = path / "index.html"
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
-        render_dossier_html_index(dossiers, dataset_validation),
+        render_dossier_html_index(dossiers, dataset_validation, dataset_sources),
         encoding="utf-8",
     )
     return path

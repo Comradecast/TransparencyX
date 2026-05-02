@@ -172,6 +172,76 @@ def test_site_build_index_displays_dataset_validation_aggregates(
     ) in html
 
 
+def test_site_build_index_lists_unique_dataset_sources_deterministically(
+    tmp_path,
+    monkeypatch,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Jane Public",
+                "chamber": "House",
+                "disclosure_path": "data/raw/house/2023/b.pdf",
+                "asset_count": 0,
+                "trade_count": 0,
+                "linked_transaction_count": 0,
+                "unlinked_transaction_count": 0,
+                "linked_transaction_coverage_ratio": None,
+            },
+            {
+                "member_name": "Nancy Pelosi",
+                "chamber": "House",
+                "disclosure_path": "data/raw/house/2023/a.pdf",
+                "asset_count": 0,
+                "trade_count": 0,
+                "linked_transaction_count": 0,
+                "unlinked_transaction_count": 0,
+                "linked_transaction_coverage_ratio": None,
+            },
+            {
+                "member_name": "Jane Public Duplicate",
+                "chamber": "House",
+                "disclosure_path": "data/raw/house/2023/b.pdf",
+                "asset_count": 0,
+                "trade_count": 0,
+                "linked_transaction_count": 0,
+                "unlinked_transaction_count": 0,
+                "linked_transaction_coverage_ratio": None,
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    html = (output_dir / "index.html").read_text(encoding="utf-8")
+
+    assert "<h2>Dataset Sources</h2>" in html
+    assert "<p>total source count: 2</p>" in html
+    assert html.count("data/raw/house/2023/a.pdf") == 1
+    assert html.count("data/raw/house/2023/b.pdf") == 1
+    assert html.index("data/raw/house/2023/a.pdf") < html.index(
+        "data/raw/house/2023/b.pdf"
+    )
+
+
 def test_documented_local_demo_site_build_path(tmp_path, monkeypatch, capsys):
     output_dir = tmp_path / "site"
     _patch_profiles(

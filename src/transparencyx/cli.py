@@ -51,6 +51,25 @@ def _asset_summaries_by_member_id(
     return summaries_by_member_id
 
 
+def _dataset_sources_from_profiles(profiles: list[dict]) -> list[str]:
+    sources = set()
+    for profile in profiles:
+        if not isinstance(profile, dict):
+            continue
+        for key in (
+            "disclosure_path",
+            "source_pdf",
+            "source_path",
+        ):
+            value = profile.get(key)
+            if isinstance(value, str) and value.strip():
+                sources.add(Path(value.strip()).as_posix())
+        source_url = profile.get("source_url")
+        if isinstance(source_url, str) and source_url.strip():
+            sources.add(source_url.strip())
+    return sorted(sources)
+
+
 def get_normalized_asset_audit_rows(db_path: Path):
     """
     Returns normalized asset rows in deterministic insertion order for audit output.
@@ -447,6 +466,7 @@ def main():
             dossiers,
             output_dir / "index.html",
             dataset_validation=dataset_report,
+            dataset_sources=_dataset_sources_from_profiles(profiles),
         )
 
         metadata_report = build_metadata_coverage_report(dossiers, metadata_by_id)
@@ -605,6 +625,7 @@ def main():
             dossiers,
             output_dir / "index.html",
             dataset_validation=dataset_report,
+            dataset_sources=_dataset_sources_from_profiles(profiles),
         )
 
         print(f"Wrote member dossier JSON files: {len(written_json_paths)} to {output_dir}")
@@ -735,7 +756,11 @@ def main():
                 sys.exit(1)
             print(f"Wrote member dossier HTML files: {len(html_paths)} to {Path(args.output_dir)}")
             if args.html_index:
-                html_index_path = write_dossier_html_index(dossiers, Path(args.output_dir))
+                html_index_path = write_dossier_html_index(
+                    dossiers,
+                    Path(args.output_dir),
+                    dataset_sources=_dataset_sources_from_profiles(profiles),
+                )
                 print(f"Wrote dossier HTML index: {html_index_path}")
         if args.index_json:
             index_path = Path(args.index_json)
