@@ -655,3 +655,22 @@ def test_build_summary_label():
     
     # Both
     assert build_summary_label(make_summary(5, 10, "MEDIUM", "VERY_HIGH", "LOW")) == "Very high disclosed wealth, medium trading activity"
+
+from transparencyx.shape.summary import _validate_transaction_metrics
+
+def test_validate_transaction_metrics_correct():
+    _validate_transaction_metrics(1, 6, 7, 1/7)
+    _validate_transaction_metrics(48, 26, 74, 48/74)
+    _validate_transaction_metrics(0, 0, 0, None)
+
+def test_validate_transaction_metrics_count_mismatch():
+    with pytest.raises(ValueError, match="Transaction count mismatch"):
+        _validate_transaction_metrics(1, 5, 7, 1/7)
+
+def test_validate_transaction_metrics_ratio_mismatch():
+    with pytest.raises(ValueError, match="Ratio mismatch"):
+        _validate_transaction_metrics(1, 6, 7, 0.2)
+
+def test_validate_transaction_metrics_zero_case_mismatch():
+    with pytest.raises(ValueError, match="Coverage ratio must be None"):
+        _validate_transaction_metrics(0, 0, 0, 0.0)

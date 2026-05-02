@@ -270,6 +270,18 @@ def build_summary_label(summary: FinancialShapeSummary) -> str:
         
     return f"{asset_str}, {trade_str}"
 
+def _validate_transaction_metrics(linked: int, unlinked: int, total: int, ratio: Optional[float]) -> None:
+    if linked + unlinked != total:
+        raise ValueError(f"Transaction count mismatch: linked ({linked}) + unlinked ({unlinked}) != total ({total})")
+    
+    if total == 0:
+        if ratio is not None:
+            raise ValueError("Coverage ratio must be None when transaction count is 0")
+    else:
+        expected_ratio = linked / total
+        if abs(expected_ratio - ratio) >= 1e-12:
+            raise ValueError(f"Ratio mismatch: expected {expected_ratio}, got {ratio}")
+
 def build_financial_shape_summary(db_path: Path, politician_id: int) -> FinancialShapeSummary:
     with get_connection(db_path) as conn:
         cursor = conn.cursor()
@@ -330,10 +342,20 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         asset_density = get_asset_density(asset_count)
         trade_volume_band = get_trade_volume_band(trade_volume_midpoint)
         
+        linked_transaction_count = total_linked_transactions
+        unlinked_transaction_count = trade_count - total_linked_transactions
+        
         if trade_count == 0:
             linked_transaction_coverage_ratio = None
         else:
             linked_transaction_coverage_ratio = total_linked_transactions / trade_count
+            
+        _validate_transaction_metrics(
+            linked=linked_transaction_count,
+            unlinked=unlinked_transaction_count,
+            total=trade_count,
+            ratio=linked_transaction_coverage_ratio
+        )
         
         summary = FinancialShapeSummary(
             politician_id=politician_id,
@@ -343,8 +365,8 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             asset_value_midpoint=asset_value_midpoint,
             trade_count=trade_count,
             transaction_count=trade_count,
-            linked_transaction_count=total_linked_transactions,
-            unlinked_transaction_count=trade_count - total_linked_transactions,
+            linked_transaction_count=linked_transaction_count,
+            unlinked_transaction_count=unlinked_transaction_count,
             linked_transaction_coverage_ratio=linked_transaction_coverage_ratio,
             trade_volume_min=trade_volume_min,
             trade_volume_max=trade_volume_max,
