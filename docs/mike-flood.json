@@ -1,0 +1,46 @@
+{
+  "identity": {
+    "member_id": "mike-flood",
+    "full_name": "Mike Flood",
+    "chamber": null,
+    "state": null,
+    "district": null,
+    "party": null,
+    "current_status": null
+  },
+  "office": {
+    "official_salary": null,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 14,
+    "asset_value_min": 3058013.0,
+    "asset_value_max": 12260000.0,
+    "income_min": 190007.0,
+    "income_max": 1230200.0,
+    "trade_count": 1,
+    "linked_transaction_count": 1,
+    "unlinked_transaction_count": 0,
+    "linked_transaction_coverage_ratio": 1.0,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10059391.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

@@ -1,8 +1,8 @@
 {
-  "total_dossiers": 16,
+  "total_dossiers": 19,
   "metadata_records_loaded": 19,
   "matched_dossiers": 13,
-  "unmatched_dossiers": 3,
+  "unmatched_dossiers": 6,
   "matched_member_ids": [
     "pat-harrigan",
     "mark-harris",
@@ -20,7 +20,10 @@
   ],
   "unmatched_member_ids": [
     "kelly-armstrong",
+    "mike-flood",
     "greg-murphy",
+    "donald-j-bacon",
+    "adrian-smith",
     "don-davis"
   ]
 }

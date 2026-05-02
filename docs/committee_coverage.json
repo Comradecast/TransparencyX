@@ -1,7 +1,7 @@
 {
-  "total_dossiers": 16,
+  "total_dossiers": 19,
   "rows_with_committees": 4,
-  "rows_without_committees": 12,
+  "rows_without_committees": 15,
   "member_ids_with_committees": [
     "valerie-p-foushee",
     "virginia-foxx",
@@ -15,9 +15,12 @@
     "addison-p-mcdowell",
     "tim-moore",
     "kelly-armstrong",
+    "mike-flood",
     "chuck-edwards",
     "nancy-pelosi",
     "greg-murphy",
+    "donald-j-bacon",
+    "adrian-smith",
     "richard-hudson",
     "david-rouzer",
     "don-davis"

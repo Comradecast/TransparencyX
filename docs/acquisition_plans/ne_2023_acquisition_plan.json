@@ -1,0 +1,83 @@
+{
+  "plan_type": "house_acquisition_plan",
+  "state": "NE",
+  "year": 2023,
+  "total_expected": 3,
+  "total_acquired": 3,
+  "total_missing": 0,
+  "total_not_ingested_nonannual_extension": 2,
+  "entries": [
+    {
+      "member_slug": "mike-flood",
+      "full_name": "Mike Flood",
+      "chamber": "House",
+      "state": "NE",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "10059391",
+      "filing_type": "O",
+      "expected_filename": "10059391.pdf",
+      "local_path": "data/raw/house/2023/10059391.pdf",
+      "acquisition_status": "acquired",
+      "acquired": true
+    },
+    {
+      "member_slug": "donald-j-bacon",
+      "full_name": "Donald J. Bacon",
+      "chamber": "House",
+      "state": "NE",
+      "district": "2",
+      "year": 2023,
+      "doc_id": "10059759",
+      "filing_type": "O",
+      "expected_filename": "10059759.pdf",
+      "local_path": "data/raw/house/2023/10059759.pdf",
+      "acquisition_status": "acquired",
+      "acquired": true
+    },
+    {
+      "member_slug": "adrian-smith",
+      "full_name": "Adrian Smith",
+      "chamber": "House",
+      "state": "NE",
+      "district": "3",
+      "year": 2023,
+      "doc_id": "10059993",
+      "filing_type": "O",
+      "expected_filename": "10059993.pdf",
+      "local_path": "data/raw/house/2023/10059993.pdf",
+      "acquisition_status": "acquired",
+      "acquired": true
+    }
+  ],
+  "non_ingested_entries": [
+    {
+      "member_slug": "mike-flood",
+      "full_name": "Mike Flood",
+      "chamber": "House",
+      "state": "NE",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "30021009",
+      "filing_type": "X",
+      "expected_filename": "30021009.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension",
+      "acquired": false
+    },
+    {
+      "member_slug": "anthony-tony-vargas",
+      "full_name": "Anthony 'Tony' Vargas",
+      "chamber": "House",
+      "state": "NE",
+      "district": "2",
+      "year": 2023,
+      "doc_id": "8219885",
+      "filing_type": "X",
+      "expected_filename": "8219885.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension",
+      "acquired": false
+    }
+  ]
+}

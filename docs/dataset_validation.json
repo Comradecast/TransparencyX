@@ -1,11 +1,11 @@
 {
-  "total_dossiers": 16,
-  "dossiers_with_parsed_financials": 16,
+  "total_dossiers": 19,
+  "dossiers_with_parsed_financials": 19,
   "dossiers_without_parsed_financials": 0,
-  "total_assets": 962,
-  "total_transactions": 101,
-  "total_linked_transactions": 49,
-  "total_unlinked_transactions": 52,
-  "dossiers_with_transaction_count_gt_0": 3,
+  "total_assets": 1003,
+  "total_transactions": 105,
+  "total_linked_transactions": 52,
+  "total_unlinked_transactions": 53,
+  "dossiers_with_transaction_count_gt_0": 6,
   "dossiers_with_transaction_count_0": 13
 }

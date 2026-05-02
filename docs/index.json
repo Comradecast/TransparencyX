@@ -1,5 +1,5 @@
 {
-  "dossier_count": 16,
+  "dossier_count": 19,
   "dossiers": [
     {
       "member_id": "deborah-k-ross",
@@ -132,6 +132,16 @@
       "file": "tim-moore.json"
     },
     {
+      "member_id": "adrian-smith",
+      "full_name": "Adrian Smith",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "adrian-smith.json"
+    },
+    {
       "member_id": "don-davis",
       "full_name": "Don Davis",
       "chamber": null,
@@ -140,6 +150,16 @@
       "party": null,
       "current_status": null,
       "file": "don-davis.json"
+    },
+    {
+      "member_id": "donald-j-bacon",
+      "full_name": "Donald J. Bacon",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "donald-j-bacon.json"
     },
     {
       "member_id": "greg-murphy",
@@ -160,6 +180,16 @@
       "party": null,
       "current_status": null,
       "file": "kelly-armstrong.json"
+    },
+    {
+      "member_id": "mike-flood",
+      "full_name": "Mike Flood",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "mike-flood.json"
     }
   ]
 }

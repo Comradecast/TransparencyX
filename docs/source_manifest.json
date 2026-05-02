@@ -1,5 +1,5 @@
 {
-  "source_count": 16,
+  "source_count": 19,
   "sources": [
     {
       "member_slug": "addison-p-mcdowell",
@@ -8,6 +8,15 @@
       "district": "6",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10056549.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "adrian-smith",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059993.pdf",
       "parsed": true
     },
     {
@@ -65,6 +74,15 @@
       "parsed": true
     },
     {
+      "member_slug": "donald-j-bacon",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059759.pdf",
+      "parsed": true
+    },
+    {
       "member_slug": "greg-murphy",
       "chamber": null,
       "state": null,
@@ -89,6 +107,15 @@
       "district": "8",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10056160.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "mike-flood",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059391.pdf",
       "parsed": true
     },
     {
