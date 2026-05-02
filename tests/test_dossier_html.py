@@ -665,6 +665,41 @@ def test_html_index_renders_dataset_summary():
     assert "<dt>Current members</dt><dd>2</dd>" in html
 
 
+def test_html_index_renders_dataset_validation_report_values():
+    dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
+    dataset_validation = {
+        "total_dossiers": 6,
+        "dossiers_with_parsed_financials": 6,
+        "dossiers_without_parsed_financials": 0,
+        "total_assets": 198,
+        "total_transactions": 81,
+        "total_linked_transactions": 49,
+        "total_unlinked_transactions": 32,
+        "dossiers_with_transaction_count_gt_0": 2,
+        "dossiers_with_transaction_count_0": 4,
+    }
+
+    html = render_dossier_html_index(
+        [dossier],
+        dataset_validation=dataset_validation,
+    )
+
+    assert "<h2>Dataset Validation</h2>" in html
+    assert '<a href="dataset_validation.json">dataset_validation.json</a>' in html
+    assert "<tr><th>total dossiers</th><td>6</td></tr>" in html
+    assert "<tr><th>dossiers with parsed financials</th><td>6</td></tr>" in html
+    assert "<tr><th>dossiers without parsed financials</th><td>0</td></tr>" in html
+    assert "<tr><th>total assets</th><td>198</td></tr>" in html
+    assert "<tr><th>total transactions</th><td>81</td></tr>" in html
+    assert "<tr><th>total linked transactions</th><td>49</td></tr>" in html
+    assert "<tr><th>total unlinked transactions</th><td>32</td></tr>" in html
+    assert "<tr><th>dossiers with transaction_count &gt; 0</th><td>2</td></tr>" in html
+    assert (
+        "<tr><th>dossiers with transaction_count == 0 or unknown</th><td>4</td></tr>"
+        in html
+    )
+
+
 def test_html_index_summary_renders_unknown_for_missing_states():
     dossier = create_empty_member_dossier("nancy-pelosi", "Nancy Pelosi")
 

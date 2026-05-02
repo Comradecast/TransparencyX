@@ -64,6 +64,57 @@ def _summary_card(label: str, value) -> str:
     )
 
 
+def _dataset_validation_section(dataset_validation: dict | None) -> str:
+    if dataset_validation is None:
+        return ""
+
+    rows = [
+        ("total dossiers", dataset_validation.get("total_dossiers")),
+        (
+            "dossiers with parsed financials",
+            dataset_validation.get("dossiers_with_parsed_financials"),
+        ),
+        (
+            "dossiers without parsed financials",
+            dataset_validation.get("dossiers_without_parsed_financials"),
+        ),
+        ("total assets", dataset_validation.get("total_assets")),
+        ("total transactions", dataset_validation.get("total_transactions")),
+        (
+            "total linked transactions",
+            dataset_validation.get("total_linked_transactions"),
+        ),
+        (
+            "total unlinked transactions",
+            dataset_validation.get("total_unlinked_transactions"),
+        ),
+        (
+            "dossiers with transaction_count > 0",
+            dataset_validation.get("dossiers_with_transaction_count_gt_0"),
+        ),
+        (
+            "dossiers with transaction_count == 0 or unknown",
+            dataset_validation.get("dossiers_with_transaction_count_0"),
+        ),
+    ]
+    rendered_rows = [
+        f"<tr><th>{escape(label)}</th><td>{_display(value)}</td></tr>"
+        for label, value in rows
+    ]
+    table_rows = "\n        ".join(rendered_rows)
+    return (
+        '<section class="dataset-validation">\n'
+        "    <h2>Dataset Validation</h2>\n"
+        '    <p><a href="dataset_validation.json">dataset_validation.json</a></p>\n'
+        "    <table>\n"
+        "      <tbody>\n"
+        f"        {table_rows}\n"
+        "      </tbody>\n"
+        "    </table>\n"
+        "  </section>"
+    )
+
+
 def _has_parsed_disclosure_data(dossier: MemberDossier) -> bool:
     return any(
         source.source_type == "financial_disclosure_pdf"
@@ -515,7 +566,10 @@ def write_member_dossiers_html(
     ]
 
 
-def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
+def render_dossier_html_index(
+    dossiers: list[MemberDossier],
+    dataset_validation: dict | None = None,
+) -> str:
     groups = _index_groups(dossiers)
     sections = "\n".join([
         _index_section("House", "house", groups["house"]),
@@ -559,6 +613,7 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
       {_summary_card("Current members", summary["current"])}
     </dl>
   </section>
+  {_dataset_validation_section(dataset_validation)}
   <p>total dossier count: {len(dossiers)}</p>
   {sections}
 </main>
@@ -570,10 +625,14 @@ def render_dossier_html_index(dossiers: list[MemberDossier]) -> str:
 def write_dossier_html_index(
     dossiers: list[MemberDossier],
     output_path: str | Path,
+    dataset_validation: dict | None = None,
 ) -> Path:
     path = Path(output_path)
     if path.exists() and path.is_dir():
         path = path / "index.html"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(render_dossier_html_index(dossiers), encoding="utf-8")
+    path.write_text(
+        render_dossier_html_index(dossiers, dataset_validation),
+        encoding="utf-8",
+    )
     return path

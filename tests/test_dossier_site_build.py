@@ -76,6 +76,102 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
     ])
 
 
+def test_site_build_index_displays_dataset_validation_aggregates(
+    tmp_path,
+    monkeypatch,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Nancy Pelosi",
+                "chamber": "House",
+                "shape_export": {
+                    "summary": {
+                        "asset_count": 56,
+                        "transaction_count": 7,
+                        "linked_transaction_count": 1,
+                        "unlinked_transaction_count": 6,
+                        "linked_transaction_coverage_ratio": 1 / 7,
+                    },
+                    "trace": {},
+                },
+            },
+            {
+                "member_name": "Jane Public",
+                "chamber": "Senate",
+                "shape_export": {
+                    "summary": {
+                        "asset_count": 0,
+                        "transaction_count": 0,
+                        "linked_transaction_count": 0,
+                        "unlinked_transaction_count": 0,
+                        "linked_transaction_coverage_ratio": None,
+                    },
+                    "trace": {},
+                },
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    report = json.loads((output_dir / "dataset_validation.json").read_text(
+        encoding="utf-8"
+    ))
+    html = (output_dir / "index.html").read_text(encoding="utf-8")
+
+    assert "<h2>Dataset Validation</h2>" in html
+    assert '<a href="dataset_validation.json">dataset_validation.json</a>' in html
+    assert f"<tr><th>total dossiers</th><td>{report['total_dossiers']}</td></tr>" in html
+    assert (
+        "<tr><th>dossiers with parsed financials</th>"
+        f"<td>{report['dossiers_with_parsed_financials']}</td></tr>"
+    ) in html
+    assert (
+        "<tr><th>dossiers without parsed financials</th>"
+        f"<td>{report['dossiers_without_parsed_financials']}</td></tr>"
+    ) in html
+    assert f"<tr><th>total assets</th><td>{report['total_assets']}</td></tr>" in html
+    assert (
+        f"<tr><th>total transactions</th><td>{report['total_transactions']}</td></tr>"
+        in html
+    )
+    assert (
+        "<tr><th>total linked transactions</th>"
+        f"<td>{report['total_linked_transactions']}</td></tr>"
+    ) in html
+    assert (
+        "<tr><th>total unlinked transactions</th>"
+        f"<td>{report['total_unlinked_transactions']}</td></tr>"
+    ) in html
+    assert (
+        "<tr><th>dossiers with transaction_count &gt; 0</th>"
+        f"<td>{report['dossiers_with_transaction_count_gt_0']}</td></tr>"
+    ) in html
+    assert (
+        "<tr><th>dossiers with transaction_count == 0 or unknown</th>"
+        f"<td>{report['dossiers_with_transaction_count_0']}</td></tr>"
+    ) in html
+
+
 def test_documented_local_demo_site_build_path(tmp_path, monkeypatch, capsys):
     output_dir = tmp_path / "site"
     _patch_profiles(
