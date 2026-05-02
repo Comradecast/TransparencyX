@@ -398,6 +398,8 @@ def test_nc_acquisition_instructions_include_deterministic_steps():
         "5. Download PDF",
         "6. Save locally as:",
         "data/raw/house/2023/<document_id>.pdf",
+        "- Use the exact document ID provided by the disclosure system.",
+        "- Do not rename or shorten the file name.",
         "7. Update acquisition plan:",
         "- acquired = true",
         "- source_pdf = saved path",
