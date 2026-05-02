@@ -166,6 +166,7 @@ def main():
     parser.add_argument("--build-dossier-site", type=str, help="Build a complete static dossier site from PDFs in a directory")
     parser.add_argument("--build-nc-demo-site", action="store_true", help="Build a fixture-backed NC delegation demo static site from seeded metadata")
     parser.add_argument("--validate-dossier-site", type=str, help="Validate generated dossier site artifacts")
+    parser.add_argument("--validate-pdf", nargs=2, metavar=("PATH", "DOC_ID"), help="Validate a local disclosure PDF against an expected DocID")
     parser.add_argument("--validate-member-metadata-seed", type=str, help="Validate a member metadata seed CSV")
     parser.add_argument("--metadata-source-quality", type=str, help="Report member metadata source URL quality")
     parser.add_argument("--output-dir", type=str, help="Write batch dossier JSON files to a directory")
@@ -277,6 +278,15 @@ def main():
         )
         print(f"Wrote member metadata template CSV: {output_path}")
         sys.exit(0)
+
+    if args.validate_pdf:
+        from transparencyx.acquisition.validate_pdf import validate_disclosure_pdf
+
+        pdf_path, doc_id = args.validate_pdf
+        passed = validate_disclosure_pdf(Path(pdf_path), doc_id)
+        status = "PASS" if passed else "FAIL"
+        print(f"Disclosure PDF Validation: {status}")
+        sys.exit(0 if passed else 1)
 
     if args.validate_dossier_site:
         from transparencyx.dossier.validate_site import (
