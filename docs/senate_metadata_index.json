@@ -1,9 +1,8 @@
 {
-  "manifest_type": "senate_expected_sources",
+  "manifest_type": "senate_metadata_index",
   "state": "NC",
   "year": 2023,
-  "source_authority": "United States Senate eFD",
-  "source_authority_url": "https://efdsearch.senate.gov/",
+  "total_entries": 2,
   "entries": [
     {
       "member_slug": "ted-budd",
@@ -14,12 +13,11 @@
       "year": 2023,
       "filing_type": "Annual Report for CY 2023",
       "filing_date": "2024-08-13",
-      "source_id": "ac4f24bc-25fa-4821-80ca-0aa41539710d",
-      "source_url": "https://efdsearch.senate.gov/search/view/annual/ac4f24bc-25fa-4821-80ca-0aa41539710d/",
-      "pdf_url": null,
-      "local_path": null,
       "source_authority": "United States Senate eFD",
       "source_authority_url": "https://efdsearch.senate.gov/",
+      "source_url": "https://efdsearch.senate.gov/search/view/annual/ac4f24bc-25fa-4821-80ca-0aa41539710d/",
+      "pdf_available": false,
+      "parsed_financials_available": false,
       "acquisition_status": "resolved_record_url_only",
       "notes": "Official Senate eFD annual record URL is known. No deterministic PDF endpoint is available because Print Report produced no network request and appears browser-rendered; no Senate PDF has been acquired."
     },
@@ -32,12 +30,11 @@
       "year": 2023,
       "filing_type": "Annual Report for CY 2023",
       "filing_date": "2024-08-09",
-      "source_id": null,
-      "source_url": null,
-      "pdf_url": null,
-      "local_path": null,
       "source_authority": "United States Senate eFD",
       "source_authority_url": "https://efdsearch.senate.gov/",
+      "source_url": null,
+      "pdf_available": false,
+      "parsed_financials_available": false,
       "acquisition_status": "pending_record_url",
       "notes": "Official Senate eFD filing date and display name are known from observed UI evidence, but no stable record UUID/URL is recorded in repo context. No deterministic PDF endpoint is available because Print Report produced no network request and appears browser-rendered; no Senate PDF has been acquired."
     }

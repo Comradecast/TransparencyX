@@ -5,13 +5,18 @@ from pathlib import Path
 SENATE_EXPECTED_SOURCE_KEYS = {
     "member_slug",
     "full_name",
+    "display_name",
     "chamber",
     "state",
     "year",
+    "filing_type",
+    "filing_date",
     "source_id",
     "source_url",
+    "pdf_url",
     "local_path",
     "source_authority",
+    "source_authority_url",
     "acquisition_status",
     "notes",
 }
@@ -19,15 +24,38 @@ SENATE_EXPECTED_SOURCE_KEYS = {
 SENATE_ACQUISITION_PLAN_KEYS = {
     "member_slug",
     "full_name",
+    "display_name",
     "chamber",
     "state",
     "year",
+    "filing_type",
+    "filing_date",
     "source_id",
     "source_url",
+    "pdf_url",
     "local_path",
     "source_authority",
+    "source_authority_url",
     "acquisition_status",
     "acquired",
+    "notes",
+}
+
+SENATE_METADATA_INDEX_KEYS = {
+    "member_slug",
+    "full_name",
+    "display_name",
+    "chamber",
+    "state",
+    "year",
+    "filing_type",
+    "filing_date",
+    "source_authority",
+    "source_authority_url",
+    "source_url",
+    "pdf_available",
+    "parsed_financials_available",
+    "acquisition_status",
     "notes",
 }
 
@@ -150,6 +178,23 @@ def build_senate_acquisition_plan(
         "total_expected": len(entries),
         "total_acquired": sum(1 for entry in entries if entry["acquired"]),
         "total_missing": sum(1 for entry in entries if not entry["acquired"]),
+        "total_resolved_record_url_only": sum(
+            1
+            for entry in entries
+            if entry.get("acquisition_status") == "resolved_record_url_only"
+        ),
+        "total_pending_record_url": sum(
+            1
+            for entry in entries
+            if entry.get("acquisition_status") == "pending_record_url"
+        ),
+        "total_pdf_blocked_no_endpoint": sum(
+            1
+            for entry in entries
+            if _clean_text(entry.get("source_url")) is not None
+            and _clean_text(entry.get("pdf_url")) is None
+            and _clean_text(entry.get("local_path")) is None
+        ),
         "total_ambiguous": sum(
             1
             for entry in entries
@@ -161,3 +206,41 @@ def build_senate_acquisition_plan(
 
 def render_senate_acquisition_plan_json(plan: dict) -> str:
     return json.dumps(plan, indent=2, ensure_ascii=False) + "\n"
+
+
+def build_senate_metadata_index(manifest: dict) -> dict:
+    entries = []
+    for source in senate_manifest_entries(manifest):
+        pdf_available = _clean_text(source.get("pdf_url")) is not None
+        parsed_financials_available = _clean_text(source.get("local_path")) is not None
+        entries.append(
+            {
+                "member_slug": source.get("member_slug"),
+                "full_name": source.get("full_name"),
+                "display_name": source.get("display_name"),
+                "chamber": source.get("chamber"),
+                "state": source.get("state"),
+                "year": source.get("year"),
+                "filing_type": source.get("filing_type"),
+                "filing_date": source.get("filing_date"),
+                "source_authority": source.get("source_authority"),
+                "source_authority_url": source.get("source_authority_url"),
+                "source_url": source.get("source_url"),
+                "pdf_available": pdf_available,
+                "parsed_financials_available": parsed_financials_available,
+                "acquisition_status": source.get("acquisition_status"),
+                "notes": source.get("notes"),
+            }
+        )
+
+    return {
+        "manifest_type": "senate_metadata_index",
+        "state": manifest.get("state"),
+        "year": manifest.get("year"),
+        "total_entries": len(entries),
+        "entries": entries,
+    }
+
+
+def render_senate_metadata_index_json(index: dict) -> str:
+    return json.dumps(index, indent=2, ensure_ascii=False) + "\n"
