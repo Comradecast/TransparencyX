@@ -22,6 +22,9 @@ from transparencyx.dossier.schema import (
 
 
 SOURCE_MANIFEST_TEMPLATE_PATH = Path("docs/source_manifest_template.json")
+NC_EXPECTED_SOURCE_MANIFEST_PATH = Path(
+    "docs/source_manifests/nc_2023_expected_sources.json"
+)
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
     "full_name",
@@ -86,6 +89,77 @@ def test_source_manifest_template_status_fields_are_booleans():
         assert isinstance(entry["expected"], bool)
         assert isinstance(entry["acquired"], bool)
         assert isinstance(entry["parsed"], bool)
+
+
+def test_nc_expected_source_manifest_exists():
+    assert NC_EXPECTED_SOURCE_MANIFEST_PATH.exists()
+
+
+def test_nc_expected_source_manifest_json_parses():
+    manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    assert manifest["template_type"] == "state_source_manifest"
+    assert isinstance(manifest["sources"], list)
+    assert manifest["sources"]
+
+
+def test_nc_expected_source_manifest_entries_have_required_keys():
+    manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    for entry in manifest["sources"]:
+        assert set(entry) == SOURCE_MANIFEST_TEMPLATE_KEYS
+
+
+def test_nc_expected_source_manifest_entries_have_state_and_year():
+    manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    for entry in manifest["sources"]:
+        assert entry["state"] == "NC"
+        assert entry["year"] == 2023
+
+
+def test_nc_expected_source_manifest_status_fields_are_booleans():
+    manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    for entry in manifest["sources"]:
+        assert isinstance(entry["expected"], bool)
+        assert isinstance(entry["acquired"], bool)
+        assert isinstance(entry["parsed"], bool)
+
+
+def test_nc_expected_source_manifest_ordering_is_deterministic():
+    manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    entries = manifest["sources"]
+    house_entries = [
+        entry
+        for entry in entries
+        if entry["chamber"] == "House"
+    ]
+    senate_entries = [
+        entry
+        for entry in entries
+        if entry["chamber"] == "Senate"
+    ]
+
+    assert entries == house_entries + senate_entries
+    assert [
+        int(entry["district"])
+        for entry in house_entries
+    ] == sorted(int(entry["district"]) for entry in house_entries)
+    assert [
+        entry["member_slug"]
+        for entry in senate_entries
+    ] == sorted(entry["member_slug"] for entry in senate_entries)
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():
