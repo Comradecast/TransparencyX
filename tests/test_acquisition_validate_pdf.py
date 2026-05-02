@@ -86,3 +86,11 @@ def test_cli_validate_pdf_failure(tmp_path, monkeypatch, capsys):
     captured = capsys.readouterr()
     assert exit_info.value.code == 1
     assert captured.out == "Disclosure PDF Validation: FAIL\n"
+
+
+def test_senate_raw_pdf_requires_manifest_known_source_id(tmp_path):
+    path = tmp_path / "data" / "raw" / "senate" / "2023" / "UNKNOWN.pdf"
+    path.parent.mkdir(parents=True)
+    path.write_bytes(VALID_PDF_BYTES)
+
+    assert validate_disclosure_pdf(path, "UNKNOWN") is False

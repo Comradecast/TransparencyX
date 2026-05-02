@@ -1,0 +1,34 @@
+{
+  "manifest_type": "senate_expected_sources",
+  "state": "NC",
+  "year": 2023,
+  "source_authority": "Official Senate financial disclosure system",
+  "entries": [
+    {
+      "member_slug": "ted-budd",
+      "full_name": "Ted Budd",
+      "chamber": "Senate",
+      "state": "NC",
+      "year": 2023,
+      "source_id": null,
+      "source_url": null,
+      "local_path": null,
+      "source_authority": "Official Senate financial disclosure system",
+      "acquisition_status": "pending",
+      "notes": "No deterministic official Senate PDF source_id has been recorded yet."
+    },
+    {
+      "member_slug": "thom-tillis",
+      "full_name": "Thom Tillis",
+      "chamber": "Senate",
+      "state": "NC",
+      "year": 2023,
+      "source_id": null,
+      "source_url": null,
+      "local_path": null,
+      "source_authority": "Official Senate financial disclosure system",
+      "acquisition_status": "pending",
+      "notes": "No deterministic official Senate PDF source_id has been recorded yet."
+    }
+  ]
+}
