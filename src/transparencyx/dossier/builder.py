@@ -284,6 +284,18 @@ def build_member_dossier_from_profile(profile: dict) -> MemberDossier:
                 financial_shape,
                 ("transaction_count", "trade_count"),
             ),
+            linked_transaction_count=_first_int(
+                profile,
+                "linked_transaction_count",
+                financial_shape,
+                "linked_transaction_count",
+            ),
+            unlinked_transaction_count=_first_int(
+                profile,
+                "unlinked_transaction_count",
+                financial_shape,
+                "unlinked_transaction_count",
+            ),
             linked_transaction_coverage_ratio=_first_number(
                 profile,
                 "linked_transaction_coverage_ratio",

@@ -108,6 +108,8 @@ def test_pelosi_schedule_b_transactions_flow_to_shape_summary():
 
     assert summary["asset_count"] == 56
     assert summary["transaction_count"] == 7
+    assert summary["linked_transaction_count"] == 1
+    assert summary["unlinked_transaction_count"] == 6
     assert summary["linked_transaction_coverage_ratio"] == 1 / 7
     assert len(summary["asset_summaries"]) == 56
     assert linked_count_total <= 7
@@ -149,6 +151,8 @@ def test_foxx_shape_export_from_text_has_expected_trade_trace_rows():
     export = _build_shape_export_from_text(FOXX_PDF, extracted_text or "")
 
     assert export["summary"]["transaction_count"] == 74
+    assert export["summary"]["linked_transaction_count"] == 48
+    assert export["summary"]["unlinked_transaction_count"] == 26
     assert export["summary"]["linked_transaction_coverage_ratio"] == 48 / 74
     _assert_asset_summaries_contract(export["summary"]["asset_summaries"])
     assert sum(

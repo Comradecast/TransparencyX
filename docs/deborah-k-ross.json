@@ -27,6 +27,8 @@
     "income_min": 35006.0,
     "income_max": 115600.0,
     "trade_count": 0,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 0,
     "linked_transaction_coverage_ratio": null,
     "liability_count": null,
     "business_interests": []

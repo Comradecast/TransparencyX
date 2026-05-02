@@ -87,6 +87,8 @@ def test_to_dict_uses_deterministic_keys():
         "income_min",
         "income_max",
         "trade_count",
+        "linked_transaction_count",
+        "unlinked_transaction_count",
         "linked_transaction_coverage_ratio",
         "liability_count",
         "business_interests",
@@ -115,13 +117,14 @@ def test_to_dict_uses_deterministic_keys():
         "income_min",
         "income_max",
         "trade_count",
+        "linked_transaction_count",
+        "unlinked_transaction_count",
         "linked_transaction_coverage_ratio",
         "liability_count",
         "business_interests",
     ]
     assert "asset_summaries" not in dossier_dict
     assert "asset_summaries" not in dossier_dict["financials"]
-    assert "linked_transaction_count" not in dossier_dict["financials"]
 
 
 def test_render_missing_values():

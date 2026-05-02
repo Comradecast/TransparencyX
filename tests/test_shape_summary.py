@@ -51,6 +51,8 @@ def test_empty_politician_shape(db_path):
     
     assert summary.trade_count == 0
     assert summary.transaction_count == 0
+    assert summary.linked_transaction_count == 0
+    assert summary.unlinked_transaction_count == 0
     assert summary.linked_transaction_coverage_ratio is None
     assert summary.trade_volume_min is None
     assert summary.trade_volume_max is None
@@ -494,6 +496,8 @@ def test_summary_to_dict(db_path):
     assert d["asset_value_min"] is None
     assert d["trade_count"] == 0
     assert d["transaction_count"] == 0
+    assert d["linked_transaction_count"] == 0
+    assert d["unlinked_transaction_count"] == 0
     assert d["linked_transaction_coverage_ratio"] is None
     assert d["trade_activity"] == "NONE"
     assert d["net_worth_band"] == "UNKNOWN"
@@ -633,7 +637,7 @@ def test_build_summary_label():
     def make_summary(ac, tc, ta, nwb, ad):
         return FinancialShapeSummary(
             politician_id=1, asset_count=ac, asset_value_min=None, asset_value_max=None, asset_value_midpoint=None,
-            trade_count=tc, transaction_count=tc, linked_transaction_coverage_ratio=None, trade_volume_min=None, trade_volume_max=None, trade_volume_midpoint=None,
+            trade_count=tc, transaction_count=tc, linked_transaction_count=0, unlinked_transaction_count=tc, linked_transaction_coverage_ratio=None, trade_volume_min=None, trade_volume_max=None, trade_volume_midpoint=None,
             trade_activity=ta, net_worth_band=nwb, asset_density=ad, trade_volume_band="UNKNOWN", summary_label=""
         )
     

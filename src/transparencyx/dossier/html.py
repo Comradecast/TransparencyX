@@ -162,6 +162,8 @@ def _financial_summary_rows(
         ("Assets", _display(financials.asset_count)),
         ("Income entries", "Unknown"),
         ("Transactions", _display(financials.trade_count)),
+        ("Linked Transactions", _display(financials.linked_transaction_count)),
+        ("Unlinked Transactions", _display(financials.unlinked_transaction_count)),
         ("Transaction Link Coverage", _display(financials.linked_transaction_coverage_ratio)),
         ("Asset range", _format_range(financials.asset_value_min, financials.asset_value_max)),
         ("Income range", _format_range(financials.income_min, financials.income_max)),
