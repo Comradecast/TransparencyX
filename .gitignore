@@ -35,6 +35,15 @@ data/*
 data/seed/*
 !data/seed/member_metadata_seed.csv
 !data/seed/member_id_aliases.csv
+!data/raw/
+data/raw/*
+!data/raw/house/
+data/raw/house/*
+!data/raw/house/2023/
+data/raw/house/2023/*
+!data/raw/house/2023/10060732.pdf
+!data/raw/house/2023/10059751.pdf
+!data/raw/house/2023/10060621.pdf
 !data/source_indexes/
 !data/source_indexes/house/
 !data/source_indexes/house/2023FD.xml

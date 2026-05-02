@@ -25,15 +25,16 @@
   <p class="intro">This is a TransparencyX dossier index. Each row links to a member dossier page. Demo output may be fixture-backed depending on the command used to build the site.</p>
   <nav class="index-nav">
     <a href="#house">House</a>
+    <a href="#unknown">Unknown</a>
   </nav>
   <section class="summary">
     <h2>Dataset Summary</h2>
     <dl class="summary-grid">
-      <div class="summary-card"><dt>Total dossiers</dt><dd>6</dd></div>
-      <div class="summary-card"><dt>House</dt><dd>6</dd></div>
+      <div class="summary-card"><dt>Total dossiers</dt><dd>9</dd></div>
+      <div class="summary-card"><dt>House</dt><dd>7</dd></div>
       <div class="summary-card"><dt>Senate</dt><dd>0</dd></div>
       <div class="summary-card"><dt>States</dt><dd>CA, NC</dd></div>
-      <div class="summary-card"><dt>Current members</dt><dd>6</dd></div>
+      <div class="summary-card"><dt>Current members</dt><dd>7</dd></div>
     </dl>
   </section>
   <section class="dataset-validation">
@@ -41,31 +42,34 @@
     <p><a href="dataset_validation.json">dataset_validation.json</a></p>
     <table>
       <tbody>
-        <tr><th>total dossiers</th><td>6</td></tr>
-        <tr><th>dossiers with parsed financials</th><td>6</td></tr>
+        <tr><th>total dossiers</th><td>9</td></tr>
+        <tr><th>dossiers with parsed financials</th><td>9</td></tr>
         <tr><th>dossiers without parsed financials</th><td>0</td></tr>
-        <tr><th>total assets</th><td>198</td></tr>
-        <tr><th>total transactions</th><td>81</td></tr>
+        <tr><th>total assets</th><td>287</td></tr>
+        <tr><th>total transactions</th><td>101</td></tr>
         <tr><th>total linked transactions</th><td>49</td></tr>
-        <tr><th>total unlinked transactions</th><td>32</td></tr>
-        <tr><th>dossiers with transaction_count &gt; 0</th><td>2</td></tr>
-        <tr><th>dossiers with transaction_count == 0 or unknown</th><td>4</td></tr>
+        <tr><th>total unlinked transactions</th><td>52</td></tr>
+        <tr><th>dossiers with transaction_count &gt; 0</th><td>3</td></tr>
+        <tr><th>dossiers with transaction_count == 0 or unknown</th><td>6</td></tr>
       </tbody>
     </table>
   </section>
   <section class="dataset-sources">
     <h2>Dataset Sources</h2>
-    <p>total source count: 6</p>
+    <p>total source count: 9</p>
     <ul>
       <li>data/raw/house/2023/10057344.pdf</li>
       <li>data/raw/house/2023/10059335.pdf</li>
       <li>data/raw/house/2023/10059419.pdf</li>
       <li>data/raw/house/2023/10059715.pdf</li>
       <li>data/raw/house/2023/10059734.pdf</li>
+      <li>data/raw/house/2023/10059751.pdf</li>
       <li>data/raw/house/2023/10059952.pdf</li>
+      <li>data/raw/house/2023/10060621.pdf</li>
+      <li>data/raw/house/2023/10060732.pdf</li>
     </ul>
   </section>
-  <p>total dossier count: 6</p>
+  <p>total dossier count: 9</p>
   <section class="index-section">
     <h2 id="house">House</h2>
     <table>
@@ -84,9 +88,31 @@
 <tr><td>Deborah K. Ross</td><td>House</td><td>NC</td><td>2</td><td>Democratic</td><td>current</td><td><a href="deborah-k-ross.html">deborah-k-ross.html</a></td></tr>
 <tr><td>Valerie P. Foushee</td><td>House</td><td>NC</td><td>4</td><td>Democratic</td><td>current</td><td><a href="valerie-p-foushee.html">valerie-p-foushee.html</a></td></tr>
 <tr><td>Virginia Foxx</td><td>House</td><td>NC</td><td>5</td><td>Republican</td><td>current</td><td><a href="virginia-foxx.html">virginia-foxx.html</a></td></tr>
+<tr><td>David Rouzer</td><td>House</td><td>NC</td><td>7</td><td>Republican</td><td>current</td><td><a href="david-rouzer.html">david-rouzer.html</a></td></tr>
 <tr><td>Chuck Edwards</td><td>House</td><td>NC</td><td>11</td><td>Republican</td><td>current</td><td><a href="chuck-edwards.html">chuck-edwards.html</a></td></tr>
 <tr><td>Nancy Pelosi</td><td>House</td><td>CA</td><td>11</td><td>Democratic</td><td>current</td><td><a href="nancy-pelosi.html">nancy-pelosi.html</a></td></tr>
 <tr><td>Alma S. Adams</td><td>House</td><td>NC</td><td>12</td><td>Democratic</td><td>current</td><td><a href="alma-s-adams.html">alma-s-adams.html</a></td></tr>
+      </tbody>
+    </table>
+  </section>
+
+<section class="index-section">
+    <h2 id="unknown">Unknown</h2>
+    <table>
+      <thead>
+      <tr>
+        <th>full_name</th>
+        <th>chamber</th>
+        <th>state</th>
+        <th>district</th>
+        <th>party</th>
+        <th>current_status</th>
+        <th>file</th>
+      </tr>
+    </thead>
+      <tbody>
+<tr><td>Don Davis</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="don-davis.html">don-davis.html</a></td></tr>
+<tr><td>Greg Murphy</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td>Unknown</td><td><a href="greg-murphy.html">greg-murphy.html</a></td></tr>
       </tbody>
     </table>
   </section>

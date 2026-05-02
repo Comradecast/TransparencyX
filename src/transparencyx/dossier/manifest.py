@@ -6,6 +6,12 @@ from pathlib import Path
 from transparencyx.dossier.schema import MemberDossier
 
 
+ACQUISITION_SOURCE_MEMBER_ALIASES = {
+    "don-davis": "donald-g-davis",
+    "greg-murphy": "gregory-f-murphy",
+}
+
+
 def _clean_text(value) -> str | None:
     if not isinstance(value, str):
         return None
@@ -227,13 +233,26 @@ def _select_house_index_match(matches: list[dict]) -> tuple[str, dict | None, li
     return "missing", None, [], None
 
 
+def canonical_acquisition_source_member_slug(member_slug: str | None) -> str | None:
+    if member_slug is None:
+        return None
+    return ACQUISITION_SOURCE_MEMBER_ALIASES.get(member_slug, member_slug)
+
+
+def acquisition_source_key(entry: dict) -> tuple[str | None, int | None]:
+    return (
+        canonical_acquisition_source_member_slug(entry.get("member_slug")),
+        entry.get("year"),
+    )
+
+
 def build_index_acquisition_manifest(
     expected_manifest: dict,
     source_manifest: dict,
     index_rows: list[dict],
 ) -> dict:
     actual_sources = {
-        (entry.get("member_slug"), entry.get("year")): entry
+        acquisition_source_key(entry): entry
         for entry in source_manifest.get("sources", [])
         if isinstance(entry, dict)
     }

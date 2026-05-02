@@ -1,16 +1,16 @@
 {
   "total_expected": 16,
-  "total_acquired": 5,
-  "total_missing": 11,
-  "total_parsed": 5,
+  "total_acquired": 8,
+  "total_missing": 8,
+  "total_parsed": 8,
   "entries": [
     {
       "member_slug": "donald-g-davis",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10060732.pdf"
     },
     {
       "member_slug": "deborah-k-ross",
@@ -24,9 +24,9 @@
       "member_slug": "gregory-f-murphy",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10059751.pdf"
     },
     {
       "member_slug": "valerie-p-foushee",
@@ -56,9 +56,9 @@
       "member_slug": "david-rouzer",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10060621.pdf"
     },
     {
       "member_slug": "mark-harris",

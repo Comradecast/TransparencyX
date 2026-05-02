@@ -1,15 +1,19 @@
 {
-  "total_dossiers": 6,
+  "total_dossiers": 9,
   "metadata_records_loaded": 19,
-  "matched_dossiers": 6,
-  "unmatched_dossiers": 0,
+  "matched_dossiers": 7,
+  "unmatched_dossiers": 2,
   "matched_member_ids": [
     "valerie-p-foushee",
     "virginia-foxx",
     "chuck-edwards",
     "deborah-k-ross",
     "nancy-pelosi",
-    "alma-s-adams"
+    "alma-s-adams",
+    "david-rouzer"
   ],
-  "unmatched_member_ids": []
+  "unmatched_member_ids": [
+    "greg-murphy",
+    "don-davis"
+  ]
 }

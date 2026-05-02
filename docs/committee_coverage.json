@@ -1,7 +1,7 @@
 {
-  "total_dossiers": 6,
+  "total_dossiers": 9,
   "rows_with_committees": 4,
-  "rows_without_committees": 2,
+  "rows_without_committees": 5,
   "member_ids_with_committees": [
     "valerie-p-foushee",
     "virginia-foxx",
@@ -10,6 +10,9 @@
   ],
   "member_ids_without_committees": [
     "chuck-edwards",
-    "nancy-pelosi"
+    "nancy-pelosi",
+    "greg-murphy",
+    "david-rouzer",
+    "don-davis"
   ]
 }

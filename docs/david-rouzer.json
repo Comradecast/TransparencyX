@@ -1,0 +1,53 @@
+{
+  "identity": {
+    "member_id": "david-rouzer",
+    "full_name": "David Rouzer",
+    "chamber": "House",
+    "state": "NC",
+    "district": "7",
+    "party": "Republican",
+    "current_status": "current"
+  },
+  "office": {
+    "official_salary": 174000.0,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 42,
+    "asset_value_min": 340042.0,
+    "asset_value_max": 1228000.0,
+    "income_min": 1001.0,
+    "income_max": 2500.0,
+    "trade_count": 0,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 0,
+    "linked_transaction_coverage_ratio": null,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10060621.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/R000603",
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

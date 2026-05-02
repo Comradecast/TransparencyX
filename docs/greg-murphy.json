@@ -1,0 +1,46 @@
+{
+  "identity": {
+    "member_id": "greg-murphy",
+    "full_name": "Greg Murphy",
+    "chamber": null,
+    "state": null,
+    "district": null,
+    "party": null,
+    "current_status": null
+  },
+  "office": {
+    "official_salary": null,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 45,
+    "asset_value_min": 9115545.0,
+    "asset_value_max": 32440000.0,
+    "income_min": 209422.0,
+    "income_max": 1337200.0,
+    "trade_count": 20,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 20,
+    "linked_transaction_coverage_ratio": 0.0,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10059751.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

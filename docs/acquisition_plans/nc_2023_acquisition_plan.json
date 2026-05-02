@@ -2,47 +2,14 @@
   "plan_type": "state_acquisition_plan",
   "state": "NC",
   "year": 2023,
-  "entry_count": 11,
+  "entry_count": 8,
   "entries": [
-    {
-      "member_slug": "donald-g-davis",
-      "year": 2023,
-      "chamber": "House",
-      "state": "NC",
-      "district": "1",
-      "source_pdf": null,
-      "source_url": null,
-      "acquisition_status": "missing",
-      "notes": "Source not acquired in current dataset."
-    },
-    {
-      "member_slug": "gregory-f-murphy",
-      "year": 2023,
-      "chamber": "House",
-      "state": "NC",
-      "district": "3",
-      "source_pdf": null,
-      "source_url": null,
-      "acquisition_status": "missing",
-      "notes": "Source not acquired in current dataset."
-    },
     {
       "member_slug": "addison-p-mcdowell",
       "year": 2023,
       "chamber": "House",
       "state": "NC",
       "district": "6",
-      "source_pdf": null,
-      "source_url": null,
-      "acquisition_status": "missing",
-      "notes": "Source not acquired in current dataset."
-    },
-    {
-      "member_slug": "david-rouzer",
-      "year": 2023,
-      "chamber": "House",
-      "state": "NC",
-      "district": "7",
       "source_pdf": null,
       "source_url": null,
       "acquisition_status": "missing",

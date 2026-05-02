@@ -1,5 +1,5 @@
 {
-  "dossier_count": 6,
+  "dossier_count": 9,
   "dossiers": [
     {
       "member_id": "deborah-k-ross",
@@ -32,6 +32,16 @@
       "file": "virginia-foxx.json"
     },
     {
+      "member_id": "david-rouzer",
+      "full_name": "David Rouzer",
+      "chamber": "House",
+      "state": "NC",
+      "district": "7",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "david-rouzer.json"
+    },
+    {
       "member_id": "chuck-edwards",
       "full_name": "Chuck Edwards",
       "chamber": "House",
@@ -60,6 +70,26 @@
       "party": "Democratic",
       "current_status": "current",
       "file": "alma-s-adams.json"
+    },
+    {
+      "member_id": "don-davis",
+      "full_name": "Don Davis",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "don-davis.json"
+    },
+    {
+      "member_id": "greg-murphy",
+      "full_name": "Greg Murphy",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "greg-murphy.json"
     }
   ]
 }

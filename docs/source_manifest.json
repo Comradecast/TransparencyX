@@ -1,5 +1,5 @@
 {
-  "source_count": 6,
+  "source_count": 9,
   "sources": [
     {
       "member_slug": "alma-s-adams",
@@ -20,12 +20,39 @@
       "parsed": true
     },
     {
+      "member_slug": "david-rouzer",
+      "chamber": "House",
+      "state": "NC",
+      "district": "7",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10060621.pdf",
+      "parsed": true
+    },
+    {
       "member_slug": "deborah-k-ross",
       "chamber": "House",
       "state": "NC",
       "district": "2",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059715.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "don-davis",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10060732.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "greg-murphy",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059751.pdf",
       "parsed": true
     },
     {

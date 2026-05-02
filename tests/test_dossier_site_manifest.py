@@ -5,9 +5,11 @@ from pathlib import Path
 import pytest
 
 from transparencyx.dossier.manifest import (
+    acquisition_source_key,
     build_index_acquisition_manifest,
     build_source_manifest,
     build_site_manifest,
+    canonical_acquisition_source_member_slug,
     load_house_disclosure_index_xml,
     render_source_manifest_json,
     render_site_manifest_json,
@@ -218,9 +220,9 @@ def test_source_gap_report_totals():
     report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
 
     assert report["total_expected"] == 16
-    assert report["total_acquired"] == 5
-    assert report["total_missing"] == 11
-    assert report["total_parsed"] == 5
+    assert report["total_acquired"] == 8
+    assert report["total_missing"] == 8
+    assert report["total_parsed"] == 8
     assert len(report["entries"]) == 16
 
 
@@ -250,9 +252,9 @@ def test_source_gap_report_known_member_statuses():
         "member_slug": "donald-g-davis",
         "year": 2023,
         "expected": True,
-        "acquired": False,
-        "parsed": False,
-        "source_pdf": None,
+        "acquired": True,
+        "parsed": True,
+        "source_pdf": "data/raw/house/2023/10060732.pdf",
     }
 
 
@@ -277,7 +279,7 @@ def test_source_gap_report_matches_actual_sources_by_member_and_year():
     ))
     report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
     actual_sources = {
-        (entry["member_slug"], entry["year"]): entry
+        acquisition_source_key(entry): entry
         for entry in source_manifest["sources"]
     }
 
@@ -300,8 +302,8 @@ def test_nc_acquisition_plan_contains_missing_entries_only():
     assert plan["plan_type"] == "state_acquisition_plan"
     assert plan["state"] == "NC"
     assert plan["year"] == 2023
-    assert plan["entry_count"] == 11
-    assert len(plan["entries"]) == 11
+    assert plan["entry_count"] == 8
+    assert len(plan["entries"]) == 8
     assert {
         entry["acquisition_status"]
         for entry in plan["entries"]
@@ -472,7 +474,7 @@ def test_nc_index_acquisition_manifest_exists_and_has_totals():
 
     assert manifest["total_expected"] == 16
     assert manifest["identified_count"] == 13
-    assert manifest["acquired_count"] == 5
+    assert manifest["acquired_count"] == 8
     assert manifest["missing_count"] == 3
     assert manifest["ambiguous_count"] == 0
     assert len(manifest["entries"]) == 16
@@ -540,6 +542,135 @@ def test_nc_index_acquisition_manifest_order_matches_expected_manifest():
         (entry["member_slug"], entry["year"])
         for entry in expected_manifest["sources"]
     ]
+
+
+def test_acquisition_source_aliases_are_explicit_and_tiny():
+    assert canonical_acquisition_source_member_slug("don-davis") == (
+        "donald-g-davis"
+    )
+    assert canonical_acquisition_source_member_slug("greg-murphy") == (
+        "gregory-f-murphy"
+    )
+    assert canonical_acquisition_source_member_slug("david-rouzer") == (
+        "david-rouzer"
+    )
+
+
+def test_acquisition_source_alias_matches_don_davis_expected_slug():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "donald-g-davis",
+                "full_name": "Donald G. Davis",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            }
+        ]
+    }
+    source_manifest = {
+        "sources": [
+            {
+                "member_slug": "don-davis",
+                "year": 2023,
+                "source_pdf": "data/raw/house/2023/10060732.pdf",
+                "parsed": True,
+            }
+        ]
+    }
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        source_manifest,
+        [],
+    )
+
+    assert manifest["entries"][0]["member_slug"] == "donald-g-davis"
+    assert manifest["entries"][0]["acquired"] is True
+    assert manifest["entries"][0]["parsed"] is True
+    assert manifest["entries"][0]["source_pdf"] == (
+        "data/raw/house/2023/10060732.pdf"
+    )
+
+
+def test_acquisition_source_alias_matches_greg_murphy_expected_slug():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "gregory-f-murphy",
+                "full_name": "Gregory F. Murphy",
+                "chamber": "House",
+                "state": "NC",
+                "district": "3",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            }
+        ]
+    }
+    source_manifest = {
+        "sources": [
+            {
+                "member_slug": "greg-murphy",
+                "year": 2023,
+                "source_pdf": "data/raw/house/2023/10059751.pdf",
+                "parsed": True,
+            }
+        ]
+    }
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        source_manifest,
+        [],
+    )
+
+    assert manifest["entries"][0]["member_slug"] == "gregory-f-murphy"
+    assert manifest["entries"][0]["acquired"] is True
+    assert manifest["entries"][0]["parsed"] is True
+    assert manifest["entries"][0]["source_pdf"] == (
+        "data/raw/house/2023/10059751.pdf"
+    )
+
+
+def test_acquisition_source_matching_does_not_fuzzy_match_slug_variants():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "richard-hudson",
+                "full_name": "Richard Hudson",
+                "chamber": "House",
+                "state": "NC",
+                "district": "9",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            }
+        ]
+    }
+    source_manifest = {
+        "sources": [
+            {
+                "member_slug": "rich-hudson",
+                "year": 2023,
+                "source_pdf": "data/raw/house/2023/10060006.pdf",
+                "parsed": True,
+            }
+        ]
+    }
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        source_manifest,
+        [],
+    )
+
+    assert manifest["entries"][0]["acquired"] is False
+    assert manifest["entries"][0]["parsed"] is False
+    assert manifest["entries"][0]["source_pdf"] is None
 
 
 def test_index_acquisition_manifest_missing_and_ambiguous_fail_closed():
