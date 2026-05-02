@@ -15,7 +15,7 @@
       "local_path": null,
       "source_authority": "Official Senate financial disclosure system",
       "acquisition_status": "pending",
-      "notes": "No deterministic official Senate PDF source_id has been recorded yet."
+      "notes": "Official Senate Ethics guidance identifies https://efdsearch.senate.gov/search/home/ as the public online access path for Senate financial disclosure reports. No stable person-level source_id, source URL, or PDF URL was identified for the 2023 annual disclosure period without session-bound interaction, so this entry remains pending and no PDF has been acquired."
     },
     {
       "member_slug": "thom-tillis",
@@ -28,7 +28,7 @@
       "local_path": null,
       "source_authority": "Official Senate financial disclosure system",
       "acquisition_status": "pending",
-      "notes": "No deterministic official Senate PDF source_id has been recorded yet."
+      "notes": "Official Senate Ethics guidance identifies https://efdsearch.senate.gov/search/home/ as the public online access path for Senate financial disclosure reports. No stable person-level source_id, source URL, or PDF URL was identified for the 2023 annual disclosure period without session-bound interaction, so this entry remains pending and no PDF has been acquired."
     }
   ]
 }

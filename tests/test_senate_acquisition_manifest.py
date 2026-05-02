@@ -77,6 +77,7 @@ def test_nc_senate_acquisition_plan_reports_missing_not_parsing_failure():
     assert plan["total_expected"] == 2
     assert plan["total_acquired"] == 0
     assert plan["total_missing"] == 2
+    assert plan["total_pending"] == 2
     assert plan["total_ambiguous"] == 0
     assert {
         entry["acquisition_status"]
