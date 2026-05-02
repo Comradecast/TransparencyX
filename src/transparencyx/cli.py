@@ -488,6 +488,20 @@ def main():
         print(f"Wrote committee coverage JSON: {committee_coverage_path}")
         print(f"Wrote site build manifest JSON: {manifest_path}")
         print(f"Wrote generated site README: {readme_path}")
+        
+        from transparencyx.dossier.dataset_validation import validate_dataset_scale_metrics
+        try:
+            dataset_report = validate_dataset_scale_metrics(dossiers)
+            dataset_validation_path = output_dir / "dataset_validation.json"
+            dataset_validation_path.write_text(
+                json.dumps(dataset_report, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8"
+            )
+            print(f"Wrote dataset validation JSON: {dataset_validation_path}")
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+            
         print(f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}")
         sys.exit(0)
 
@@ -626,6 +640,20 @@ def main():
 
         readme_path = write_site_readme(output_dir)
         print(f"Wrote generated site README: {readme_path}")
+        
+        from transparencyx.dossier.dataset_validation import validate_dataset_scale_metrics
+        try:
+            dataset_report = validate_dataset_scale_metrics(dossiers)
+            dataset_validation_path = output_dir / "dataset_validation.json"
+            dataset_validation_path.write_text(
+                json.dumps(dataset_report, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8"
+            )
+            print(f"Wrote dataset validation JSON: {dataset_validation_path}")
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+            
         print(f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}")
 
         sys.exit(0)
@@ -722,6 +750,20 @@ def main():
                     encoding="utf-8",
                 )
                 print(f"Wrote metadata coverage JSON: {coverage_path}")
+                
+        from transparencyx.dossier.dataset_validation import validate_dataset_scale_metrics
+        try:
+            dataset_report = validate_dataset_scale_metrics(dossiers)
+            dataset_validation_path = Path(args.output_dir) / "dataset_validation.json"
+            dataset_validation_path.write_text(
+                json.dumps(dataset_report, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8"
+            )
+            print(f"Wrote dataset validation JSON: {dataset_validation_path}")
+        except ValueError as error:
+            print(str(error))
+            sys.exit(1)
+            
         sys.exit(0)
 
     if args.batch_exposure:

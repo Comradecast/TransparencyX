@@ -397,9 +397,8 @@ def test_cli_batch_dossier_export_summary_message(
     captured = capsys.readouterr()
 
     assert exit_info.value.code == 0
-    assert captured.out == (
-        f"Wrote member dossier JSON files: 2 to {output_dir}\n"
-    )
+    assert f"Wrote member dossier JSON files: 2 to {output_dir}\n" in captured.out
+    assert f"Wrote dataset validation JSON: {output_dir / 'dataset_validation.json'}\n" in captured.out
     assert json.loads((output_dir / "nancy-pelosi.json").read_text(
         encoding="utf-8"
     ))["identity"]["full_name"] == "Nancy Pelosi"
@@ -453,10 +452,9 @@ def test_cli_batch_dossier_index_summary_message(
     index = json.loads(index_path.read_text(encoding="utf-8"))
 
     assert exit_info.value.code == 0
-    assert captured.out == (
-        f"Wrote member dossier JSON files: 1 to {output_dir}\n"
-        f"Wrote dossier index JSON: {index_path}\n"
-    )
+    assert f"Wrote member dossier JSON files: 1 to {output_dir}\n" in captured.out
+    assert f"Wrote dossier index JSON: {index_path}\n" in captured.out
+    assert f"Wrote dataset validation JSON: {output_dir / 'dataset_validation.json'}\n" in captured.out
     assert index == {
         "dossier_count": 1,
         "dossiers": [

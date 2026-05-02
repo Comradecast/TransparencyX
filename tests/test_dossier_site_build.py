@@ -70,6 +70,7 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
         f"Wrote dossier HTML index: {output_dir / 'index.html'}",
         f"Wrote site build manifest JSON: {output_dir / 'build_manifest.json'}",
         f"Wrote generated site README: {output_dir / 'README.txt'}",
+        f"Wrote dataset validation JSON: {output_dir / 'dataset_validation.json'}",
         f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}",
         "",
     ])
@@ -163,6 +164,7 @@ def test_nc_demo_site_build_produces_valid_seeded_delegation(tmp_path, monkeypat
             "build_manifest.json",
             "metadata_coverage.json",
             "committee_coverage.json",
+            "dataset_validation.json",
         }
     ]
 
