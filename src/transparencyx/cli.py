@@ -550,7 +550,9 @@ def main():
             write_committee_coverage_json,
         )
         from transparencyx.dossier.manifest import (
+            build_source_manifest,
             build_site_manifest,
+            write_source_manifest_json,
             write_site_manifest_json,
         )
         from transparencyx.dossier.readme import write_site_readme
@@ -671,6 +673,12 @@ def main():
             output_dir / "build_manifest.json",
         )
         print(f"Wrote site build manifest JSON: {manifest_path}")
+
+        source_manifest_path = write_source_manifest_json(
+            build_source_manifest(profiles, dossiers),
+            output_dir / "source_manifest.json",
+        )
+        print(f"Wrote dataset source manifest JSON: {source_manifest_path}")
 
         readme_path = write_site_readme(output_dir)
         print(f"Wrote generated site README: {readme_path}")

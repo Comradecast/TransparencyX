@@ -5,10 +5,234 @@ from pathlib import Path
 import pytest
 
 from transparencyx.dossier.manifest import (
+    build_source_manifest,
     build_site_manifest,
+    render_source_manifest_json,
     render_site_manifest_json,
+    write_source_manifest_json,
     write_site_manifest_json,
 )
+from transparencyx.dossier.schema import (
+    DossierExposure,
+    DossierFinancials,
+    MemberDossier,
+    MemberIdentity,
+    MemberOffice,
+)
+
+
+def _dossier(
+    member_id: str,
+    chamber: str | None = "House",
+    state: str | None = "CA",
+    district: str | None = None,
+    years: list[int] | None = None,
+) -> MemberDossier:
+    return MemberDossier(
+        identity=MemberIdentity(
+            member_id=member_id,
+            full_name=member_id.replace("-", " ").title(),
+            chamber=chamber,
+            state=state,
+            district=district,
+        ),
+        office=MemberOffice(),
+        financials=DossierFinancials(disclosure_years=years or []),
+        exposure=DossierExposure(),
+        evidence_sources=[],
+    )
+
+
+def test_source_manifest_entries_are_deterministic_and_structured():
+    manifest = build_source_manifest(
+        profiles=[
+            {
+                "disclosure_path": "data/raw/house/2023/b.pdf",
+                "shape_export": {"summary": {}},
+            },
+            {
+                "disclosure_path": "data/raw/house/2024/a.pdf",
+            },
+        ],
+        dossiers=[
+            _dossier("z-member", district="2"),
+            _dossier("a-member", state="NC", district=None, years=[2022]),
+        ],
+    )
+
+    assert manifest == {
+        "source_count": 2,
+        "sources": [
+            {
+                "member_slug": "a-member",
+                "chamber": "House",
+                "state": "NC",
+                "district": None,
+                "year": 2024,
+                "source_pdf": "data/raw/house/2024/a.pdf",
+                "parsed": False,
+            },
+            {
+                "member_slug": "z-member",
+                "chamber": "House",
+                "state": "CA",
+                "district": "2",
+                "year": 2023,
+                "source_pdf": "data/raw/house/2023/b.pdf",
+                "parsed": True,
+            },
+        ],
+    }
+
+
+def test_source_manifest_deduplicates_same_member_same_source():
+    manifest = build_source_manifest(
+        profiles=[
+            {
+                "disclosure_path": "data/raw/house/2023/a.pdf",
+                "shape_export": {"summary": {}},
+            },
+            {
+                "disclosure_path": "data/raw/house/2023/a.pdf",
+                "shape_export": {"summary": {}},
+            },
+        ],
+        dossiers=[
+            _dossier("same-member"),
+            _dossier("same-member"),
+        ],
+    )
+
+    assert manifest["source_count"] == 1
+    assert len(manifest["sources"]) == 1
+
+
+def test_source_manifest_keeps_same_member_different_source_pdf():
+    manifest = build_source_manifest(
+        profiles=[
+            {
+                "disclosure_path": "data/raw/house/2023/a.pdf",
+                "shape_export": {"summary": {}},
+            },
+            {
+                "disclosure_path": "data/raw/house/2023/b.pdf",
+                "shape_export": {"summary": {}},
+            },
+        ],
+        dossiers=[
+            _dossier("same-member"),
+            _dossier("same-member"),
+        ],
+    )
+
+    assert manifest["source_count"] == 2
+    assert [
+        entry["source_pdf"]
+        for entry in manifest["sources"]
+    ] == [
+        "data/raw/house/2023/a.pdf",
+        "data/raw/house/2023/b.pdf",
+    ]
+
+
+def test_source_manifest_keeps_same_member_different_years():
+    manifest = build_source_manifest(
+        profiles=[
+            {
+                "disclosure_path": "data/raw/house/no-year/a.pdf",
+                "disclosure_year": 2023,
+                "shape_export": {"summary": {}},
+            },
+            {
+                "disclosure_path": "data/raw/house/no-year/a.pdf",
+                "disclosure_year": 2024,
+                "shape_export": {"summary": {}},
+            },
+        ],
+        dossiers=[
+            _dossier("same-member"),
+            _dossier("same-member"),
+        ],
+    )
+
+    assert manifest["source_count"] == 2
+    assert [
+        entry["year"]
+        for entry in manifest["sources"]
+    ] == [2023, 2024]
+
+
+def test_source_manifest_current_dataset_count_remains_six():
+    members = [
+        ("alma-s-adams", "NC", "12", "data/raw/house/2023/10059952.pdf"),
+        ("chuck-edwards", "NC", "11", "data/raw/house/2023/10059419.pdf"),
+        ("deborah-k-ross", "NC", "2", "data/raw/house/2023/10059715.pdf"),
+        ("nancy-pelosi", "CA", "11", "data/raw/house/2023/10059734.pdf"),
+        ("valerie-p-foushee", "NC", "4", "data/raw/house/2023/10057344.pdf"),
+        ("virginia-foxx", "NC", "5", "data/raw/house/2023/10059335.pdf"),
+    ]
+
+    manifest = build_source_manifest(
+        profiles=[
+            {
+                "disclosure_path": source_pdf,
+                "shape_export": {"summary": {}},
+            }
+            for _, _, _, source_pdf in members
+        ],
+        dossiers=[
+            _dossier(member_id, state=state, district=district)
+            for member_id, state, district, _ in members
+        ],
+    )
+
+    assert manifest["source_count"] == 6
+    assert len(manifest["sources"]) == 6
+
+
+def test_source_manifest_year_falls_back_to_profile_then_dossier():
+    manifest = build_source_manifest(
+        profiles=[
+            {"disclosure_path": "data/raw/house/no-year/a.pdf", "filing_year": 2021},
+            {"disclosure_path": "data/raw/house/no-year/b.pdf"},
+        ],
+        dossiers=[
+            _dossier("profile-year", years=[2020]),
+            _dossier("dossier-year", years=[2019]),
+        ],
+    )
+
+    entries = {
+        entry["member_slug"]: entry
+        for entry in manifest["sources"]
+    }
+    assert entries["profile-year"]["year"] == 2021
+    assert entries["dossier-year"]["year"] == 2019
+
+
+def test_render_source_manifest_json_parseable_and_newline():
+    manifest = build_source_manifest(
+        profiles=[],
+        dossiers=[],
+    )
+
+    rendered = render_source_manifest_json(manifest)
+
+    assert json.loads(rendered) == manifest
+    assert rendered.endswith("\n")
+
+
+def test_write_source_manifest_json_creates_parent_dirs(tmp_path):
+    path = tmp_path / "nested" / "source_manifest.json"
+    manifest = build_source_manifest(
+        profiles=[],
+        dossiers=[],
+    )
+
+    returned = write_source_manifest_json(manifest, path)
+
+    assert returned == path
+    assert json.loads(path.read_text(encoding="utf-8")) == manifest
 
 
 def test_manifest_without_metadata():

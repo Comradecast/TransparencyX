@@ -60,6 +60,7 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
     assert (output_dir / "index.json").exists()
     assert (output_dir / "index.html").exists()
     assert (output_dir / "build_manifest.json").exists()
+    assert (output_dir / "source_manifest.json").exists()
     assert (output_dir / "README.txt").exists()
     assert not (output_dir / "metadata_coverage.json").exists()
     assert not (output_dir / "committee_coverage.json").exists()
@@ -69,6 +70,7 @@ def test_site_build_produces_expected_files(tmp_path, monkeypatch, capsys):
         f"Wrote member dossier HTML files: 2 to {output_dir}",
         f"Wrote dossier HTML index: {output_dir / 'index.html'}",
         f"Wrote site build manifest JSON: {output_dir / 'build_manifest.json'}",
+        f"Wrote dataset source manifest JSON: {output_dir / 'source_manifest.json'}",
         f"Wrote generated site README: {output_dir / 'README.txt'}",
         f"Wrote dataset validation JSON: {output_dir / 'dataset_validation.json'}",
         f"Validation hint: python -m transparencyx --validate-dossier-site {output_dir}",
@@ -240,6 +242,80 @@ def test_site_build_index_lists_unique_dataset_sources_deterministically(
     assert html.index("data/raw/house/2023/a.pdf") < html.index(
         "data/raw/house/2023/b.pdf"
     )
+
+
+def test_site_build_writes_source_manifest_from_profiles_and_dossiers(
+    tmp_path,
+    monkeypatch,
+):
+    input_dir = tmp_path / "input"
+    output_dir = tmp_path / "site"
+    input_dir.mkdir()
+    _patch_profiles(
+        monkeypatch,
+        profiles=[
+            {
+                "member_name": "Jane Public",
+                "chamber": "House",
+                "state": "NC",
+                "district": "2",
+                "disclosure_path": "data/raw/house/2023/b.pdf",
+                "shape_export": {"summary": {}},
+            },
+            {
+                "member_name": "Nancy Pelosi",
+                "chamber": "House",
+                "state": "CA",
+                "district": "11",
+                "disclosure_path": "data/raw/house/2023/a.pdf",
+            },
+        ],
+    )
+    monkeypatch.setattr(
+        sys,
+        "argv",
+        [
+            "transparencyx",
+            "--build-dossier-site",
+            str(input_dir),
+            "--output-dir",
+            str(output_dir),
+        ],
+    )
+
+    from transparencyx.cli import main
+
+    with pytest.raises(SystemExit):
+        main()
+
+    manifest = json.loads(
+        (output_dir / "source_manifest.json").read_text(encoding="utf-8")
+    )
+
+    assert manifest["source_count"] == 2
+    assert [
+        entry["member_slug"]
+        for entry in manifest["sources"]
+    ] == ["jane-public", "nancy-pelosi"]
+    assert set(manifest["sources"][0]) == {
+        "member_slug",
+        "chamber",
+        "state",
+        "district",
+        "year",
+        "source_pdf",
+        "parsed",
+    }
+    assert manifest["sources"][0] == {
+        "member_slug": "jane-public",
+        "chamber": "House",
+        "state": "NC",
+        "district": "2",
+        "year": 2023,
+        "source_pdf": "data/raw/house/2023/b.pdf",
+        "parsed": True,
+    }
+    assert manifest["sources"][1]["parsed"] is False
 
 
 def test_documented_local_demo_site_build_path(tmp_path, monkeypatch, capsys):

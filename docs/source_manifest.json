@@ -1,0 +1,59 @@
+{
+  "source_count": 6,
+  "sources": [
+    {
+      "member_slug": "alma-s-adams",
+      "chamber": "House",
+      "state": "NC",
+      "district": "12",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059952.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "chuck-edwards",
+      "chamber": "House",
+      "state": "NC",
+      "district": "11",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059419.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "deborah-k-ross",
+      "chamber": "House",
+      "state": "NC",
+      "district": "2",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059715.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "nancy-pelosi",
+      "chamber": "House",
+      "state": "CA",
+      "district": "11",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059734.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "valerie-p-foushee",
+      "chamber": "House",
+      "state": "NC",
+      "district": "4",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10057344.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "virginia-foxx",
+      "chamber": "House",
+      "state": "NC",
+      "district": "5",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10059335.pdf",
+      "parsed": true
+    }
+  ]
+}
