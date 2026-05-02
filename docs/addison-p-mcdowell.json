@@ -1,15 +1,15 @@
 {
   "identity": {
-    "member_id": "mark-e-harris",
-    "full_name": "Mark E. Harris",
-    "chamber": null,
-    "state": null,
-    "district": null,
-    "party": null,
-    "current_status": null
+    "member_id": "addison-p-mcdowell",
+    "full_name": "Addison P. McDowell",
+    "chamber": "House",
+    "state": "NC",
+    "district": "6",
+    "party": "Republican",
+    "current_status": "current"
   },
   "office": {
-    "official_salary": null,
+    "official_salary": 174000.0,
     "leadership_roles": [],
     "committee_assignments": [],
     "office_start": null,
@@ -17,11 +17,11 @@
   },
   "financials": {
     "disclosure_years": [],
-    "asset_count": 30,
-    "asset_value_min": 1299030.0,
-    "asset_value_max": 2962000.0,
-    "income_min": 23528.0,
-    "income_max": 77400.0,
+    "asset_count": 2,
+    "asset_value_min": 6002.0,
+    "asset_value_max": 165001.0,
+    "income_min": 1.0,
+    "income_max": 200.0,
     "trade_count": 0,
     "linked_transaction_count": 0,
     "unlinked_transaction_count": 0,
@@ -37,8 +37,15 @@
   "evidence_sources": [
     {
       "source_type": "financial_disclosure_pdf",
-      "source_name": "10056160.pdf",
+      "source_name": "10056549.pdf",
       "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/M001240",
       "retrieved_at": null,
       "notes": null
     }

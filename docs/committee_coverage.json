@@ -1,7 +1,7 @@
 {
-  "total_dossiers": 15,
+  "total_dossiers": 16,
   "rows_with_committees": 4,
-  "rows_without_committees": 11,
+  "rows_without_committees": 12,
   "member_ids_with_committees": [
     "valerie-p-foushee",
     "virginia-foxx",
@@ -10,10 +10,11 @@
   ],
   "member_ids_without_committees": [
     "pat-harrigan",
-    "mark-e-harris",
+    "mark-harris",
     "brad-knott",
-    "addison-mcdowell",
+    "addison-p-mcdowell",
     "tim-moore",
+    "kelly-armstrong",
     "chuck-edwards",
     "nancy-pelosi",
     "greg-murphy",

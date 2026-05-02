@@ -1,11 +1,11 @@
 {
-  "source_count": 15,
+  "source_count": 16,
   "sources": [
     {
-      "member_slug": "addison-mcdowell",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "member_slug": "addison-p-mcdowell",
+      "chamber": "House",
+      "state": "NC",
+      "district": "6",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10056549.pdf",
       "parsed": true
@@ -74,10 +74,19 @@
       "parsed": true
     },
     {
-      "member_slug": "mark-e-harris",
+      "member_slug": "kelly-armstrong",
       "chamber": null,
       "state": null,
       "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10057429.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "mark-harris",
+      "chamber": "House",
+      "state": "NC",
+      "district": "8",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10056160.pdf",
       "parsed": true

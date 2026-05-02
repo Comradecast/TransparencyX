@@ -8,15 +8,15 @@
     "recipient_candidate_audit": false
   },
   "counts": {
-    "profiles": 15,
-    "dossiers": 15,
-    "json_dossiers": 15,
-    "html_dossiers": 15,
+    "profiles": 16,
+    "dossiers": 16,
+    "json_dossiers": 16,
+    "html_dossiers": 16,
     "metadata_records_loaded": 19,
-    "metadata_matched_dossiers": 11,
-    "metadata_unmatched_dossiers": 4,
+    "metadata_matched_dossiers": 13,
+    "metadata_unmatched_dossiers": 3,
     "committee_rows_with_assignments": 4,
-    "committee_rows_without_assignments": 11
+    "committee_rows_without_assignments": 12
   },
   "artifacts": {
     "json_index": "index.json",
@@ -25,11 +25,12 @@
     "committee_coverage": "committee_coverage.json",
     "dossier_json_files": [
       "pat-harrigan.json",
-      "mark-e-harris.json",
+      "mark-harris.json",
       "brad-knott.json",
-      "addison-mcdowell.json",
+      "addison-p-mcdowell.json",
       "tim-moore.json",
       "valerie-p-foushee.json",
+      "kelly-armstrong.json",
       "virginia-foxx.json",
       "chuck-edwards.json",
       "deborah-k-ross.json",
@@ -42,11 +43,12 @@
     ],
     "dossier_html_files": [
       "pat-harrigan.html",
-      "mark-e-harris.html",
+      "mark-harris.html",
       "brad-knott.html",
-      "addison-mcdowell.html",
+      "addison-p-mcdowell.html",
       "tim-moore.html",
       "valerie-p-foushee.html",
+      "kelly-armstrong.html",
       "virginia-foxx.html",
       "chuck-edwards.html",
       "deborah-k-ross.html",

@@ -1,5 +1,5 @@
 {
-  "dossier_count": 15,
+  "dossier_count": 16,
   "dossiers": [
     {
       "member_id": "deborah-k-ross",
@@ -32,6 +32,16 @@
       "file": "virginia-foxx.json"
     },
     {
+      "member_id": "addison-p-mcdowell",
+      "full_name": "Addison P. McDowell",
+      "chamber": "House",
+      "state": "NC",
+      "district": "6",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "addison-p-mcdowell.json"
+    },
+    {
       "member_id": "david-rouzer",
       "full_name": "David Rouzer",
       "chamber": "House",
@@ -40,6 +50,16 @@
       "party": "Republican",
       "current_status": "current",
       "file": "david-rouzer.json"
+    },
+    {
+      "member_id": "mark-harris",
+      "full_name": "Mark Harris",
+      "chamber": "House",
+      "state": "NC",
+      "district": "8",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "mark-harris.json"
     },
     {
       "member_id": "richard-hudson",
@@ -112,16 +132,6 @@
       "file": "tim-moore.json"
     },
     {
-      "member_id": "addison-mcdowell",
-      "full_name": "Addison McDowell",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "addison-mcdowell.json"
-    },
-    {
       "member_id": "don-davis",
       "full_name": "Don Davis",
       "chamber": null,
@@ -142,14 +152,14 @@
       "file": "greg-murphy.json"
     },
     {
-      "member_id": "mark-e-harris",
-      "full_name": "Mark E. Harris",
+      "member_id": "kelly-armstrong",
+      "full_name": "Kelly Armstrong",
       "chamber": null,
       "state": null,
       "district": null,
       "party": null,
       "current_status": null,
-      "file": "mark-e-harris.json"
+      "file": "kelly-armstrong.json"
     }
   ]
 }

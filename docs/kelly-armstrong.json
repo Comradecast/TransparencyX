@@ -1,7 +1,7 @@
 {
   "identity": {
-    "member_id": "addison-mcdowell",
-    "full_name": "Addison McDowell",
+    "member_id": "kelly-armstrong",
+    "full_name": "Kelly Armstrong",
     "chamber": null,
     "state": null,
     "district": null,
@@ -17,11 +17,11 @@
   },
   "financials": {
     "disclosure_years": [],
-    "asset_count": 2,
-    "asset_value_min": 6002.0,
-    "asset_value_max": 165001.0,
-    "income_min": 1.0,
-    "income_max": 200.0,
+    "asset_count": 564,
+    "asset_value_min": 5462563.0,
+    "asset_value_max": 18147700.0,
+    "income_min": 345513.0,
+    "income_max": 930400.0,
     "trade_count": 0,
     "linked_transaction_count": 0,
     "unlinked_transaction_count": 0,
@@ -37,7 +37,7 @@
   "evidence_sources": [
     {
       "source_type": "financial_disclosure_pdf",
-      "source_name": "10056549.pdf",
+      "source_name": "10057429.pdf",
       "source_url": null,
       "retrieved_at": null,
       "notes": null

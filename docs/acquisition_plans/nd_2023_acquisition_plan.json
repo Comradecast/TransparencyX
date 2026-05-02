@@ -1,0 +1,42 @@
+{
+  "plan_type": "house_acquisition_plan",
+  "state": "ND",
+  "year": 2023,
+  "total_expected": 1,
+  "total_acquired": 1,
+  "total_missing": 0,
+  "total_not_ingested_nonannual_extension": 1,
+  "entries": [
+    {
+      "member_slug": "kelly-armstrong",
+      "full_name": "Kelly Armstrong",
+      "chamber": "House",
+      "state": "ND",
+      "district": "0",
+      "year": 2023,
+      "doc_id": "10057429",
+      "filing_type": "O",
+      "expected_filename": "10057429.pdf",
+      "local_path": "data/raw/house/2023/10057429.pdf",
+      "acquisition_status": "acquired",
+      "acquired": true
+    }
+  ],
+  "non_ingested_entries": [
+    {
+      "member_slug": "kelly-armstrong",
+      "full_name": "Kelly Armstrong",
+      "chamber": "House",
+      "state": "ND",
+      "district": "0",
+      "year": 2023,
+      "doc_id": "30019757",
+      "filing_type": "X",
+      "expected_filename": "30019757.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension",
+      "acquired": false,
+      "resolution_note": "Official index record has FilingType X. It was not retained in data/raw because the annual FilingType O report for the same member/year is the deterministic financial disclosure source and ingesting both creates a duplicate dossier filename."
+    }
+  ]
+}

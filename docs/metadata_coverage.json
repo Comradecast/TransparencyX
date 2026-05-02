@@ -1,11 +1,13 @@
 {
-  "total_dossiers": 15,
+  "total_dossiers": 16,
   "metadata_records_loaded": 19,
-  "matched_dossiers": 11,
-  "unmatched_dossiers": 4,
+  "matched_dossiers": 13,
+  "unmatched_dossiers": 3,
   "matched_member_ids": [
     "pat-harrigan",
+    "mark-harris",
     "brad-knott",
+    "addison-p-mcdowell",
     "tim-moore",
     "valerie-p-foushee",
     "virginia-foxx",
@@ -17,8 +19,7 @@
     "david-rouzer"
   ],
   "unmatched_member_ids": [
-    "mark-e-harris",
-    "addison-mcdowell",
+    "kelly-armstrong",
     "greg-murphy",
     "don-davis"
   ]

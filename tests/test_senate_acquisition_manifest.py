@@ -180,7 +180,10 @@ def test_senate_metadata_index_is_metadata_only_and_not_a_dossier():
         SENATE_METADATA_INDEX_PATH.read_text(encoding="utf-8")
     )
 
-    assert site_index["dossier_count"] == 15
+    assert all(
+        dossier["member_id"] not in {"ted-budd", "thom-tillis"}
+        for dossier in site_index["dossiers"]
+    )
     assert metadata_index["manifest_type"] == "senate_metadata_index"
     assert metadata_index["total_entries"] == 2
     assert {
