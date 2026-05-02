@@ -284,6 +284,12 @@ def build_member_dossier_from_profile(profile: dict) -> MemberDossier:
                 financial_shape,
                 ("transaction_count", "trade_count"),
             ),
+            linked_transaction_coverage_ratio=_first_number(
+                profile,
+                "linked_transaction_coverage_ratio",
+                financial_shape,
+                "linked_transaction_coverage_ratio",
+            ),
             liability_count=_int_or_none(profile.get("liability_count")),
             business_interests=_business_interests(profile, federal_award_exposure),
         ),

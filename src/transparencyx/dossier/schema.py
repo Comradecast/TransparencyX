@@ -39,6 +39,7 @@ class DossierFinancials:
     income_min: float | None = None
     income_max: float | None = None
     trade_count: int | None = None
+    linked_transaction_coverage_ratio: float | None = None
     liability_count: int | None = None
     business_interests: list[str] = field(default_factory=list)
 

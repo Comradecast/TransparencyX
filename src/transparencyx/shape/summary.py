@@ -49,6 +49,7 @@ class FinancialShapeSummary:
     asset_value_midpoint: Optional[float]
     trade_count: int
     transaction_count: int
+    linked_transaction_coverage_ratio: Optional[float]
     trade_volume_min: Optional[float]
     trade_volume_max: Optional[float]
     trade_volume_midpoint: Optional[float]
@@ -106,6 +107,23 @@ def compute_linked_transaction_counts(trace: dict) -> dict[int, int]:
         if isinstance(linked_asset_id, int) and not isinstance(linked_asset_id, bool):
             counts[linked_asset_id] = counts.get(linked_asset_id, 0) + 1
     return counts
+
+
+def compute_total_linked_transaction_count(trace: dict) -> int:
+    count = 0
+    trades = trace.get("trades")
+    if not isinstance(trades, dict):
+        return count
+    detail_rows = trades.get("detail_rows")
+    if not isinstance(detail_rows, list):
+        return count
+
+    for row in detail_rows:
+        if not isinstance(row, dict):
+            continue
+        if row.get("linked_asset_id") is not None:
+            count += 1
+    return count
 
 
 def extract_income_signal(text: str) -> dict | None:
@@ -272,9 +290,9 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         
         asset_count = len(usable_assets)
         asset_category_counts = compute_asset_category_counts(usable_assets)
-        linked_transaction_counts = compute_linked_transaction_counts(
-            build_financial_shape_trace(db_path, politician_id)
-        )
+        trace = build_financial_shape_trace(db_path, politician_id)
+        linked_transaction_counts = compute_linked_transaction_counts(trace)
+        total_linked_transactions = compute_total_linked_transaction_count(trace)
         asset_summaries = compute_asset_summaries(
             usable_assets,
             linked_transaction_counts,
@@ -310,6 +328,11 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
         asset_density = get_asset_density(asset_count)
         trade_volume_band = get_trade_volume_band(trade_volume_midpoint)
         
+        if trade_count == 0:
+            linked_transaction_coverage_ratio = None
+        else:
+            linked_transaction_coverage_ratio = total_linked_transactions / trade_count
+        
         summary = FinancialShapeSummary(
             politician_id=politician_id,
             asset_count=asset_count,
@@ -318,6 +341,7 @@ def build_financial_shape_summary(db_path: Path, politician_id: int) -> Financia
             asset_value_midpoint=asset_value_midpoint,
             trade_count=trade_count,
             transaction_count=trade_count,
+            linked_transaction_coverage_ratio=linked_transaction_coverage_ratio,
             trade_volume_min=trade_volume_min,
             trade_volume_max=trade_volume_max,
             trade_volume_midpoint=trade_volume_midpoint,
@@ -347,6 +371,7 @@ def summary_to_dict(summary: FinancialShapeSummary) -> dict:
         "asset_value_midpoint": summary.asset_value_midpoint,
         "trade_count": summary.trade_count,
         "transaction_count": summary.transaction_count,
+        "linked_transaction_coverage_ratio": summary.linked_transaction_coverage_ratio,
         "trade_volume_min": summary.trade_volume_min,
         "trade_volume_max": summary.trade_volume_max,
         "trade_volume_midpoint": summary.trade_volume_midpoint,
