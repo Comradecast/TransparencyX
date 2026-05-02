@@ -21,6 +21,23 @@ from transparencyx.dossier.schema import (
 )
 
 
+SOURCE_MANIFEST_TEMPLATE_PATH = Path("docs/source_manifest_template.json")
+SOURCE_MANIFEST_TEMPLATE_KEYS = {
+    "member_slug",
+    "full_name",
+    "chamber",
+    "state",
+    "district",
+    "year",
+    "source_pdf",
+    "source_url",
+    "expected",
+    "acquired",
+    "parsed",
+    "notes",
+}
+
+
 def _dossier(
     member_id: str,
     chamber: str | None = "House",
@@ -41,6 +58,34 @@ def _dossier(
         exposure=DossierExposure(),
         evidence_sources=[],
     )
+
+
+def test_source_manifest_template_json_exists():
+    assert SOURCE_MANIFEST_TEMPLATE_PATH.exists()
+
+
+def test_source_manifest_template_json_parses():
+    template = json.loads(SOURCE_MANIFEST_TEMPLATE_PATH.read_text(encoding="utf-8"))
+
+    assert template["template_type"] == "state_source_manifest"
+    assert isinstance(template["sources"], list)
+    assert template["sources"]
+
+
+def test_source_manifest_template_entries_have_required_keys():
+    template = json.loads(SOURCE_MANIFEST_TEMPLATE_PATH.read_text(encoding="utf-8"))
+
+    for entry in template["sources"]:
+        assert set(entry) == SOURCE_MANIFEST_TEMPLATE_KEYS
+
+
+def test_source_manifest_template_status_fields_are_booleans():
+    template = json.loads(SOURCE_MANIFEST_TEMPLATE_PATH.read_text(encoding="utf-8"))
+
+    for entry in template["sources"]:
+        assert isinstance(entry["expected"], bool)
+        assert isinstance(entry["acquired"], bool)
+        assert isinstance(entry["parsed"], bool)
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():

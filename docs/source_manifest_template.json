@@ -1,0 +1,33 @@
+{
+  "template_type": "state_source_manifest",
+  "sources": [
+    {
+      "member_slug": "example-member",
+      "full_name": "Example Member",
+      "chamber": "House",
+      "state": "ST",
+      "district": "1",
+      "year": 2024,
+      "source_pdf": "data/raw/house/2024/example-member.pdf",
+      "source_url": "https://example.test/disclosures/example-member.pdf",
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "notes": ""
+    },
+    {
+      "member_slug": "example-senator",
+      "full_name": "Example Senator",
+      "chamber": "Senate",
+      "state": "ST",
+      "district": null,
+      "year": 2024,
+      "source_pdf": null,
+      "source_url": "https://example.test/disclosures/example-senator.pdf",
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "notes": ""
+    }
+  ]
+}
