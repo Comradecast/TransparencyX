@@ -1,0 +1,136 @@
+{
+  "total_expected": 16,
+  "total_acquired": 5,
+  "total_missing": 11,
+  "total_parsed": 5,
+  "entries": [
+    {
+      "member_slug": "donald-g-davis",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "deborah-k-ross",
+      "year": 2023,
+      "expected": true,
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10059715.pdf"
+    },
+    {
+      "member_slug": "gregory-f-murphy",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "valerie-p-foushee",
+      "year": 2023,
+      "expected": true,
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10057344.pdf"
+    },
+    {
+      "member_slug": "virginia-foxx",
+      "year": 2023,
+      "expected": true,
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10059335.pdf"
+    },
+    {
+      "member_slug": "addison-p-mcdowell",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "david-rouzer",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "mark-harris",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "richard-hudson",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "pat-harrigan",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "chuck-edwards",
+      "year": 2023,
+      "expected": true,
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10059419.pdf"
+    },
+    {
+      "member_slug": "alma-s-adams",
+      "year": 2023,
+      "expected": true,
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10059952.pdf"
+    },
+    {
+      "member_slug": "brad-knott",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "tim-moore",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "ted-budd",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    },
+    {
+      "member_slug": "thom-tillis",
+      "year": 2023,
+      "expected": true,
+      "acquired": false,
+      "parsed": false,
+      "source_pdf": null
+    }
+  ]
+}

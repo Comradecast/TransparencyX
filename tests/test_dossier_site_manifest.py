@@ -25,6 +25,7 @@ SOURCE_MANIFEST_TEMPLATE_PATH = Path("docs/source_manifest_template.json")
 NC_EXPECTED_SOURCE_MANIFEST_PATH = Path(
     "docs/source_manifests/nc_2023_expected_sources.json"
 )
+SOURCE_GAP_REPORT_PATH = Path("docs/source_gap_report.json")
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
     "full_name",
@@ -38,6 +39,14 @@ SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "acquired",
     "parsed",
     "notes",
+}
+SOURCE_GAP_REPORT_KEYS = {
+    "member_slug",
+    "year",
+    "expected",
+    "acquired",
+    "parsed",
+    "source_pdf",
 }
 
 
@@ -160,6 +169,86 @@ def test_nc_expected_source_manifest_ordering_is_deterministic():
         entry["member_slug"]
         for entry in senate_entries
     ] == sorted(entry["member_slug"] for entry in senate_entries)
+
+
+def test_source_gap_report_exists():
+    assert SOURCE_GAP_REPORT_PATH.exists()
+
+
+def test_source_gap_report_totals():
+    report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+
+    assert report["total_expected"] == 16
+    assert report["total_acquired"] == 5
+    assert report["total_missing"] == 11
+    assert report["total_parsed"] == 5
+    assert len(report["entries"]) == 16
+
+
+def test_source_gap_report_entries_have_required_keys():
+    report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+
+    for entry in report["entries"]:
+        assert set(entry) == SOURCE_GAP_REPORT_KEYS
+
+
+def test_source_gap_report_known_member_statuses():
+    report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+    entries = {
+        entry["member_slug"]: entry
+        for entry in report["entries"]
+    }
+
+    assert entries["alma-s-adams"] == {
+        "member_slug": "alma-s-adams",
+        "year": 2023,
+        "expected": True,
+        "acquired": True,
+        "parsed": True,
+        "source_pdf": "data/raw/house/2023/10059952.pdf",
+    }
+    assert entries["donald-g-davis"] == {
+        "member_slug": "donald-g-davis",
+        "year": 2023,
+        "expected": True,
+        "acquired": False,
+        "parsed": False,
+        "source_pdf": None,
+    }
+
+
+def test_source_gap_report_order_matches_expected_manifest():
+    expected_manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+
+    assert [
+        (entry["member_slug"], entry["year"])
+        for entry in report["entries"]
+    ] == [
+        (entry["member_slug"], entry["year"])
+        for entry in expected_manifest["sources"]
+    ]
+
+
+def test_source_gap_report_matches_actual_sources_by_member_and_year():
+    source_manifest = json.loads(Path("docs/source_manifest.json").read_text(
+        encoding="utf-8"
+    ))
+    report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+    actual_sources = {
+        (entry["member_slug"], entry["year"]): entry
+        for entry in source_manifest["sources"]
+    }
+
+    for entry in report["entries"]:
+        actual = actual_sources.get((entry["member_slug"], entry["year"]))
+        assert entry["acquired"] is (actual is not None)
+        assert entry["parsed"] is (actual["parsed"] if actual is not None else False)
+        assert entry["source_pdf"] == (
+            actual["source_pdf"] if actual is not None else None
+        )
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():
