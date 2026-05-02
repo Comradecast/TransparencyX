@@ -1,5 +1,5 @@
 {
-  "dossier_count": 9,
+  "dossier_count": 15,
   "dossiers": [
     {
       "member_id": "deborah-k-ross",
@@ -42,6 +42,26 @@
       "file": "david-rouzer.json"
     },
     {
+      "member_id": "richard-hudson",
+      "full_name": "Richard Hudson",
+      "chamber": "House",
+      "state": "NC",
+      "district": "9",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "richard-hudson.json"
+    },
+    {
+      "member_id": "pat-harrigan",
+      "full_name": "Pat Harrigan",
+      "chamber": "House",
+      "state": "NC",
+      "district": "10",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "pat-harrigan.json"
+    },
+    {
       "member_id": "chuck-edwards",
       "full_name": "Chuck Edwards",
       "chamber": "House",
@@ -72,6 +92,36 @@
       "file": "alma-s-adams.json"
     },
     {
+      "member_id": "brad-knott",
+      "full_name": "Brad Knott",
+      "chamber": "House",
+      "state": "NC",
+      "district": "13",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "brad-knott.json"
+    },
+    {
+      "member_id": "tim-moore",
+      "full_name": "Tim Moore",
+      "chamber": "House",
+      "state": "NC",
+      "district": "14",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "tim-moore.json"
+    },
+    {
+      "member_id": "addison-mcdowell",
+      "full_name": "Addison McDowell",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "addison-mcdowell.json"
+    },
+    {
       "member_id": "don-davis",
       "full_name": "Don Davis",
       "chamber": null,
@@ -90,6 +140,16 @@
       "party": null,
       "current_status": null,
       "file": "greg-murphy.json"
+    },
+    {
+      "member_id": "mark-e-harris",
+      "full_name": "Mark E. Harris",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "mark-e-harris.json"
     }
   ]
 }

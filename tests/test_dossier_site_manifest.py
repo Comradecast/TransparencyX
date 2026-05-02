@@ -1,3 +1,4 @@
+import csv
 import json
 import sys
 from pathlib import Path
@@ -40,6 +41,7 @@ HOUSE_2023_DISCLOSURE_INDEX_PATH = Path("data/source_indexes/house/2023FD.xml")
 NC_INDEX_ACQUISITION_MANIFEST_PATH = Path(
     "docs/acquisition_plans/nc_2023_index_acquisition_manifest.json"
 )
+MEMBER_ID_ALIASES_PATH = Path("data/seed/member_id_aliases.csv")
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
     "full_name",
@@ -111,6 +113,20 @@ def _dossier(
         exposure=DossierExposure(),
         evidence_sources=[],
     )
+
+
+def _member_id_aliases() -> dict[str, str]:
+    with MEMBER_ID_ALIASES_PATH.open(newline="", encoding="utf-8") as csv_file:
+        rows = csv.DictReader(csv_file)
+        return {
+            row["parsed_member_id"]: row["canonical_member_id"]
+            for row in rows
+        }
+
+
+def _source_gap_key(entry: dict) -> tuple[str | None, int | None]:
+    member_slug, year = acquisition_source_key(entry)
+    return (_member_id_aliases().get(member_slug, member_slug), year)
 
 
 def test_source_manifest_template_json_exists():
@@ -220,9 +236,9 @@ def test_source_gap_report_totals():
     report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
 
     assert report["total_expected"] == 16
-    assert report["total_acquired"] == 8
-    assert report["total_missing"] == 8
-    assert report["total_parsed"] == 8
+    assert report["total_acquired"] == 14
+    assert report["total_missing"] == 2
+    assert report["total_parsed"] == 14
     assert len(report["entries"]) == 16
 
 
@@ -279,7 +295,7 @@ def test_source_gap_report_matches_actual_sources_by_member_and_year():
     ))
     report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
     actual_sources = {
-        acquisition_source_key(entry): entry
+        _source_gap_key(entry): entry
         for entry in source_manifest["sources"]
     }
 
@@ -302,8 +318,8 @@ def test_nc_acquisition_plan_contains_missing_entries_only():
     assert plan["plan_type"] == "state_acquisition_plan"
     assert plan["state"] == "NC"
     assert plan["year"] == 2023
-    assert plan["entry_count"] == 8
-    assert len(plan["entries"]) == 8
+    assert plan["entry_count"] == 2
+    assert len(plan["entries"]) == 2
     assert {
         entry["acquisition_status"]
         for entry in plan["entries"]
@@ -473,9 +489,9 @@ def test_nc_index_acquisition_manifest_exists_and_has_totals():
     )
 
     assert manifest["total_expected"] == 16
-    assert manifest["identified_count"] == 13
-    assert manifest["acquired_count"] == 8
-    assert manifest["missing_count"] == 3
+    assert manifest["identified_count"] == 14
+    assert manifest["acquired_count"] == 14
+    assert manifest["missing_count"] == 2
     assert manifest["ambiguous_count"] == 0
     assert len(manifest["entries"]) == 16
 
@@ -523,8 +539,8 @@ def test_nc_index_acquisition_manifest_keeps_acquired_status_from_source_manifes
 
     assert entries["alma-s-adams"]["acquired"] is True
     assert entries["alma-s-adams"]["parsed"] is True
-    assert entries["addison-p-mcdowell"]["acquired"] is False
-    assert entries["addison-p-mcdowell"]["parsed"] is False
+    assert entries["addison-p-mcdowell"]["acquired"] is True
+    assert entries["addison-p-mcdowell"]["parsed"] is True
 
 
 def test_nc_index_acquisition_manifest_order_matches_expected_manifest():

@@ -1,6 +1,15 @@
 {
-  "source_count": 9,
+  "source_count": 15,
   "sources": [
+    {
+      "member_slug": "addison-mcdowell",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10056549.pdf",
+      "parsed": true
+    },
     {
       "member_slug": "alma-s-adams",
       "chamber": "House",
@@ -8,6 +17,15 @@
       "district": "12",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059952.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "brad-knott",
+      "chamber": "House",
+      "state": "NC",
+      "district": "13",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10056335.pdf",
       "parsed": true
     },
     {
@@ -56,12 +74,48 @@
       "parsed": true
     },
     {
+      "member_slug": "mark-e-harris",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10056160.pdf",
+      "parsed": true
+    },
+    {
       "member_slug": "nancy-pelosi",
       "chamber": "House",
       "state": "CA",
       "district": "11",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059734.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "pat-harrigan",
+      "chamber": "House",
+      "state": "NC",
+      "district": "10",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10055854.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "richard-hudson",
+      "chamber": "House",
+      "state": "NC",
+      "district": "9",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10060006.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "tim-moore",
+      "chamber": "House",
+      "state": "NC",
+      "district": "14",
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10056570.pdf",
       "parsed": true
     },
     {

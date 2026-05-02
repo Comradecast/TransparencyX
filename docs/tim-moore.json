@@ -1,0 +1,53 @@
+{
+  "identity": {
+    "member_id": "tim-moore",
+    "full_name": "Tim Moore",
+    "chamber": "House",
+    "state": "NC",
+    "district": "14",
+    "party": "Republican",
+    "current_status": "current"
+  },
+  "office": {
+    "official_salary": 174000.0,
+    "leadership_roles": [],
+    "committee_assignments": [],
+    "office_start": null,
+    "office_end": null
+  },
+  "financials": {
+    "disclosure_years": [],
+    "asset_count": 45,
+    "asset_value_min": 2395045.0,
+    "asset_value_max": 5625000.0,
+    "income_min": 4231.0,
+    "income_max": 16200.0,
+    "trade_count": 0,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 0,
+    "linked_transaction_coverage_ratio": null,
+    "liability_count": null,
+    "business_interests": []
+  },
+  "exposure": {
+    "federal_award_exposure": [],
+    "recipient_candidates": [],
+    "exposure_counted": false
+  },
+  "evidence_sources": [
+    {
+      "source_type": "financial_disclosure_pdf",
+      "source_name": "10056570.pdf",
+      "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/M001236",
+      "retrieved_at": null,
+      "notes": null
+    }
+  ]
+}

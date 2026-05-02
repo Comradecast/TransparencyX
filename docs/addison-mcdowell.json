@@ -1,7 +1,7 @@
 {
   "identity": {
-    "member_id": "deborah-ross",
-    "full_name": "Deborah Ross",
+    "member_id": "addison-mcdowell",
+    "full_name": "Addison McDowell",
     "chamber": null,
     "state": null,
     "district": null,
@@ -17,12 +17,15 @@
   },
   "financials": {
     "disclosure_years": [],
-    "asset_count": 71,
-    "asset_value_min": 2821571.0,
-    "asset_value_max": 6867000.0,
-    "income_min": 35006.0,
-    "income_max": 115600.0,
-    "trade_count": null,
+    "asset_count": 2,
+    "asset_value_min": 6002.0,
+    "asset_value_max": 165001.0,
+    "income_min": 1.0,
+    "income_max": 200.0,
+    "trade_count": 0,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 0,
+    "linked_transaction_coverage_ratio": null,
     "liability_count": null,
     "business_interests": []
   },
@@ -34,7 +37,7 @@
   "evidence_sources": [
     {
       "source_type": "financial_disclosure_pdf",
-      "source_name": "10059715.pdf",
+      "source_name": "10056549.pdf",
       "source_url": null,
       "retrieved_at": null,
       "notes": null

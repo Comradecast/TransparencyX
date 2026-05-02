@@ -1,7 +1,7 @@
 {
   "identity": {
-    "member_id": "valerie-foushee",
-    "full_name": "Valerie Foushee",
+    "member_id": "mark-e-harris",
+    "full_name": "Mark E. Harris",
     "chamber": null,
     "state": null,
     "district": null,
@@ -17,12 +17,15 @@
   },
   "financials": {
     "disclosure_years": [],
-    "asset_count": 6,
-    "asset_value_min": 91006.0,
-    "asset_value_max": 232500.0,
-    "income_min": 202.0,
-    "income_max": 1200.0,
-    "trade_count": null,
+    "asset_count": 30,
+    "asset_value_min": 1299030.0,
+    "asset_value_max": 2962000.0,
+    "income_min": 23528.0,
+    "income_max": 77400.0,
+    "trade_count": 0,
+    "linked_transaction_count": 0,
+    "unlinked_transaction_count": 0,
+    "linked_transaction_coverage_ratio": null,
     "liability_count": null,
     "business_interests": []
   },
@@ -34,7 +37,7 @@
   "evidence_sources": [
     {
       "source_type": "financial_disclosure_pdf",
-      "source_name": "10057344.pdf",
+      "source_name": "10056160.pdf",
       "source_url": null,
       "retrieved_at": null,
       "notes": null

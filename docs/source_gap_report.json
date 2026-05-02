@@ -1,8 +1,8 @@
 {
   "total_expected": 16,
-  "total_acquired": 8,
-  "total_missing": 8,
-  "total_parsed": 8,
+  "total_acquired": 14,
+  "total_missing": 2,
+  "total_parsed": 14,
   "entries": [
     {
       "member_slug": "donald-g-davis",
@@ -48,9 +48,9 @@
       "member_slug": "addison-p-mcdowell",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10056549.pdf"
     },
     {
       "member_slug": "david-rouzer",
@@ -64,25 +64,25 @@
       "member_slug": "mark-harris",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10056160.pdf"
     },
     {
       "member_slug": "richard-hudson",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10060006.pdf"
     },
     {
       "member_slug": "pat-harrigan",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10055854.pdf"
     },
     {
       "member_slug": "chuck-edwards",
@@ -104,17 +104,17 @@
       "member_slug": "brad-knott",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10056335.pdf"
     },
     {
       "member_slug": "tim-moore",
       "year": 2023,
       "expected": true,
-      "acquired": false,
-      "parsed": false,
-      "source_pdf": null
+      "acquired": true,
+      "parsed": true,
+      "source_pdf": "data/raw/house/2023/10056570.pdf"
     },
     {
       "member_slug": "ted-budd",
