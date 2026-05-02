@@ -1,5 +1,6 @@
 import json
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 from transparencyx.dossier.schema import MemberDossier
@@ -110,6 +111,204 @@ def write_source_manifest_json(manifest: dict, output_path: str | Path) -> Path:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(render_source_manifest_json(manifest), encoding="utf-8")
     return path
+
+
+def _xml_child_text(element: ET.Element, tag: str) -> str | None:
+    child = element.find(tag)
+    if child is None or child.text is None:
+        return None
+    text = child.text.strip()
+    return text or None
+
+
+def _normalize_last_name(value: str | None) -> str | None:
+    text = _clean_text(value)
+    if text is None:
+        return None
+    normalized = re.sub(r"[^A-Za-z]", "", text).upper()
+    return normalized or None
+
+
+def _expected_last_name(entry: dict) -> str | None:
+    full_name = _clean_text(entry.get("full_name"))
+    if full_name is None:
+        return None
+    parts = full_name.split()
+    if not parts:
+        return None
+    return _normalize_last_name(parts[-1])
+
+
+def _expected_state_dst(entry: dict) -> str | None:
+    state = _clean_text(entry.get("state"))
+    district = _clean_text(entry.get("district"))
+    if state is None or district is None:
+        return None
+    try:
+        district_number = int(district)
+    except ValueError:
+        return None
+    return f"{state.upper()}{district_number:02d}"
+
+
+def load_house_disclosure_index_xml(path: str | Path) -> list[dict]:
+    root = ET.parse(path).getroot()
+    rows = []
+    for member in root.findall("Member"):
+        row = {
+            "last": _xml_child_text(member, "Last"),
+            "first": _xml_child_text(member, "First"),
+            "filing_type": _xml_child_text(member, "FilingType"),
+            "state_dst": _xml_child_text(member, "StateDst"),
+            "year": _xml_child_text(member, "Year"),
+            "filing_date": _xml_child_text(member, "FilingDate"),
+            "doc_id": _xml_child_text(member, "DocID"),
+        }
+        rows.append(row)
+    return rows
+
+
+def _index_candidate(row: dict) -> dict:
+    return {
+        "doc_id": row.get("doc_id"),
+        "filing_type": row.get("filing_type"),
+        "state_dst": row.get("state_dst"),
+        "last": row.get("last"),
+    }
+
+
+def _matching_house_index_rows(entry: dict, index_rows: list[dict]) -> list[dict]:
+    state_dst = _expected_state_dst(entry)
+    last_name = _expected_last_name(entry)
+    year = entry.get("year")
+    if state_dst is None or last_name is None:
+        return []
+    matches = [
+        row
+        for row in index_rows
+        if row.get("year") == str(year)
+        and row.get("state_dst") == state_dst
+        and _normalize_last_name(row.get("last")) == last_name
+        and row.get("doc_id") is not None
+    ]
+    return sorted(
+        matches,
+        key=lambda row: (
+            row.get("filing_type") or "",
+            row.get("doc_id") or "",
+        ),
+    )
+
+
+def _select_house_index_match(matches: list[dict]) -> tuple[str, dict | None, list[dict], str | None]:
+    official_matches = [
+        row
+        for row in matches
+        if row.get("filing_type") == "O"
+    ]
+    candidate_matches = [
+        row
+        for row in matches
+        if row.get("filing_type") == "C"
+    ]
+    if len(official_matches) == 1:
+        return "identified", official_matches[0], [], None
+    if len(official_matches) > 1:
+        return "ambiguous", None, official_matches, None
+    if len(candidate_matches) == 1:
+        return (
+            "identified",
+            candidate_matches[0],
+            [],
+            "Official index contains FilingType C and no FilingType O record for this expected member/year/district.",
+        )
+    if len(candidate_matches) > 1:
+        return "ambiguous", None, candidate_matches, None
+    return "missing", None, [], None
+
+
+def build_index_acquisition_manifest(
+    expected_manifest: dict,
+    source_manifest: dict,
+    index_rows: list[dict],
+) -> dict:
+    actual_sources = {
+        (entry.get("member_slug"), entry.get("year")): entry
+        for entry in source_manifest.get("sources", [])
+        if isinstance(entry, dict)
+    }
+    entries = []
+    for expected in expected_manifest.get("sources", []):
+        if not isinstance(expected, dict):
+            continue
+        key = (expected.get("member_slug"), expected.get("year"))
+        actual = actual_sources.get(key)
+        matches = (
+            _matching_house_index_rows(expected, index_rows)
+            if expected.get("chamber") == "House"
+            else []
+        )
+        acquisition_status, match, candidate_rows, resolution_note = (
+            _select_house_index_match(matches)
+        )
+        if match is not None:
+            doc_id = match.get("doc_id")
+            filing_type = match.get("filing_type")
+            source_pdf = f"data/raw/house/2023/{doc_id}.pdf"
+        else:
+            doc_id = None
+            filing_type = None
+            source_pdf = actual.get("source_pdf") if actual is not None else expected.get("source_pdf")
+        candidates = [_index_candidate(row) for row in candidate_rows]
+
+        acquired = actual is not None
+        parsed = bool(actual.get("parsed")) if actual is not None else False
+        entries.append({
+            "member_slug": expected.get("member_slug"),
+            "year": expected.get("year"),
+            "chamber": expected.get("chamber"),
+            "state": expected.get("state"),
+            "district": expected.get("district"),
+            "expected": bool(expected.get("expected")),
+            "acquired": acquired,
+            "parsed": parsed,
+            "doc_id": doc_id,
+            "filing_type": filing_type,
+            "source_pdf": actual.get("source_pdf") if actual is not None else source_pdf,
+            "acquisition_status": acquisition_status,
+            "resolution_note": resolution_note,
+            "candidates": candidates,
+        })
+
+    return {
+        "total_expected": len(entries),
+        "identified_count": sum(
+            1
+            for entry in entries
+            if entry["acquisition_status"] == "identified"
+        ),
+        "acquired_count": sum(1 for entry in entries if entry["acquired"]),
+        "missing_count": sum(
+            1
+            for entry in entries
+            if entry["acquisition_status"] == "missing"
+        ),
+        "ambiguous_count": sum(
+            1
+            for entry in entries
+            if entry["acquisition_status"] == "ambiguous"
+        ),
+        "entries": entries,
+    }
+
+
+def render_index_acquisition_manifest_json(manifest: dict) -> str:
+    return json.dumps(
+        manifest,
+        indent=2,
+        ensure_ascii=False,
+        sort_keys=False,
+    ) + "\n"
 
 
 def build_site_manifest(

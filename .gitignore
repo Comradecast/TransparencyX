@@ -35,6 +35,9 @@ data/*
 data/seed/*
 !data/seed/member_metadata_seed.csv
 !data/seed/member_id_aliases.csv
+!data/source_indexes/
+!data/source_indexes/house/
+!data/source_indexes/house/2023FD.xml
 site/
 *.sqlite
 *.sqlite3

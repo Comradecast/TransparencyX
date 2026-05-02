@@ -5,8 +5,10 @@ from pathlib import Path
 import pytest
 
 from transparencyx.dossier.manifest import (
+    build_index_acquisition_manifest,
     build_source_manifest,
     build_site_manifest,
+    load_house_disclosure_index_xml,
     render_source_manifest_json,
     render_site_manifest_json,
     write_source_manifest_json,
@@ -31,6 +33,10 @@ NC_ACQUISITION_PLAN_PATH = Path(
 )
 NC_ACQUISITION_INSTRUCTIONS_PATH = Path(
     "docs/acquisition_plans/nc_2023_acquisition_instructions.md"
+)
+HOUSE_2023_DISCLOSURE_INDEX_PATH = Path("data/source_indexes/house/2023FD.xml")
+NC_INDEX_ACQUISITION_MANIFEST_PATH = Path(
+    "docs/acquisition_plans/nc_2023_index_acquisition_manifest.json"
 )
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
@@ -64,6 +70,22 @@ ACQUISITION_PLAN_KEYS = {
     "source_url",
     "acquisition_status",
     "notes",
+}
+INDEX_ACQUISITION_MANIFEST_KEYS = {
+    "member_slug",
+    "year",
+    "chamber",
+    "state",
+    "district",
+    "expected",
+    "acquired",
+    "parsed",
+    "doc_id",
+    "filing_type",
+    "source_pdf",
+    "acquisition_status",
+    "resolution_note",
+    "candidates",
 }
 
 
@@ -409,6 +431,337 @@ def test_nc_acquisition_instructions_include_deterministic_steps():
 
     for step in required_steps:
         assert step in instructions
+
+
+def test_house_2023_disclosure_index_xml_exists_and_parses():
+    rows = load_house_disclosure_index_xml(HOUSE_2023_DISCLOSURE_INDEX_PATH)
+
+    assert rows
+    assert {
+        "last",
+        "first",
+        "filing_type",
+        "state_dst",
+        "year",
+        "filing_date",
+        "doc_id",
+    } == set(rows[0])
+
+
+def test_nc_index_acquisition_manifest_exists_and_has_totals():
+    manifest = json.loads(
+        NC_INDEX_ACQUISITION_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    assert manifest["total_expected"] == 16
+    assert manifest["identified_count"] == 13
+    assert manifest["acquired_count"] == 5
+    assert manifest["missing_count"] == 3
+    assert manifest["ambiguous_count"] == 0
+    assert len(manifest["entries"]) == 16
+
+
+def test_nc_index_acquisition_manifest_entries_have_required_keys():
+    manifest = json.loads(
+        NC_INDEX_ACQUISITION_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    for entry in manifest["entries"]:
+        assert set(entry) == INDEX_ACQUISITION_MANIFEST_KEYS
+
+
+def test_nc_index_acquisition_manifest_resolves_known_doc_ids():
+    manifest = json.loads(
+        NC_INDEX_ACQUISITION_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    entries = {
+        entry["member_slug"]: entry
+        for entry in manifest["entries"]
+    }
+
+    assert entries["alma-s-adams"]["doc_id"] == "10059952"
+    assert entries["alma-s-adams"]["source_pdf"] == (
+        "data/raw/house/2023/10059952.pdf"
+    )
+    assert entries["addison-p-mcdowell"]["doc_id"] == "10056549"
+    assert entries["addison-p-mcdowell"]["filing_type"] == "C"
+    assert entries["addison-p-mcdowell"]["resolution_note"] == (
+        "Official index contains FilingType C and no FilingType O record for this expected member/year/district."
+    )
+    assert entries["addison-p-mcdowell"]["source_pdf"] == (
+        "data/raw/house/2023/10056549.pdf"
+    )
+
+
+def test_nc_index_acquisition_manifest_keeps_acquired_status_from_source_manifest():
+    manifest = json.loads(
+        NC_INDEX_ACQUISITION_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    entries = {
+        entry["member_slug"]: entry
+        for entry in manifest["entries"]
+    }
+
+    assert entries["alma-s-adams"]["acquired"] is True
+    assert entries["alma-s-adams"]["parsed"] is True
+    assert entries["addison-p-mcdowell"]["acquired"] is False
+    assert entries["addison-p-mcdowell"]["parsed"] is False
+
+
+def test_nc_index_acquisition_manifest_order_matches_expected_manifest():
+    expected_manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    manifest = json.loads(
+        NC_INDEX_ACQUISITION_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+
+    assert [
+        (entry["member_slug"], entry["year"])
+        for entry in manifest["entries"]
+    ] == [
+        (entry["member_slug"], entry["year"])
+        for entry in expected_manifest["sources"]
+    ]
+
+
+def test_index_acquisition_manifest_missing_and_ambiguous_fail_closed():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "one",
+                "full_name": "One Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+            {
+                "member_slug": "two",
+                "full_name": "Two Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "2",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+        ]
+    }
+    source_manifest = {"sources": []}
+    index_rows = [
+        {
+            "last": "Member",
+            "first": "Two",
+            "filing_type": "O",
+            "state_dst": "NC02",
+            "year": "2023",
+            "filing_date": "1/1/2024",
+            "doc_id": "1",
+        },
+        {
+            "last": "Member",
+            "first": "Two",
+            "filing_type": "O",
+            "state_dst": "NC02",
+            "year": "2023",
+            "filing_date": "1/2/2024",
+            "doc_id": "2",
+        },
+    ]
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        source_manifest,
+        index_rows,
+    )
+
+    assert manifest["entries"][0]["acquisition_status"] == "missing"
+    assert manifest["entries"][0]["doc_id"] is None
+    assert manifest["entries"][1]["acquisition_status"] == "ambiguous"
+    assert manifest["entries"][1]["doc_id"] is None
+    assert [
+        candidate["doc_id"]
+        for candidate in manifest["entries"][1]["candidates"]
+    ] == ["1", "2"]
+
+
+def test_index_acquisition_manifest_prefers_o_over_c():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "one",
+                "full_name": "One Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+        ]
+    }
+    index_rows = [
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "C",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/1/2024",
+            "doc_id": "1",
+        },
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "O",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/2/2024",
+            "doc_id": "2",
+        },
+    ]
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        {"sources": []},
+        index_rows,
+    )
+
+    assert manifest["entries"][0]["doc_id"] == "2"
+    assert manifest["entries"][0]["filing_type"] == "O"
+    assert manifest["entries"][0]["resolution_note"] is None
+
+
+def test_index_acquisition_manifest_single_c_resolves_when_o_absent():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "one",
+                "full_name": "One Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+        ]
+    }
+    index_rows = [
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "C",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/1/2024",
+            "doc_id": "1",
+        },
+    ]
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        {"sources": []},
+        index_rows,
+    )
+
+    assert manifest["entries"][0]["acquisition_status"] == "identified"
+    assert manifest["entries"][0]["doc_id"] == "1"
+    assert manifest["entries"][0]["filing_type"] == "C"
+    assert manifest["entries"][0]["resolution_note"] == (
+        "Official index contains FilingType C and no FilingType O record for this expected member/year/district."
+    )
+
+
+def test_index_acquisition_manifest_multiple_c_matches_are_ambiguous():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "one",
+                "full_name": "One Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+        ]
+    }
+    index_rows = [
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "C",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/1/2024",
+            "doc_id": "1",
+        },
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "C",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/2/2024",
+            "doc_id": "2",
+        },
+    ]
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        {"sources": []},
+        index_rows,
+    )
+
+    assert manifest["entries"][0]["acquisition_status"] == "ambiguous"
+    assert manifest["entries"][0]["doc_id"] is None
+    assert [
+        candidate["doc_id"]
+        for candidate in manifest["entries"][0]["candidates"]
+    ] == ["1", "2"]
+
+
+def test_index_acquisition_manifest_ignores_non_o_c_filing_types():
+    expected_manifest = {
+        "sources": [
+            {
+                "member_slug": "one",
+                "full_name": "One Member",
+                "chamber": "House",
+                "state": "NC",
+                "district": "1",
+                "year": 2023,
+                "expected": True,
+                "source_pdf": None,
+            },
+        ]
+    }
+    index_rows = [
+        {
+            "last": "Member",
+            "first": "One",
+            "filing_type": "X",
+            "state_dst": "NC01",
+            "year": "2023",
+            "filing_date": "1/1/2024",
+            "doc_id": "1",
+        },
+    ]
+
+    manifest = build_index_acquisition_manifest(
+        expected_manifest,
+        {"sources": []},
+        index_rows,
+    )
+
+    assert manifest["entries"][0]["acquisition_status"] == "missing"
+    assert manifest["entries"][0]["doc_id"] is None
+    assert manifest["entries"][0]["candidates"] == []
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():
