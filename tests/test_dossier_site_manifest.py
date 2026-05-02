@@ -29,6 +29,9 @@ SOURCE_GAP_REPORT_PATH = Path("docs/source_gap_report.json")
 NC_ACQUISITION_PLAN_PATH = Path(
     "docs/acquisition_plans/nc_2023_acquisition_plan.json"
 )
+NC_ACQUISITION_INSTRUCTIONS_PATH = Path(
+    "docs/acquisition_plans/nc_2023_acquisition_instructions.md"
+)
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
     "full_name",
@@ -355,6 +358,55 @@ def test_nc_acquisition_plan_ordering_is_deterministic():
         entry["member_slug"]
         for entry in senate_entries
     ] == sorted(entry["member_slug"] for entry in senate_entries)
+
+
+def test_nc_acquisition_instructions_exist_and_are_readable():
+    assert NC_ACQUISITION_INSTRUCTIONS_PATH.exists()
+    assert NC_ACQUISITION_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+
+
+def test_nc_acquisition_instructions_include_missing_member_slugs():
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+    instructions = NC_ACQUISITION_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+
+    for entry in plan["entries"]:
+        assert entry["member_slug"] in instructions
+
+
+def test_nc_acquisition_instructions_include_official_disclosure_url():
+    instructions = NC_ACQUISITION_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+
+    assert (
+        "https://disclosures-clerk.house.gov/PublicDisclosure/FinancialDisclosure"
+        in instructions
+    )
+
+
+def test_nc_acquisition_instructions_include_deterministic_steps():
+    instructions = NC_ACQUISITION_INSTRUCTIONS_PATH.read_text(encoding="utf-8")
+    required_steps = [
+        "1. Navigate to official disclosure search site:",
+        "2. Search by:",
+        "- Last name",
+        "- Filing year: 2023",
+        "3. Locate:",
+        "- Annual Financial Disclosure Report",
+        "4. Verify:",
+        "- Correct member",
+        "- Correct filing year",
+        "- PDF format",
+        "5. Download PDF",
+        "6. Save locally as:",
+        "data/raw/house/2023/<document_id>.pdf",
+        "7. Update acquisition plan:",
+        "- acquired = true",
+        "- source_pdf = saved path",
+        "8. Re-run:",
+        "- dataset build and validation",
+    ]
+
+    for step in required_steps:
+        assert step in instructions
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():
