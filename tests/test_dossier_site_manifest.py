@@ -26,6 +26,9 @@ NC_EXPECTED_SOURCE_MANIFEST_PATH = Path(
     "docs/source_manifests/nc_2023_expected_sources.json"
 )
 SOURCE_GAP_REPORT_PATH = Path("docs/source_gap_report.json")
+NC_ACQUISITION_PLAN_PATH = Path(
+    "docs/acquisition_plans/nc_2023_acquisition_plan.json"
+)
 SOURCE_MANIFEST_TEMPLATE_KEYS = {
     "member_slug",
     "full_name",
@@ -47,6 +50,17 @@ SOURCE_GAP_REPORT_KEYS = {
     "acquired",
     "parsed",
     "source_pdf",
+}
+ACQUISITION_PLAN_KEYS = {
+    "member_slug",
+    "year",
+    "chamber",
+    "state",
+    "district",
+    "source_pdf",
+    "source_url",
+    "acquisition_status",
+    "notes",
 }
 
 
@@ -249,6 +263,98 @@ def test_source_gap_report_matches_actual_sources_by_member_and_year():
         assert entry["source_pdf"] == (
             actual["source_pdf"] if actual is not None else None
         )
+
+
+def test_nc_acquisition_plan_exists():
+    assert NC_ACQUISITION_PLAN_PATH.exists()
+
+
+def test_nc_acquisition_plan_contains_missing_entries_only():
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+
+    assert plan["plan_type"] == "state_acquisition_plan"
+    assert plan["state"] == "NC"
+    assert plan["year"] == 2023
+    assert plan["entry_count"] == 11
+    assert len(plan["entries"]) == 11
+    assert {
+        entry["acquisition_status"]
+        for entry in plan["entries"]
+    } == {"missing"}
+
+
+def test_nc_acquisition_plan_entries_have_required_keys():
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+
+    for entry in plan["entries"]:
+        assert set(entry) == ACQUISITION_PLAN_KEYS
+
+
+def test_nc_acquisition_plan_matches_source_gap_report_missing_entries():
+    gap_report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+    expected_manifest = json.loads(
+        NC_EXPECTED_SOURCE_MANIFEST_PATH.read_text(encoding="utf-8")
+    )
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+    missing_keys = [
+        (entry["member_slug"], entry["year"])
+        for entry in gap_report["entries"]
+        if entry["expected"] and not entry["acquired"]
+    ]
+    expected_sources = {
+        (entry["member_slug"], entry["year"]): entry
+        for entry in expected_manifest["sources"]
+    }
+
+    assert [
+        (entry["member_slug"], entry["year"])
+        for entry in plan["entries"]
+    ] == missing_keys
+    for entry in plan["entries"]:
+        expected = expected_sources[(entry["member_slug"], entry["year"])]
+        assert entry["chamber"] == expected["chamber"]
+        assert entry["state"] == expected["state"]
+        assert entry["district"] == expected["district"]
+        assert entry["source_pdf"] == expected["source_pdf"]
+        assert entry["source_url"] == expected["source_url"]
+
+
+def test_nc_acquisition_plan_excludes_acquired_members():
+    gap_report = json.loads(SOURCE_GAP_REPORT_PATH.read_text(encoding="utf-8"))
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+    acquired_keys = {
+        (entry["member_slug"], entry["year"])
+        for entry in gap_report["entries"]
+        if entry["acquired"]
+    }
+
+    for entry in plan["entries"]:
+        assert (entry["member_slug"], entry["year"]) not in acquired_keys
+
+
+def test_nc_acquisition_plan_ordering_is_deterministic():
+    plan = json.loads(NC_ACQUISITION_PLAN_PATH.read_text(encoding="utf-8"))
+    entries = plan["entries"]
+    house_entries = [
+        entry
+        for entry in entries
+        if entry["chamber"] == "House"
+    ]
+    senate_entries = [
+        entry
+        for entry in entries
+        if entry["chamber"] == "Senate"
+    ]
+
+    assert entries == house_entries + senate_entries
+    assert [
+        int(entry["district"])
+        for entry in house_entries
+    ] == sorted(int(entry["district"]) for entry in house_entries)
+    assert [
+        entry["member_slug"]
+        for entry in senate_entries
+    ] == sorted(entry["member_slug"] for entry in senate_entries)
 
 
 def test_source_manifest_entries_are_deterministic_and_structured():
