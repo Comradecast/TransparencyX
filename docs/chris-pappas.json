@@ -2,9 +2,9 @@
   "identity": {
     "member_id": "chris-pappas",
     "full_name": "Chris Pappas",
-    "chamber": null,
-    "state": null,
-    "district": null,
+    "chamber": "House",
+    "state": "NH",
+    "district": "1",
     "party": null,
     "current_status": null
   },
@@ -16,7 +16,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 26,
     "asset_value_min": 1682026.0,
     "asset_value_max": 6780000.0,

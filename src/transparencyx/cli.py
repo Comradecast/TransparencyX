@@ -567,6 +567,9 @@ def main():
         )
         from transparencyx.dossier.readme import write_site_readme
         from transparencyx.profile.batch import build_profiles_for_directory
+        from transparencyx.acquisition.house_identity import (
+            apply_house_doc_id_identity_resolution_to_profiles,
+        )
 
         output_dir = Path(args.output_dir)
         metadata_path = (
@@ -574,7 +577,9 @@ def main():
             if args.use_default_member_metadata
             else Path(args.member_metadata) if args.member_metadata else None
         )
-        profiles = build_profiles_for_directory(Path(args.build_dossier_site))
+        profiles = apply_house_doc_id_identity_resolution_to_profiles(
+            build_profiles_for_directory(Path(args.build_dossier_site))
+        )
 
         if args.fetch_exposure:
             attach_federal_award_exposure_to_profiles(

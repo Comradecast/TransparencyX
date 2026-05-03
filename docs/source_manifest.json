@@ -12,12 +12,22 @@
     },
     {
       "member_slug": "adrian-smith",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "chamber": "House",
+      "state": "NE",
+      "district": "3",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059993.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059993",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Adrian Smith",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "alma-s-adams",
@@ -26,7 +36,17 @@
       "district": "12",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059952.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059952",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Alma Shealey Adams",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "brad-knott",
@@ -39,12 +59,22 @@
     },
     {
       "member_slug": "chris-pappas",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10058983.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10058983",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Chris Pappas",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "chuck-edwards",
@@ -53,7 +83,17 @@
       "district": "11",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059419.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059419",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Chuck Edwards",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "david-rouzer",
@@ -62,7 +102,17 @@
       "district": "7",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10060621.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10060621",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "David Rouzer",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "deborah-k-ross",
@@ -71,43 +121,93 @@
       "district": "2",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059715.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059715",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Deborah Ross",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
-      "member_slug": "don-davis",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "member_slug": "donald-g-davis",
+      "chamber": "House",
+      "state": "NC",
+      "district": "1",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10060732.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10060732",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Don Davis",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "donald-j-bacon",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "chamber": "House",
+      "state": "NE",
+      "district": "2",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059759.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059759",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Donald J. Bacon",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
-      "member_slug": "greg-murphy",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "member_slug": "gregory-f-murphy",
+      "chamber": "House",
+      "state": "NC",
+      "district": "3",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059751.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059751",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Greg Murphy",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "kelly-armstrong",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "chamber": "House",
+      "state": "ND",
+      "district": "0",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10057429.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10057429",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Kelly Armstrong",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "mark-harris",
@@ -120,12 +220,22 @@
     },
     {
       "member_slug": "mike-flood",
-      "chamber": null,
-      "state": null,
-      "district": null,
+      "chamber": "House",
+      "state": "NE",
+      "district": "1",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059391.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059391",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Mike Flood",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "nancy-pelosi",
@@ -152,7 +262,17 @@
       "district": "9",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10060006.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10060006",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Richard Hudson",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "tim-moore",
@@ -170,7 +290,17 @@
       "district": "4",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10057344.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10057344",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Valerie Foushee",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     },
     {
       "member_slug": "virginia-foxx",
@@ -179,7 +309,17 @@
       "district": "5",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10059335.pdf",
-      "parsed": true
+      "parsed": true,
+      "identity_resolution_source": "house_doc_id_manifest",
+      "identity_resolution_doc_id": "10059335",
+      "parsed_identity_original": {
+        "member_id": null,
+        "member_name": "Virginia Foxx",
+        "chamber": null,
+        "state": null,
+        "district": null
+      },
+      "identity_resolution_status": "resolved"
     }
   ]
 }

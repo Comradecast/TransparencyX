@@ -13,10 +13,10 @@
     "json_dossiers": 20,
     "html_dossiers": 20,
     "metadata_records_loaded": 19,
-    "metadata_matched_dossiers": 13,
-    "metadata_unmatched_dossiers": 7,
-    "committee_rows_with_assignments": 4,
-    "committee_rows_without_assignments": 16
+    "metadata_matched_dossiers": 15,
+    "metadata_unmatched_dossiers": 5,
+    "committee_rows_with_assignments": 6,
+    "committee_rows_without_assignments": 14
   },
   "artifacts": {
     "json_index": "index.json",
@@ -37,13 +37,13 @@
       "chuck-edwards.json",
       "deborah-k-ross.json",
       "nancy-pelosi.json",
-      "greg-murphy.json",
+      "gregory-f-murphy.json",
       "donald-j-bacon.json",
       "alma-s-adams.json",
       "adrian-smith.json",
       "richard-hudson.json",
       "david-rouzer.json",
-      "don-davis.json"
+      "donald-g-davis.json"
     ],
     "dossier_html_files": [
       "pat-harrigan.html",
@@ -59,13 +59,13 @@
       "chuck-edwards.html",
       "deborah-k-ross.html",
       "nancy-pelosi.html",
-      "greg-murphy.html",
+      "gregory-f-murphy.html",
       "donald-j-bacon.html",
       "alma-s-adams.html",
       "adrian-smith.html",
       "richard-hudson.html",
       "david-rouzer.html",
-      "don-davis.html"
+      "donald-g-davis.html"
     ]
   }
 }

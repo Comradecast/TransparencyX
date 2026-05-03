@@ -1,22 +1,27 @@
 {
   "identity": {
-    "member_id": "don-davis",
-    "full_name": "Don Davis",
-    "chamber": null,
-    "state": null,
-    "district": null,
-    "party": null,
-    "current_status": null
+    "member_id": "donald-g-davis",
+    "full_name": "Donald G. Davis",
+    "chamber": "House",
+    "state": "NC",
+    "district": "1",
+    "party": "Democratic",
+    "current_status": "current"
   },
   "office": {
-    "official_salary": null,
+    "official_salary": 174000.0,
     "leadership_roles": [],
-    "committee_assignments": [],
+    "committee_assignments": [
+      "Committee on Agriculture",
+      "Committee on Armed Services"
+    ],
     "office_start": null,
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 2,
     "asset_value_min": 16002.0,
     "asset_value_max": 65000.0,
@@ -39,6 +44,13 @@
       "source_type": "financial_disclosure_pdf",
       "source_name": "10060732.pdf",
       "source_url": null,
+      "retrieved_at": null,
+      "notes": null
+    },
+    {
+      "source_type": "member_metadata",
+      "source_name": "House Clerk Member Profile",
+      "source_url": "https://clerk.house.gov/members/D000230",
       "retrieved_at": null,
       "notes": null
     }

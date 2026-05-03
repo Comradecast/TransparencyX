@@ -2,9 +2,9 @@
   "identity": {
     "member_id": "adrian-smith",
     "full_name": "Adrian Smith",
-    "chamber": null,
-    "state": null,
-    "district": null,
+    "chamber": "House",
+    "state": "NE",
+    "district": "3",
     "party": null,
     "current_status": null
   },
@@ -16,7 +16,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 18,
     "asset_value_min": 2101018.0,
     "asset_value_max": 4390000.0,

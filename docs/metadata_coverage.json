@@ -1,8 +1,8 @@
 {
   "total_dossiers": 20,
   "metadata_records_loaded": 19,
-  "matched_dossiers": 13,
-  "unmatched_dossiers": 7,
+  "matched_dossiers": 15,
+  "unmatched_dossiers": 5,
   "matched_member_ids": [
     "pat-harrigan",
     "mark-harris",
@@ -14,17 +14,17 @@
     "chuck-edwards",
     "deborah-k-ross",
     "nancy-pelosi",
+    "gregory-f-murphy",
     "alma-s-adams",
     "richard-hudson",
-    "david-rouzer"
+    "david-rouzer",
+    "donald-g-davis"
   ],
   "unmatched_member_ids": [
     "kelly-armstrong",
     "chris-pappas",
     "mike-flood",
-    "greg-murphy",
     "donald-j-bacon",
-    "adrian-smith",
-    "don-davis"
+    "adrian-smith"
   ]
 }

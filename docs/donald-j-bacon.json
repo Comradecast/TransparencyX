@@ -2,9 +2,9 @@
   "identity": {
     "member_id": "donald-j-bacon",
     "full_name": "Donald J. Bacon",
-    "chamber": null,
-    "state": null,
-    "district": null,
+    "chamber": "House",
+    "state": "NE",
+    "district": "2",
     "party": null,
     "current_status": null
   },
@@ -16,7 +16,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 9,
     "asset_value_min": 845009.0,
     "asset_value_max": 1752000.0,

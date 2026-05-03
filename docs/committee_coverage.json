@@ -1,12 +1,14 @@
 {
   "total_dossiers": 20,
-  "rows_with_committees": 4,
-  "rows_without_committees": 16,
+  "rows_with_committees": 6,
+  "rows_without_committees": 14,
   "member_ids_with_committees": [
     "valerie-p-foushee",
     "virginia-foxx",
     "deborah-k-ross",
-    "alma-s-adams"
+    "gregory-f-murphy",
+    "alma-s-adams",
+    "donald-g-davis"
   ],
   "member_ids_without_committees": [
     "pat-harrigan",
@@ -19,11 +21,9 @@
     "mike-flood",
     "chuck-edwards",
     "nancy-pelosi",
-    "greg-murphy",
     "donald-j-bacon",
     "adrian-smith",
     "richard-hudson",
-    "david-rouzer",
-    "don-davis"
+    "david-rouzer"
   ]
 }

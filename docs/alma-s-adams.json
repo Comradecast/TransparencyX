@@ -19,7 +19,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 2,
     "asset_value_min": 265002.0,
     "asset_value_max": 550000.0,

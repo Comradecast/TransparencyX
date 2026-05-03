@@ -2,9 +2,9 @@
   "identity": {
     "member_id": "kelly-armstrong",
     "full_name": "Kelly Armstrong",
-    "chamber": null,
-    "state": null,
-    "district": null,
+    "chamber": "House",
+    "state": "ND",
+    "district": "0",
     "party": null,
     "current_status": null
   },
@@ -16,7 +16,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 564,
     "asset_value_min": 5462563.0,
     "asset_value_max": 18147700.0,

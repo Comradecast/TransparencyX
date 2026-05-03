@@ -2,9 +2,9 @@
   "identity": {
     "member_id": "mike-flood",
     "full_name": "Mike Flood",
-    "chamber": null,
-    "state": null,
-    "district": null,
+    "chamber": "House",
+    "state": "NE",
+    "district": "1",
     "party": null,
     "current_status": null
   },
@@ -16,7 +16,9 @@
     "office_end": null
   },
   "financials": {
-    "disclosure_years": [],
+    "disclosure_years": [
+      2023
+    ],
     "asset_count": 14,
     "asset_value_min": 3058013.0,
     "asset_value_max": 12260000.0,

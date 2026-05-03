@@ -83,7 +83,7 @@ def build_source_manifest(
             or _year_from_dossier(dossier)
         )
         key = (member_slug, year, source_pdf)
-        entries_by_key[key] = {
+        entry = {
             "member_slug": member_slug,
             "chamber": dossier.identity.chamber,
             "state": dossier.identity.state,
@@ -92,6 +92,17 @@ def build_source_manifest(
             "source_pdf": source_pdf,
             "parsed": _profile_has_summary(profile),
         }
+        identity_resolution = profile.get("identity_resolution")
+        if isinstance(identity_resolution, dict):
+            for field in (
+                "identity_resolution_source",
+                "identity_resolution_doc_id",
+                "parsed_identity_original",
+                "identity_resolution_status",
+            ):
+                if field in identity_resolution:
+                    entry[field] = identity_resolution[field]
+        entries_by_key[key] = entry
 
     entries = [
         entries_by_key[key]

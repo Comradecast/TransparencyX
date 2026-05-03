@@ -2,6 +2,46 @@
   "dossier_count": 20,
   "dossiers": [
     {
+      "member_id": "kelly-armstrong",
+      "full_name": "Kelly Armstrong",
+      "chamber": "House",
+      "state": "ND",
+      "district": "0",
+      "party": null,
+      "current_status": null,
+      "file": "kelly-armstrong.json"
+    },
+    {
+      "member_id": "chris-pappas",
+      "full_name": "Chris Pappas",
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
+      "party": null,
+      "current_status": null,
+      "file": "chris-pappas.json"
+    },
+    {
+      "member_id": "donald-g-davis",
+      "full_name": "Donald G. Davis",
+      "chamber": "House",
+      "state": "NC",
+      "district": "1",
+      "party": "Democratic",
+      "current_status": "current",
+      "file": "donald-g-davis.json"
+    },
+    {
+      "member_id": "mike-flood",
+      "full_name": "Mike Flood",
+      "chamber": "House",
+      "state": "NE",
+      "district": "1",
+      "party": null,
+      "current_status": null,
+      "file": "mike-flood.json"
+    },
+    {
       "member_id": "deborah-k-ross",
       "full_name": "Deborah K. Ross",
       "chamber": "House",
@@ -10,6 +50,36 @@
       "party": "Democratic",
       "current_status": "current",
       "file": "deborah-k-ross.json"
+    },
+    {
+      "member_id": "donald-j-bacon",
+      "full_name": "Donald J. Bacon",
+      "chamber": "House",
+      "state": "NE",
+      "district": "2",
+      "party": null,
+      "current_status": null,
+      "file": "donald-j-bacon.json"
+    },
+    {
+      "member_id": "adrian-smith",
+      "full_name": "Adrian Smith",
+      "chamber": "House",
+      "state": "NE",
+      "district": "3",
+      "party": null,
+      "current_status": null,
+      "file": "adrian-smith.json"
+    },
+    {
+      "member_id": "gregory-f-murphy",
+      "full_name": "Gregory F. Murphy",
+      "chamber": "House",
+      "state": "NC",
+      "district": "3",
+      "party": "Republican",
+      "current_status": "current",
+      "file": "gregory-f-murphy.json"
     },
     {
       "member_id": "valerie-p-foushee",
@@ -130,76 +200,6 @@
       "party": "Republican",
       "current_status": "current",
       "file": "tim-moore.json"
-    },
-    {
-      "member_id": "adrian-smith",
-      "full_name": "Adrian Smith",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "adrian-smith.json"
-    },
-    {
-      "member_id": "chris-pappas",
-      "full_name": "Chris Pappas",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "chris-pappas.json"
-    },
-    {
-      "member_id": "don-davis",
-      "full_name": "Don Davis",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "don-davis.json"
-    },
-    {
-      "member_id": "donald-j-bacon",
-      "full_name": "Donald J. Bacon",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "donald-j-bacon.json"
-    },
-    {
-      "member_id": "greg-murphy",
-      "full_name": "Greg Murphy",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "greg-murphy.json"
-    },
-    {
-      "member_id": "kelly-armstrong",
-      "full_name": "Kelly Armstrong",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "kelly-armstrong.json"
-    },
-    {
-      "member_id": "mike-flood",
-      "full_name": "Mike Flood",
-      "chamber": null,
-      "state": null,
-      "district": null,
-      "party": null,
-      "current_status": null,
-      "file": "mike-flood.json"
     }
   ]
 }
