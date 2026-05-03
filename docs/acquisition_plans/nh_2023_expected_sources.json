@@ -1,0 +1,84 @@
+{
+  "manifest_type": "house_expected_sources",
+  "state": "NH",
+  "year": 2023,
+  "source_authority": "Official House financial disclosure index",
+  "source_index": "data/source_indexes/house/2023FD.xml",
+  "total_expected": 2,
+  "total_acquired": 1,
+  "total_missing": 0,
+  "total_blocked_identity_resolution": 1,
+  "total_not_ingested_nonannual_extension": 3,
+  "entries": [
+    {
+      "member_slug": "chris-pappas",
+      "full_name": "Chris Pappas",
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "10058983",
+      "filing_type": "O",
+      "expected_filename": "10058983.pdf",
+      "local_path": "data/raw/house/2023/10058983.pdf",
+      "acquisition_status": "acquired"
+    }
+  ],
+  "blocked_identity_resolution_entries": [
+    {
+      "member_slug": "ann-m-kuster",
+      "full_name": "Ann M. Kuster",
+      "chamber": "House",
+      "state": "NH",
+      "district": "2",
+      "year": 2023,
+      "doc_id": "8220486",
+      "filing_type": "O",
+      "expected_filename": "8220486.pdf",
+      "local_path": null,
+      "acquisition_status": "blocked_identity_resolution",
+      "resolution_note": "Official House index identifies DocID 8220486 as Ann M. Kuster, NH02, FilingType O. Current parser emits member_slug unknown for this PDF; no deterministic source-backed identity override exists in the acquisition layer, so the PDF is not retained in data/raw."
+    }
+  ],
+  "non_ingested_entries": [
+    {
+      "member_slug": "chris-bright",
+      "full_name": "Chris Bright",
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "30019456",
+      "filing_type": "X",
+      "expected_filename": "30019456.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension"
+    },
+    {
+      "member_slug": "chris-pappas",
+      "full_name": "Chris Pappas",
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "30021294",
+      "filing_type": "X",
+      "expected_filename": "30021294.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension"
+    },
+    {
+      "member_slug": "russell-prescott",
+      "full_name": "Russell Prescott",
+      "chamber": "House",
+      "state": "NH",
+      "district": "1",
+      "year": 2023,
+      "doc_id": "30019393",
+      "filing_type": "X",
+      "expected_filename": "30019393.pdf",
+      "local_path": null,
+      "acquisition_status": "not_ingested_nonannual_extension"
+    }
+  ]
+}

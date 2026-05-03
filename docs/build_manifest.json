@@ -8,15 +8,15 @@
     "recipient_candidate_audit": false
   },
   "counts": {
-    "profiles": 19,
-    "dossiers": 19,
-    "json_dossiers": 19,
-    "html_dossiers": 19,
+    "profiles": 20,
+    "dossiers": 20,
+    "json_dossiers": 20,
+    "html_dossiers": 20,
     "metadata_records_loaded": 19,
     "metadata_matched_dossiers": 13,
-    "metadata_unmatched_dossiers": 6,
+    "metadata_unmatched_dossiers": 7,
     "committee_rows_with_assignments": 4,
-    "committee_rows_without_assignments": 15
+    "committee_rows_without_assignments": 16
   },
   "artifacts": {
     "json_index": "index.json",
@@ -31,6 +31,7 @@
       "tim-moore.json",
       "valerie-p-foushee.json",
       "kelly-armstrong.json",
+      "chris-pappas.json",
       "virginia-foxx.json",
       "mike-flood.json",
       "chuck-edwards.json",
@@ -52,6 +53,7 @@
       "tim-moore.html",
       "valerie-p-foushee.html",
       "kelly-armstrong.html",
+      "chris-pappas.html",
       "virginia-foxx.html",
       "mike-flood.html",
       "chuck-edwards.html",

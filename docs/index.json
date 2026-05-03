@@ -1,5 +1,5 @@
 {
-  "dossier_count": 19,
+  "dossier_count": 20,
   "dossiers": [
     {
       "member_id": "deborah-k-ross",
@@ -140,6 +140,16 @@
       "party": null,
       "current_status": null,
       "file": "adrian-smith.json"
+    },
+    {
+      "member_id": "chris-pappas",
+      "full_name": "Chris Pappas",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "party": null,
+      "current_status": null,
+      "file": "chris-pappas.json"
     },
     {
       "member_id": "don-davis",

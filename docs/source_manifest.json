@@ -1,5 +1,5 @@
 {
-  "source_count": 19,
+  "source_count": 20,
   "sources": [
     {
       "member_slug": "addison-p-mcdowell",
@@ -35,6 +35,15 @@
       "district": "13",
       "year": 2023,
       "source_pdf": "data/raw/house/2023/10056335.pdf",
+      "parsed": true
+    },
+    {
+      "member_slug": "chris-pappas",
+      "chamber": null,
+      "state": null,
+      "district": null,
+      "year": 2023,
+      "source_pdf": "data/raw/house/2023/10058983.pdf",
       "parsed": true
     },
     {
